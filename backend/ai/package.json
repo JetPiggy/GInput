@@ -1,0 +1,19 @@
+{
+  "name": "ginput-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node --test",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply ginput-ai --local",
+    "db:remote": "wrangler d1 migrations apply ginput-ai --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260925.2",
+    "typescript": "^5.9.2",
+    "wrangler": "4.141.0"
+  }
+}

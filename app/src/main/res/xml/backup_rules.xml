@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 只備份設定和常用短語（ADR 0001），兩者都在 SharedPreferences；其餘資料放在 noBackupFilesDir。Android 11 或以下用這個檔案。 -->
+<full-backup-content>
+    <include domain="sharedpref" path="." />
+</full-backup-content>

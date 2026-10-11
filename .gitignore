@@ -1,0 +1,22 @@
+*.iml
+hs_err_pid*.log
+replay_pid*.log
+.gradle/
+.idea/
+.kotlin/
+.claude/
+CLAUDE.local.md
+local.properties
+keystore.properties
+signing/
+build/
+app/build/
+captures/
+artifacts/
+.externalNativeBuild/
+.cxx/
+
+# Cloudflare Worker
+node_modules/
+.wrangler/
+.dev.vars

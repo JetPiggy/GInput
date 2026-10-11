@@ -1,0 +1,18 @@
+# GInput 自行整理：不會出現在英文建議裏的粗口、色情字眼和侮辱字眼，不涉及第三方授權。
+# 建置時從英文詞庫刪去，所以打到一半時不會建議；照打的字母仍然是英文建議的第一項，打全了照樣可以寫入。
+# 不分大小寫；每行可以放多個項目，用空白分隔；# 之後是註解。
+# * 代表任何字母：*fuck* 刪去所有含 fuck 的詞，wank* 刪去所有以 wank 開頭的詞（swank 不受影響）。
+# 有正當意思、但常被當作粗口的詞（例如 ass、cock）也收，因為打全了一樣可以寫入。
+# 只在不會誤中正常詞時才用 *：例如 cum 不可以寫成 *cum*（document），coon 不可以寫成 *coon*（raccoon）。
+
+# 粗口
+*fuck* *shit* *cunt* *bitch* *asshole* *arsehole* *dickhead* cocksucker* wank* twat twats
+bastard bastards ass arse dick dicks cock cocks prick pricks pussy pussies bollocks
+
+# 色情字眼
+porn porno pornos *slut* *whore* *dildo* cum jizz* tits titty titties boobs boobies
+
+# 侮辱字眼
+*nigger* nigga niggas niggaz negro negroes *faggot* fag fags dyke dykes homo homos tranny trannies
+retard retards retarded chink chinks gook gooks jap japs spic spics kike kikes
+wetback wetbacks paki pakis coon coons chinaman chinamen

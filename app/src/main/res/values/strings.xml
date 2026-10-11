@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GInput</string>
+    <string name="ime_name">GInput</string>
+    <string name="subtype_zh_hk">Chinese (Hong Kong)</string>
+
+    <!-- 通用 -->
+    <string name="action_next">Next</string>
+    <string name="action_previous">Back</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_done">Done</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_back">Back</string>
+
+    <!-- 首次設定精靈 -->
+    <string name="setup_welcome">Welcome to GInput</string>
+    <string name="setup_step">Step %1$d of %2$d</string>
+
+    <string name="setup_enable_title">Enable GInput</string>
+    <string name="setup_enable_body">Turn on GInput in your phone’s keyboard settings.</string>
+    <string name="setup_enable_button">Open keyboard settings</string>
+    <string name="setup_enable_done">GInput is enabled.</string>
+
+    <string name="setup_default_title">Make GInput your keyboard</string>
+    <string name="setup_default_body">Choose GInput from the keyboard list.</string>
+    <string name="setup_default_button">Choose keyboard</string>
+    <string name="setup_default_done">GInput is your current keyboard.</string>
+
+    <string name="setup_scheme_title">How do you type Chinese?</string>
+    <string name="setup_scheme_body">You can turn on the others later in Settings and use them together.</string>
+
+    <string name="setup_stats_title">Usage statistics</string>
+    <string name="setup_stats_body">You can let GInput send anonymous counts of which features are used, to help us improve it. They never include anything you type. You can change this later in Settings.</string>
+    <string name="setup_stats_switch">Share usage statistics</string>
+
+    <string name="setup_try_title">Try typing</string>
+    <string name="setup_try_quick">Type hi, then pick 我 in the candidate bar. For English, just type and press space.</string>
+    <string name="setup_try_cangjie">Type hqi, then pick 我 in the candidate bar. For English, just type and press space.</string>
+    <string name="setup_try_jyutping">Type ngo, then pick 我 in the candidate bar; neihou gives 你好. For English, just type and press space.</string>
+    <string name="setup_try_hint">Type here to try GInput</string>
+
+    <!-- 設定頁 -->
+    <string name="settings_title">GInput settings</string>
+    <string name="try_keyboard_hint">Type here. The keyboard stays open while you change settings.</string>
+    <string name="try_keyboard_not_default">GInput isn’t your current keyboard, so another keyboard will open</string>
+    <string name="try_keyboard_clear">Clear the text</string>
+    <string name="status_not_enabled">GInput is not enabled.</string>
+    <string name="status_not_default">GInput is not your current keyboard.</string>
+
+    <string name="section_schemes">Chinese input</string>
+    <string name="scheme_quick">Quick</string>
+    <string name="scheme_quick_summary">First and last Cangjie codes, e.g. HI for 我</string>
+    <string name="scheme_cangjie">Cangjie</string>
+    <string name="scheme_cangjie_summary">Full Cangjie codes, e.g. HQI for 我</string>
+    <string name="scheme_jyutping">Jyutping</string>
+    <string name="scheme_jyutping_summary">Cantonese romanisation without tones, e.g. NGO for 我</string>
+    <string name="scheme_order_hint">When more than one is on, candidates from the first one come first. At least one must be on.</string>
+    <string name="scheme_move_up">Move %1$s up</string>
+    <string name="scheme_move_down">Move %1$s down</string>
+    <string name="cangjie_generation">Cangjie version</string>
+    <string name="loose_spelling">Loose Jyutping spelling</string>
+    <string name="loose_spelling_summary">Also accept lazy and Hong Kong spellings, e.g. lei for 你, o for 我, yau for 有, cheung for 張</string>
+    <string name="generation_both">3rd and 5th generation</string>
+    <string name="generation_third">3rd generation only</string>
+    <string name="generation_fifth">5th generation only</string>
+    <string name="shared_code_order">Order of shared codes</string>
+    <string name="order_frequency">Most common first</string>
+    <string name="order_windows">Windows order</string>
+    <string name="remember_candidates">Remember picks</string>
+    <string name="remember_candidates_summary">Characters you pick twice move to the front, highlighted in green. Most-common-first order only.</string>
+    <string name="clear_memory">Clear remembered characters</string>
+    <string name="clear_memory_summary">Puts every remembered character back in its usual place</string>
+    <string name="clear_memory_confirm_title">Clear all remembered characters?</string>
+    <string name="clear_memory_confirm">Clear</string>
+    <string name="clear_memory_done">Remembered characters cleared</string>
+
+    <string name="section_typing">Typing</string>
+    <string name="colloquial_priority">Colloquial Cantonese first</string>
+    <string name="colloquial_priority_summary">Puts characters such as 嘅 and 咗 first and suggests colloquial words</string>
+    <string name="space_mode">Space bar</string>
+    <string name="space_english">Writes the letters as English</string>
+    <string name="space_chinese">Picks the first Chinese candidate</string>
+    <string name="smart_space_removal">Smart space removal</string>
+    <string name="smart_space_removal_summary">Removes the space after an English word when Chinese or punctuation follows</string>
+    <string name="emoji_keywords">Emoji keywords</string>
+    <string name="emoji_keywords_summary">Suggests related emoji at the right of the candidate bar after Chinese words, e.g. 😊 after 開心</string>
+
+    <string name="section_clipboard">Clipboard and phrases</string>
+    <string name="clipboard_history">Clipboard history</string>
+    <string name="clipboard_history_summary">Keeps text you copy for 1 hour so you can use it again from the keyboard’s clipboard. It stays on your phone, and turning this off deletes it.</string>
+    <string name="saved_phrases">Saved phrases</string>
+    <string name="saved_phrases_summary">Addresses, replies and other text you can insert from the keyboard’s clipboard</string>
+
+    <!-- 常用短語頁 -->
+    <string name="phrases_hint">Up to %1$d. On the keyboard, tap Clipboard in the toolbar, then the Phrases tab.</string>
+    <string name="phrases_empty">No saved phrases yet. Tap Add, or long-press an item in the keyboard’s clipboard to save it.</string>
+    <string name="phrases_full">Phrase limit reached (%1$d). Delete some to add more.</string>
+    <string name="phrase_add">Add</string>
+    <string name="phrase_add_title">Add phrase</string>
+    <string name="phrase_edit_title">Edit phrase</string>
+    <string name="phrase_save">Save</string>
+    <string name="phrase_too_long">Too long (limit: %1$d)</string>
+    <string name="phrase_edit">Edit “%1$s”</string>
+    <string name="phrase_move_up">Move “%1$s” up</string>
+    <string name="phrase_move_down">Move “%1$s” down</string>
+
+    <string name="section_keyboard">Keyboard</string>
+    <string name="keyboard_theme">Theme</string>
+    <string name="keyboard_theme_summary">Light or dark follows your system setting</string>
+    <string name="theme_default">Default</string>
+    <string name="theme_milk_tea">Milk tea</string>
+    <string name="theme_tram">Tram</string>
+    <string name="theme_harbour">Harbour</string>
+    <string name="theme_sakura">Sakura</string>
+    <string name="theme_neon">Neon</string>
+    <string name="keyboard_height">Keyboard height</string>
+    <string name="height_compact">Short</string>
+    <string name="height_standard">Standard</string>
+    <string name="height_tall">Tall</string>
+    <string name="key_labels">Key labels</string>
+    <string name="labels_letters">Large letters, small Cangjie radicals</string>
+    <string name="labels_radicals">Large Cangjie radicals, small letters</string>
+    <string name="labels_letters_only">Letters only</string>
+    <string name="number_row">Number row</string>
+    <string name="number_row_summary">Always show a row of numbers above the letters</string>
+    <string name="key_preview">Key preview</string>
+    <string name="key_preview_summary">Shows a larger copy of the key while you press it</string>
+    <string name="key_sound">Key sound</string>
+    <string name="key_sound_summary">Plays a sound on each key press. Vibration follows your system setting.</string>
+
+    <string name="section_privacy">Privacy</string>
+    <string name="crash_reports">Crash reports</string>
+    <string name="crash_reports_summary">Sends technical details when GInput crashes so we can fix it. Never includes anything you type.</string>
+    <string name="usage_stats">Usage statistics</string>
+    <string name="usage_stats_summary">Sends anonymous counts of which features are used. Never includes anything you type.</string>
+
+    <string name="section_about">About</string>
+    <string name="version">Version</string>
+    <string name="contact">Contact us</string>
+    <string name="no_email_app">No email app found</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="licenses">Open source licences</string>
+    <string name="licenses_summary">Libraries and data GInput uses</string>
+
+    <!-- 更新提示（不是從 Google Play 安裝的版本） -->
+    <string name="update_available">Version %1$s is available</string>
+    <string name="update_open">Go to download page</string>
+
+    <!-- 開源授權頁 -->
+    <string name="license_public_domain">Public domain</string>
+    <string name="license_notice">Full notice</string>
+    <string name="license_website">Website</string>
+    <string name="license_usage_wordshk">Chinese character frequencies and words for suggestions</string>
+    <string name="license_usage_libcangjie">Cangjie and Quick code tables</string>
+    <string name="license_usage_rime_cantonese">Jyutping readings of characters and words</string>
+    <string name="license_usage_12dicts">English words</string>
+    <string name="license_usage_wordfreq">English word frequencies. GInput’s English word list is adapted from wordfreq and is also licensed under CC BY-SA 4.0.</string>
+    <string name="license_usage_unicode">Emoji panel</string>
+    <string name="license_usage_cldr">Emoji keywords</string>
+    <string name="license_usage_material_symbols">Icons on the keys, candidate bar, toolbar and panels</string>
+    <string name="license_usage_androidx">User interface and system features, including Guava ListenableFuture</string>
+    <string name="license_usage_sentry">Crash reports</string>
+    <string name="license_usage_epitaph">Used by Sentry to read native crash records (turned off in GInput)</string>
+    <string name="license_usage_kotlin">Programming language and background work, including JetBrains Annotations</string>
+
+    <!-- 123 頁在常用和更多兩組符號之間切換的按鍵 -->
+    <string name="key_more">#+=</string>
+    <string name="key_common">123</string>
+
+    <!-- 候選列空閒時的工具列 -->
+    <string name="toolbar_clipboard">Clipboard</string>
+    <string name="toolbar_translate">Translate</string>
+    <string name="toolbar_rewrite">Rewrite</string>
+    <string name="toolbar_settings">Settings</string>
+    <string name="toolbar_voice_input">Voice input</string>
+
+    <!-- 按了語音輸入，但手機未啟用語音輸入法 -->
+    <string name="voice_input_not_enabled">No voice typing is turned on</string>
+    <string name="voice_input_settings">Settings</string>
+
+    <!-- 長按記憶字 -->
+    <string name="forget_prompt">Stop putting “%1$s” first?</string>
+    <string name="forget_button">Forget</string>
+
+    <!-- 剪貼簿面板 -->
+    <string name="clipboard_copy">Copy</string>
+    <string name="clipboard_paste">Paste</string>
+    <string name="clipboard_select_all">Select all</string>
+    <string name="clipboard_tab_history">Clipboard</string>
+    <string name="clipboard_tab_phrases">Phrases</string>
+    <string name="clipboard_manage">Manage</string>
+    <string name="clipboard_history_empty">Text you copy stays here for 1 hour</string>
+    <string name="clipboard_history_off">Clipboard history is off. You can turn it on in GInput settings.</string>
+    <string name="clipboard_phrases_empty">Long-press a clipboard item to save it as a phrase, or tap Manage to add one</string>
+    <string name="clipboard_save_phrase">Save as phrase</string>
+    <string name="clipboard_delete">Delete</string>
+    <string name="clipboard_item_actions">Save as phrase or delete</string>
+    <string name="phrase_delete_prompt">Delete this phrase?</string>
+    <string name="phrase_saved">Saved as a phrase</string>
+
+    <!-- 翻譯面板和改寫面板 -->
+    <string name="translate_english">English</string>
+    <string name="translate_written">Written Chinese</string>
+    <string name="translate_colloquial">Cantonese</string>
+    <string name="rewrite_written">Written Chinese</string>
+    <string name="rewrite_colloquial">Cantonese</string>
+    <string name="rewrite_polite">Polite</string>
+    <string name="rewrite_casual">Casual</string>
+    <string name="rewrite_fix">Fix typos</string>
+    <string name="cloud_notice">When you tap an option, your text (the selected part, or the whole text box) goes through GInput’s server to Cloudflare, which processes it with Google’s Gemma model. Google doesn’t get your text, GInput doesn’t keep it, and Cloudflare doesn’t use it to train models. Daily limit per phone: %1$d.</string>
+    <string name="cloud_accept">Agree</string>
+    <string name="cloud_remaining">Left today: %1$d</string>
+    <string name="cloud_used_up">You’ve reached today’s limit (%1$d). Try again tomorrow.</string>
+    <string name="cloud_apply">Replace</string>
+    <string name="cloud_translating">Translating…</string>
+    <string name="cloud_rewriting">Rewriting…</string>
+    <string name="cloud_no_text">There’s no text. Type something, or select the text you want.</string>
+    <string name="cloud_too_long">The text is too long (limit: %1$,d). Select part of it.</string>
+    <string name="cloud_unreadable">Can’t read the selected text.</string>
+    <string name="cloud_offline">Can’t connect. Check your network and try again.</string>
+    <string name="cloud_busy">Too many people are using it right now. Try again later.</string>
+    <string name="cloud_failed">Something went wrong. Try again.</string>
+    <string name="cloud_changed">The text has changed. Try again.</string>
+
+    <!-- TalkBack 讀出的按鍵標籤 -->
+    <string name="key_letter_radical">%1$s, %2$s</string>
+    <string name="key_shift">Shift</string>
+    <string name="state_uppercase">Uppercase</string>
+    <string name="state_caps_lock">Caps lock</string>
+    <string name="state_selected">Selected</string>
+    <string name="state_unavailable">Unavailable</string>
+    <string name="key_delete">Delete</string>
+    <string name="key_space">Space</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_emoji">Emoji</string>
+    <string name="key_switch_keyboard">Switch keyboard</string>
+    <string name="key_symbols">Numbers and symbols</string>
+    <string name="key_letters">Letters</string>
+    <string name="key_back_to_letters">Back to letters</string>
+    <string name="key_more_symbols">More symbols</string>
+    <string name="key_common_symbols">Common symbols</string>
+    <string name="key_comma">Comma</string>
+    <string name="key_period">Period</string>
+    <string name="key_more_punctuation">More punctuation</string>
+    <string name="bar_close">Close</string>
+    <string name="bar_show_all">Show all candidates</string>
+    <string name="bar_hide_all">Hide all candidates</string>
+    <string name="candidate_remembered">Remembered</string>
+    <string name="emoji_skin_tones">Skin tones</string>
+    <string name="emoji_recent">Recently used</string>
+    <string name="emoji_smileys">Smileys</string>
+    <string name="emoji_people">People</string>
+    <string name="emoji_nature">Animals and nature</string>
+    <string name="emoji_food">Food and drink</string>
+    <string name="emoji_travel">Travel and places</string>
+    <string name="emoji_activities">Activities</string>
+    <string name="emoji_objects">Objects</string>
+    <string name="emoji_symbols">Symbols</string>
+    <string name="emoji_flags">Flags</string>
+</resources>

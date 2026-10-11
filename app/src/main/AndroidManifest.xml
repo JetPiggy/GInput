@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 當機回報、使用統計、更新提示，以及雲端翻譯和改寫（ADR 0005）。除了使用者按翻譯或改寫時的原文，輸入內容不會送出。 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 找出手機已啟用的語音輸入法（工具列的語音輸入）。Android 11 起要宣告，才看得到其他輸入法。 -->
+    <queries>
+        <intent>
+            <action android:name="android.view.InputMethod" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".GInputApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.GInput"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".settings.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".ime.GInputImeService"
+            android:exported="true"
+            android:label="@string/ime_name"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
+        <!-- Sentry 由 GInputApplication 按設定啟動（CrashReports），不用它自動啟動和量度啟動時間的 provider。 -->
+        <provider
+            android:name="io.sentry.android.core.SentryInitProvider"
+            android:authorities="${applicationId}.SentryInitProvider"
+            tools:node="remove" />
+        <provider
+            android:name="io.sentry.android.core.SentryPerformanceProvider"
+            android:authorities="${applicationId}.SentryPerformanceProvider"
+            tools:node="remove" />
+    </application>
+
+</manifest>

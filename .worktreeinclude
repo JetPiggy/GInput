@@ -1,0 +1,2 @@
+# Claude Code 建立 worktree 時，把這些 git 不追蹤的檔案複製過去。
+CLAUDE.local.md

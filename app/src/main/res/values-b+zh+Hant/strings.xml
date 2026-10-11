@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GInput</string>
+    <string name="ime_name">GInput</string>
+    <string name="subtype_zh_hk">中文（香港）</string>
+
+    <!-- 通用 -->
+    <string name="action_next">下一步</string>
+    <string name="action_previous">上一步</string>
+    <string name="action_skip">略過</string>
+    <string name="action_done">完成</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_back">返回</string>
+
+    <!-- 首次設定精靈 -->
+    <string name="setup_welcome">歡迎使用 GInput</string>
+    <string name="setup_step">第 %1$d 步，共 %2$d 步</string>
+
+    <string name="setup_enable_title">啟用 GInput</string>
+    <string name="setup_enable_body">到手機的鍵盤設定開啟 GInput。</string>
+    <string name="setup_enable_button">開啟鍵盤設定</string>
+    <string name="setup_enable_done">已啟用 GInput。</string>
+
+    <string name="setup_default_title">設為預設輸入法</string>
+    <string name="setup_default_body">在輸入法清單選擇 GInput。</string>
+    <string name="setup_default_button">選擇輸入法</string>
+    <string name="setup_default_done">GInput 已是目前的輸入法。</string>
+
+    <string name="setup_scheme_title">選擇輸入方案</string>
+    <string name="setup_scheme_body">你用哪一種打中文？之後可以在設定加開其他輸入方案，一齊用。</string>
+
+    <string name="setup_stats_title">使用統計</string>
+    <string name="setup_stats_body">你可以讓 GInput 傳送匿名的功能使用次數，幫助我們改善 GInput。使用統計不包括你打的任何內容。之後可以在設定更改。</string>
+    <string name="setup_stats_switch">參加使用統計</string>
+
+    <string name="setup_try_title">試打</string>
+    <string name="setup_try_quick">試打 hi，再在候選列選「我」。英文照打，按空白鍵寫入。</string>
+    <string name="setup_try_cangjie">試打 hqi，再在候選列選「我」。英文照打，按空白鍵寫入。</string>
+    <string name="setup_try_jyutping">試打 ngo，再在候選列選「我」；打 neihou 就出「你好」。英文照打，按空白鍵寫入。</string>
+    <string name="setup_try_hint">在這裏試打</string>
+
+    <!-- 設定頁 -->
+    <string name="settings_title">GInput 設定</string>
+    <string name="try_keyboard_hint">在這裏試打，改設定時鍵盤會留着</string>
+    <string name="try_keyboard_not_default">GInput 不是目前的輸入法，試打會用另一個鍵盤</string>
+    <string name="try_keyboard_clear">清除試打的文字</string>
+    <string name="status_not_enabled">GInput 未啟用。</string>
+    <string name="status_not_default">GInput 不是目前的輸入法。</string>
+
+    <string name="section_schemes">輸入方案</string>
+    <string name="scheme_quick">速成</string>
+    <string name="scheme_quick_summary">倉頡碼的首碼加尾碼，例如「我」打 HI</string>
+    <string name="scheme_cangjie">倉頡</string>
+    <string name="scheme_cangjie_summary">完整的倉頡碼，例如「我」打 HQI</string>
+    <string name="scheme_jyutping">粵拼</string>
+    <string name="scheme_jyutping_summary">粵語拼音，不用打聲調，例如「我」打 NGO</string>
+    <string name="scheme_order_hint">啟用多於一種時，排前的輸入方案的候選字排在前面。至少要啟用一種。</string>
+    <string name="scheme_move_up">把%1$s上移</string>
+    <string name="scheme_move_down">把%1$s下移</string>
+    <string name="cangjie_generation">倉頡版本</string>
+    <string name="loose_spelling">寬鬆拼法</string>
+    <string name="loose_spelling_summary">粵拼也接受懶音和港式拼法，例如 lei（你）、o（我）、yau（有）、cheung（張）</string>
+    <string name="generation_both">三代和五代</string>
+    <string name="generation_third">只用三代</string>
+    <string name="generation_fifth">只用五代</string>
+    <string name="shared_code_order">重碼次序</string>
+    <string name="order_frequency">常用度次序</string>
+    <string name="order_windows">Windows 次序</string>
+    <string name="remember_candidates">記憶字</string>
+    <string name="remember_candidates_summary">選過兩次的字排在最前，以淺綠底標示；只在常用度次序生效</string>
+    <string name="clear_memory">清除全部記憶</string>
+    <string name="clear_memory_summary">全部記憶字回到原來的位置</string>
+    <string name="clear_memory_confirm_title">清除全部記憶？</string>
+    <string name="clear_memory_confirm">清除</string>
+    <string name="clear_memory_done">已清除全部記憶</string>
+
+    <string name="section_typing">打字</string>
+    <string name="colloquial_priority">口語優先</string>
+    <string name="colloquial_priority_summary">重碼時粵語口語字（例如嘅、咗）排前，聯想加入口語詞</string>
+    <string name="space_mode">空白鍵模式</string>
+    <string name="space_english">寫英文：把字母當英文寫入</string>
+    <string name="space_chinese">選中文：有候選字時寫入首選字</string>
+    <string name="smart_space_removal">智能刪空格</string>
+    <string name="smart_space_removal_summary">英文之後接中文或標點時，自動刪掉英文後面的空格</string>
+    <string name="emoji_keywords">Emoji 關鍵字</string>
+    <string name="emoji_keywords_summary">寫入中文後，在候選列最右邊提示相關的 Emoji，例如「開心」後出 😊</string>
+
+    <string name="section_clipboard">剪貼簿和常用短語</string>
+    <string name="clipboard_history">剪貼簿歷史</string>
+    <string name="clipboard_history_summary">記下複製的文字 1 小時，可以在鍵盤的剪貼簿再用；只存在手機上，關了會刪除已記下的</string>
+    <string name="saved_phrases">常用短語</string>
+    <string name="saved_phrases_summary">地址、常用回覆等，在鍵盤的剪貼簿一按就寫入</string>
+
+    <!-- 常用短語頁 -->
+    <string name="phrases_hint">最多 %1$d 個。在鍵盤按工具列的「剪貼簿」，再選「常用短語」分頁就可以用。</string>
+    <string name="phrases_empty">未有常用短語。按「加入」，或在鍵盤的剪貼簿長按一項存起。</string>
+    <string name="phrases_full">已有 %1$d 個常用短語，要先刪除一些才可以再加入。</string>
+    <string name="phrase_add">加入</string>
+    <string name="phrase_add_title">加入常用短語</string>
+    <string name="phrase_edit_title">修改常用短語</string>
+    <string name="phrase_save">儲存</string>
+    <string name="phrase_too_long">最多 %1$d 字</string>
+    <string name="phrase_edit">修改「%1$s」</string>
+    <string name="phrase_move_up">把「%1$s」上移</string>
+    <string name="phrase_move_down">把「%1$s」下移</string>
+
+    <string name="section_keyboard">鍵盤</string>
+    <string name="keyboard_theme">主題</string>
+    <string name="keyboard_theme_summary">淺色或深色跟隨系統的設定</string>
+    <string name="theme_default">預設</string>
+    <string name="theme_milk_tea">奶茶</string>
+    <string name="theme_tram">叮叮</string>
+    <string name="theme_harbour">維港</string>
+    <string name="theme_sakura">櫻花</string>
+    <string name="theme_neon">霓虹</string>
+    <string name="keyboard_height">鍵盤高度</string>
+    <string name="height_compact">矮</string>
+    <string name="height_standard">標準</string>
+    <string name="height_tall">高</string>
+    <string name="key_labels">按鍵標示</string>
+    <string name="labels_letters">英文字母大、倉頡字根小</string>
+    <string name="labels_radicals">倉頡字根大、英文字母小</string>
+    <string name="labels_letters_only">只顯示英文字母</string>
+    <string name="number_row">數字行</string>
+    <string name="number_row_summary">字母上面常駐一行數字</string>
+    <string name="key_preview">按鍵放大預覽</string>
+    <string name="key_preview_summary">按住按鍵時，在上方放大顯示</string>
+    <string name="key_sound">按鍵音</string>
+    <string name="key_sound_summary">按鍵時發聲；震動跟隨系統的設定</string>
+
+    <string name="section_privacy">私隱</string>
+    <string name="crash_reports">當機回報</string>
+    <string name="crash_reports_summary">GInput 當機時傳送技術資料，幫助我們修正問題；不包括你打的任何內容</string>
+    <string name="usage_stats">使用統計</string>
+    <string name="usage_stats_summary">傳送匿名的功能使用次數；不包括你打的任何內容</string>
+
+    <string name="section_about">關於</string>
+    <string name="version">版本</string>
+    <string name="contact">聯絡我們</string>
+    <string name="no_email_app">找不到可以寄電郵的 App</string>
+    <string name="privacy_policy">私隱政策</string>
+    <string name="licenses">開源授權</string>
+    <string name="licenses_summary">GInput 用到的程式庫和資料</string>
+
+    <!-- 更新提示（不是從 Google Play 安裝的版本） -->
+    <string name="update_available">有新版本：%1$s</string>
+    <string name="update_open">前往下載頁</string>
+
+    <!-- 開源授權頁 -->
+    <string name="license_public_domain">公有領域</string>
+    <string name="license_notice">授權全文</string>
+    <string name="license_website">網站</string>
+    <string name="license_usage_wordshk">中文字頻和聯想用的詞</string>
+    <string name="license_usage_libcangjie">倉頡和速成的碼表</string>
+    <string name="license_usage_rime_cantonese">粵拼的字音和詞音</string>
+    <string name="license_usage_12dicts">英文詞</string>
+    <string name="license_usage_wordfreq">英文詞頻。GInput 的英文詞庫由 wordfreq 改編，同樣以 CC BY-SA 4.0 授權。</string>
+    <string name="license_usage_unicode">Emoji 面板</string>
+    <string name="license_usage_cldr">Emoji 關鍵字</string>
+    <string name="license_usage_material_symbols">鍵盤按鍵、候選列、工具列和面板的圖示</string>
+    <string name="license_usage_androidx">介面和系統功能，連同它們用到的 Guava ListenableFuture</string>
+    <string name="license_usage_sentry">當機回報</string>
+    <string name="license_usage_epitaph">Sentry 用來讀取原生當機記錄的程式庫（GInput 沒有開啟這個功能）</string>
+    <string name="license_usage_kotlin">程式語言和背景工作，連同 JetBrains Annotations</string>
+
+    <!-- 123 頁在常用和更多兩組符號之間切換的按鍵 -->
+    <string name="key_more">更多</string>
+    <string name="key_common">常用</string>
+
+    <!-- 候選列空閒時的工具列 -->
+    <string name="toolbar_clipboard">剪貼簿</string>
+    <string name="toolbar_translate">翻譯</string>
+    <string name="toolbar_rewrite">改寫</string>
+    <string name="toolbar_settings">設定</string>
+    <string name="toolbar_voice_input">語音輸入</string>
+
+    <!-- 按了語音輸入，但手機未啟用語音輸入法 -->
+    <string name="voice_input_not_enabled">未啟用語音輸入法</string>
+    <string name="voice_input_settings">前往設定</string>
+
+    <!-- 長按記憶字 -->
+    <string name="forget_prompt">不再把「%1$s」排在前面？</string>
+    <string name="forget_button">忘記</string>
+
+    <!-- 剪貼簿面板 -->
+    <string name="clipboard_copy">複製</string>
+    <string name="clipboard_paste">貼上</string>
+    <string name="clipboard_select_all">全選</string>
+    <string name="clipboard_tab_history">剪貼簿</string>
+    <string name="clipboard_tab_phrases">常用短語</string>
+    <string name="clipboard_manage">管理</string>
+    <string name="clipboard_history_empty">複製的文字會在這裏保留 1 小時</string>
+    <string name="clipboard_history_off">剪貼簿歷史已關閉，可以在 GInput 設定開啟</string>
+    <string name="clipboard_phrases_empty">在剪貼簿長按一項就可以存成常用短語，或按「管理」加入</string>
+    <string name="clipboard_save_phrase">存成常用短語</string>
+    <string name="clipboard_delete">刪除</string>
+    <string name="clipboard_item_actions">存成常用短語或刪除</string>
+    <string name="phrase_delete_prompt">刪除這個常用短語？</string>
+    <string name="phrase_saved">已存成常用短語</string>
+
+    <!-- 翻譯面板和改寫面板 -->
+    <string name="translate_english">英文</string>
+    <string name="translate_written">書面語</string>
+    <string name="translate_colloquial">粵語口語</string>
+    <string name="rewrite_written">書面語</string>
+    <string name="rewrite_colloquial">粵語口語</string>
+    <string name="rewrite_polite">客氣</string>
+    <string name="rewrite_casual">輕鬆</string>
+    <string name="rewrite_fix">改錯字</string>
+    <string name="cloud_notice">按選項時，文字（有選取就是選取的部分，否則是整個文字框）會經 GInput 的伺服器交 Cloudflare，用 Google 的 Gemma 模型處理。文字不會交給 Google，GInput 不會記錄，Cloudflare 也不會用來訓練模型。每部手機每日可以用 %1$d 次。</string>
+    <string name="cloud_accept">同意</string>
+    <string name="cloud_remaining">今日尚餘 %1$d 次</string>
+    <string name="cloud_used_up">今日 %1$d 次已經用完，明日再用。</string>
+    <string name="cloud_apply">取代</string>
+    <string name="cloud_translating">翻譯中…</string>
+    <string name="cloud_rewriting">改寫中…</string>
+    <string name="cloud_no_text">文字框沒有文字。先打字，或者選取要處理的文字。</string>
+    <string name="cloud_too_long">文字太長，最多 %1$,d 字。請選取其中一部分。</string>
+    <string name="cloud_unreadable">讀不到選取的文字。</string>
+    <string name="cloud_offline">未能連線。請檢查網絡，再試一次。</string>
+    <string name="cloud_busy">現在太多人使用，請稍後再試。</string>
+    <string name="cloud_failed">未能完成，請再試一次。</string>
+    <string name="cloud_changed">文字已經改動，請再試一次。</string>
+
+    <!-- TalkBack 讀出的按鍵標籤 -->
+    <string name="key_letter_radical">%1$s，%2$s</string>
+    <string name="key_shift">Shift</string>
+    <string name="state_uppercase">大寫</string>
+    <string name="state_caps_lock">大寫鎖定</string>
+    <string name="state_selected">已選取</string>
+    <string name="state_unavailable">不可用</string>
+    <string name="key_delete">刪除</string>
+    <string name="key_space">空白</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_emoji">Emoji</string>
+    <string name="key_switch_keyboard">切換輸入法</string>
+    <string name="key_symbols">數字和符號</string>
+    <string name="key_letters">字母</string>
+    <string name="key_back_to_letters">返回字母</string>
+    <string name="key_more_symbols">更多符號</string>
+    <string name="key_common_symbols">常用符號</string>
+    <string name="key_comma">逗號</string>
+    <string name="key_period">句號</string>
+    <string name="key_more_punctuation">更多標點</string>
+    <string name="bar_close">關閉</string>
+    <string name="bar_show_all">顯示全部候選字</string>
+    <string name="bar_hide_all">收起候選字格</string>
+    <string name="candidate_remembered">記憶字</string>
+    <string name="emoji_skin_tones">膚色</string>
+    <string name="emoji_recent">最近使用</string>
+    <string name="emoji_smileys">表情</string>
+    <string name="emoji_people">人物</string>
+    <string name="emoji_nature">動物和大自然</string>
+    <string name="emoji_food">食物和飲品</string>
+    <string name="emoji_travel">旅遊和地方</string>
+    <string name="emoji_activities">活動</string>
+    <string name="emoji_objects">物件</string>
+    <string name="emoji_symbols">符號</string>
+    <string name="emoji_flags">旗幟</string>
+</resources>

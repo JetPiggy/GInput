@@ -1,0 +1,39 @@
+GInput
+Copyright 2026 JetPiggy
+
+除以下各項外，本專案以 Apache License 2.0 授權（見 LICENSE）。
+Except as noted below, this project is licensed under the Apache License 2.0
+(see LICENSE).
+
+1. 品牌圖像 / Brand assets
+
+   GInput 和 JetPiggy 的名稱、App 圖示和 JetPiggy 飛豬的圖像保留所有權利，
+   不在 Apache License 2.0 的範圍內，包括：
+   The GInput and JetPiggy names, the app icon and the JetPiggy flying pig
+   artwork are all rights reserved and not covered by the Apache License 2.0.
+   This includes:
+
+   - app/src/main/res/mipmap-*/ic_launcher_foreground.png
+   - app/src/main/res/mipmap-*/ic_launcher_monochrome.png
+   - tools/icon/art/
+   - docs/play/graphics/
+
+   發佈修改版時，請改用自己的名稱和圖示。
+   If you distribute a modified version, use your own name and icon.
+
+2. 英文詞庫 / English word list
+
+   app/src/main/assets/dict/english-1.db 以 CC BY-SA 4.0 授權，改編自
+   wordfreq v3.2（Robyn Speer，CC BY-SA 4.0），詞來自 12dicts（公有領域）。
+   出處和改動寫在檔案的 meta 表。
+   app/src/main/assets/dict/english-1.db is licensed under CC BY-SA 4.0. It is
+   adapted from wordfreq v3.2 by Robyn Speer (CC BY-SA 4.0), with words from
+   12dicts (public domain). Its sources and changes are recorded in the file's
+   meta table.
+
+3. 其他第三方程式庫和資料 / Other third-party libraries and data
+
+   各自保留原本的授權，見 app/src/main/assets/licenses/ 和 App 內的
+   「開源授權」頁。
+   They keep their own licenses. See app/src/main/assets/licenses/ and the
+   open source licences page in the app.

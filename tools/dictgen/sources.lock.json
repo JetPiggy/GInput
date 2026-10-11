@@ -1,0 +1,62 @@
+{
+  "libcangjie/table.txt": {
+    "url": "https://sources.debian.org/data/main/libc/libcangjie/1.4.0.really.1.4.0-5/data/table.txt",
+    "sha256": "a8921c7ece9e1445b4f19aa514b0b0c7545a8d53201d17ad4ab6e1e416f133f7"
+  },
+  "libcangjie/README.table.md": {
+    "url": "https://sources.debian.org/data/main/libc/libcangjie/1.4.0.really.1.4.0-5/data/README.table.md",
+    "sha256": "5962758f991e9119dddf78391202443731264332ea6b1f013791ba599fcb1b5d"
+  },
+  "wordshk/charcount.csv": {
+    "url": "https://words.hk/faiman/analysis/charcount.csv",
+    "sha256": "0497442be943c90c09ded51701cfd855be7d18133c9994b9cc9c13de8e5b99a7"
+  },
+  "wordshk/existingwordcount.csv": {
+    "url": "https://words.hk/faiman/analysis/existingwordcount.csv",
+    "sha256": "33b08d2e4cab4bdf9b481c956da68be09784c2638f999da7f88fb70cf9fc4960"
+  },
+  "12dicts/12dicts-6.0.2.zip": {
+    "url": "http://downloads.sourceforge.net/wordlist/12dicts-6.0.2.zip",
+    "sha256": "64ac1d35acb66b550c7ebc56e080b62e0bad8f5984d72059dc2e05ac48780e52"
+  },
+  "unicode/emoji-test.txt": {
+    "url": "https://www.unicode.org/Public/emoji/latest/emoji-test.txt",
+    "sha256": "8f3735cda1f92a779d78af67cf86066bb1f07143dc22f2ac29394d9bc57ab21a"
+  },
+  "unicode/license.txt": {
+    "url": "https://www.unicode.org/license.txt",
+    "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
+  },
+  "cldr/zh_Hant.xml": {
+    "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-48-2/common/annotations/zh_Hant.xml",
+    "sha256": "1aa9491be56437a69b1b9833dc84ec65a38fcce093810bf60ed64f179e5dfcd9"
+  },
+  "cldr/zh_Hant_HK.xml": {
+    "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-48-2/common/annotations/zh_Hant_HK.xml",
+    "sha256": "114c6ded42a386913117885b895624fa17fb469a25bbfbfa5b92916cc71bae80"
+  },
+  "wordfreq/large_en.msgpack.gz": {
+    "url": "https://raw.githubusercontent.com/rspeer/wordfreq/v3.2/wordfreq/data/large_en.msgpack.gz",
+    "sha256": "dffae8066b78dce0a6667cf5f58e567054f902674667090a7ac8a8a44628b05c"
+  },
+  "wordfreq/NOTICE.md": {
+    "url": "https://raw.githubusercontent.com/rspeer/wordfreq/v3.2/NOTICE.md",
+    "sha256": "d9b104dafe63886af55e7cea7484824e32e12d4e1f57f319923dd643b36d6b15"
+  },
+  "wordfreq/README.md": {
+    "url": "https://raw.githubusercontent.com/rspeer/wordfreq/v3.2/README.md",
+    "sha256": "0f1db058e1df2e6bda2db5d0ea851a7111d2390ec16a9939d971ef53ea24f684"
+  },
+  "rime-cantonese/jyut6ping3.chars.dict.yaml": {
+    "url": "https://raw.githubusercontent.com/rime/rime-cantonese/259f0e48bba840c3a2e0d117539e96937f3d89bc/jyut6ping3.chars.dict.yaml",
+    "sha256": "9b053a594c80eae76545bcdd83239884a49b1ba48b89ca0ab9e8daac79f33013"
+  },
+  "rime-cantonese/jyut6ping3.words.dict.yaml": {
+    "url": "https://raw.githubusercontent.com/rime/rime-cantonese/259f0e48bba840c3a2e0d117539e96937f3d89bc/jyut6ping3.words.dict.yaml",
+    "sha256": "54d174ad2bb997e4a678b7b076b84e4dc5914481b32467cdea3b43e88b7d5474"
+  },
+  "rime-cantonese/LICENSE-CC-BY": {
+    "url": "https://raw.githubusercontent.com/rime/rime-cantonese/259f0e48bba840c3a2e0d117539e96937f3d89bc/LICENSE-CC-BY",
+    "sha256": "97d24386ff776d7160b87031b259a942bd03c9939796cab6724ad5d17d2cf785"
+  }
+}

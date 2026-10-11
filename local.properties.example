@@ -1,0 +1,9 @@
+# 把需要的設定加到 local.properties（不進版控；Android Studio 寫的 sdk.dir 要保留）。
+
+# Sentry 專案（歐盟區）的 DSN。留空就不啟動當機回報。
+SENTRY_DSN=
+
+# 以下有預設值，只在要指向測試伺服器時才設定。
+# USAGE_STATS_URL=https://ginput-stats.jetpiggy.com/v1/daily
+# CLOUD_TEXT_URL=https://ginput-ai.jetpiggy.com/v1/text
+# SITE_URL=https://ginput.jetpiggy.com/

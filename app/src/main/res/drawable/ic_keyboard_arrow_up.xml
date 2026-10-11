@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material Symbols Rounded 的 keyboard_arrow_up 圖示，Apache 2.0 授權，聲明見 assets/licenses/apache-2.0.txt。候選列收起候選字格的按鈕用。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M480,432L324,588Q313,599 296,599Q279,599 268,588Q257,577 257,560Q257,543 268,532L452,348Q464,336 480,336Q496,336 508,348L692,532Q703,543 703,560Q703,577 692,588Q681,599 664,599Q647,599 636,588L480,432Z" />
+</vector>

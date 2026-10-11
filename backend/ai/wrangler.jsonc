@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ginput-ai",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-25",
+  // 只用 jetpiggy.com 的子網域；不開 workers.dev 和預覽網址。
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "ginput-ai.jetpiggy.com", "custom_domain": true }],
+  // 不記錄請求日誌（ADR 0005）。
+  "observability": { "enabled": false },
+  // 直接呼叫 Workers AI，不經 AI Gateway，所以 Cloudflare 不會記錄提示和結果。
+  "ai": { "binding": "AI" },
+  // 每個 IP 每分鐘最多 30 次。namespace_id 是這個 Cloudflare 帳戶裏自訂的編號，帳戶內不可重複。
+  "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ginput-ai",
+      "database_id": "2cf19b1a-ded7-4c99-b38b-1b2544da2a2a",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    // 全部請求每日（UTC）合共可以用的 neurons。10,000 是 Workers 免費方案的每日額度；轉付費方案後按預算調高。
+    "DAILY_NEURONS": "10000"
+  }
+}

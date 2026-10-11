@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // 只用來在本機經 getPlatformProxy 呼叫 Workers AI，不會部署。
+  "name": "ginput-ai-eval",
+  "compatibility_date": "2026-09-25",
+  "workers_dev": false,
+  "preview_urls": false,
+  "ai": { "binding": "AI", "remote": true }
+}

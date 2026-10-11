@@ -1,0 +1,55 @@
+package com.jetpiggy.ginput.engine
+
+/** 字庫：碼表、字頻和詞語。CandidateEngine 只透過這個介面讀資料。 */
+interface Dictionary {
+    /** 某個輸入方案裏碼完全相同的字；同一個字的三代和五代各佔一項。 */
+    fun characters(scheme: Scheme, code: String): List<CharacterEntry>
+
+    /** 以 head 這個字開頭的詞。 */
+    fun wordsAfter(head: String): List<WordEntry>
+
+    /**
+     * 查找鍵以 prefix 開頭的英文詞，最常用的先出，一樣常用的較短先出；最多 limit 個。
+     * 查找鍵是小寫、去掉撇號的詞（don't 的查找鍵是 dont）。
+     */
+    fun englishWords(prefix: String, limit: Int): List<String>
+
+    /** 字庫裏全部粵拼音節（不含聲調），例如 nei、hou。 */
+    fun jyutpingSyllables(): Set<String>
+
+    /** 粵拼完全是 syllables 的字和詞；syllables 不含聲調，用空格分隔，例如 "nei hou"。 */
+    fun jyutping(syllables: String): List<JyutpingEntry>
+
+    /**
+     * 粵拼以 syllables 這幾個完整音節開頭的字和詞，包括完全相同的。
+     * 例如 "nei" 會找到「你」和「你好」（nei hou），但不會找到 neoi 開頭的。
+     */
+    fun jyutpingStartingWith(syllables: String): List<JyutpingEntry>
+}
+
+data class CharacterEntry(
+    val character: String,
+    val generation: CangjieGeneration,
+    /** 在 words.hk 語料裏出現的次數。 */
+    val frequency: Int,
+    /** Windows 次序的名次，由 1 開始；0 表示沒有名次（不在 Big5 裏）。 */
+    val windowsRank: Int,
+    val colloquial: Boolean,
+)
+
+data class WordEntry(
+    /** 詞去掉開頭那個字之後的部分。 */
+    val rest: String,
+    val frequency: Int,
+    val colloquial: Boolean,
+)
+
+data class JyutpingEntry(
+    /** 字或詞。 */
+    val text: String,
+    /** 不含聲調、用空格分隔的音節，每個字一個，例如 "nei hou"。 */
+    val syllables: String,
+    /** 在 words.hk 語料裏出現的次數；一個字有幾個讀音的話，次要讀音按比例打折。 */
+    val frequency: Int,
+    val colloquial: Boolean,
+)

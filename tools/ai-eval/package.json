@@ -1,0 +1,13 @@
+{
+  "name": "ginput-ai-eval",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "node run.mjs",
+    "report": "node report.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.141.0"
+  }
+}

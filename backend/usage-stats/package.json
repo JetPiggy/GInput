@@ -1,0 +1,19 @@
+{
+  "name": "ginput-usage-stats",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node --test",
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply ginput-usage-stats --local",
+    "db:remote": "wrangler d1 migrations apply ginput-usage-stats --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260925.2",
+    "typescript": "^5.9.2",
+    "wrangler": "4.141.0"
+  }
+}
