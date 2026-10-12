@@ -37,6 +37,23 @@ class SqlDictionaryTest {
     private fun texts(code: String, settings: EngineSettings) = engine.candidates(code, settings).map { it.text }
 
     @Test
+    fun continuousTypingReadsWholeTablesAndFindsTheSentence() {
+        val dictionary = SqlDictionary(JdbcSqlRunner(connection), JdbcSqlRunner(englishConnection))
+        assertTrue(dictionary.codeTable(Scheme.Quick).any { it.code == "hi" && it.entry.character == "我" })
+        assertTrue(dictionary.allWords().any { it.word == "香港" })
+        assertTrue(dictionary.characterFrequencies().getValue("我") > 0)
+        assertTrue(dictionary.hasEnglishWord("dont"))
+        assertFalse(dictionary.hasEnglishWord("hivddpof"))
+        val quick = EngineSettings(continuousTyping = true)
+        val cangjie = quick.copy(schemes = listOf(Scheme.Cangjie))
+        assertEquals("我好想你", engine.candidates("hivddpof", quick).first { it.sentence }.text)
+        assertEquals("我好想你", engine.candidates("hqivndduponf", cangjie).first { it.sentence }.text)
+        for (english in listOf("hello", "happened", "cats")) {
+            assertTrue(english, engine.candidates(english, quick).none { it.sentence })
+        }
+    }
+
+    @Test
     fun quickInWindowsOrderMatchesWindows() {
         val windows = EngineSettings(sharedCodeOrder = SharedCodeOrder.Windows)
         assertEquals(listOf("伙", "你", "係", "偽", "氮", "焦", "無"), texts("of", windows).take(7))

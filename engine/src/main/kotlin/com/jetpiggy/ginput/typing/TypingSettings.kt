@@ -16,6 +16,8 @@ data class TypingSettings(
     val spaceMode: SpaceMode = SpaceMode.WriteEnglish,
     /** 智能刪空格 */
     val smartSpaceRemoval: Boolean = true,
+    /** 句首自動大寫（欄位也要接受自動大寫）；單獨的「i」寫成「I」不受這個設定影響。 */
+    val autoCapitalize: Boolean = true,
     /** Emoji 關鍵字（預設關閉） */
     val emojiKeywords: Boolean = false,
 )

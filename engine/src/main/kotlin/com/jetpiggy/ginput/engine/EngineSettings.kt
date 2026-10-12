@@ -31,4 +31,6 @@ data class EngineSettings(
     val rememberCandidates: Boolean = true,
     /** 寬鬆拼法：粵拼也接受懶音和港式拼法。 */
     val looseSpelling: Boolean = true,
+    /** 連打：速成和倉頡可以連續打幾個字的碼，出整句候選；預設關閉。 */
+    val continuousTyping: Boolean = false,
 )

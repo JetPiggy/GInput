@@ -18,16 +18,19 @@ class UserSettingsTest {
         assertEquals(listOf(Scheme.Quick), settings.typing.engine.schemes)
         assertEquals(SpaceMode.WriteEnglish, settings.typing.spaceMode)
         assertTrue(settings.typing.smartSpaceRemoval)
+        assertTrue(settings.typing.autoCapitalize)
+        assertFalse(settings.typing.engine.continuousTyping)
         assertFalse(settings.typing.emojiKeywords)
         assertTrue(settings.clipboardHistory)
         assertTrue(settings.crashReports)
         assertFalse(settings.usageStats)
         assertFalse(settings.cloudNoticeAccepted)
         assertEquals(KeyboardTheme.Default, settings.keyboard.theme)
-        assertFalse(settings.keyboard.numberRow)
+        assertTrue(settings.keyboard.numberRow)
         assertTrue(settings.keyboard.keyPreview)
         assertFalse(settings.keyboard.keySound)
         assertFalse(settings.setupDone)
+        assertEquals(0, settings.whatsNewSeen)
     }
 
     @Test
@@ -39,16 +42,18 @@ class UserSettingsTest {
             sharedCodeOrder = SharedCodeOrder.Windows,
             rememberCandidates = false,
             looseSpelling = false,
+            continuousTyping = true,
             colloquialPriority = false,
             spaceMode = SpaceMode.SelectChinese,
             smartSpaceRemoval = false,
+            autoCapitalize = false,
             emojiKeywords = true,
             clipboardHistory = false,
             keyboard = KeyboardSettings(
                 theme = KeyboardTheme.MilkTea,
                 height = KeyboardHeight.Tall,
                 labels = KeyLabels.RadicalsLarge,
-                numberRow = true,
+                numberRow = false,
                 keyPreview = false,
                 keySound = true,
             ),
@@ -56,11 +61,14 @@ class UserSettingsTest {
             usageStats = true,
             cloudNoticeAccepted = true,
             setupDone = true,
+            whatsNewSeen = 8,
         )
         assertEquals(changed, SettingsPreferences.read(SettingsPreferences.write(changed)))
         assertEquals(listOf(Scheme.Jyutping, Scheme.Quick), changed.typing.engine.schemes)
         assertFalse(changed.typing.engine.looseSpelling)
+        assertTrue(changed.typing.engine.continuousTyping)
         assertTrue(changed.typing.emojiKeywords)
+        assertFalse(changed.typing.autoCapitalize)
     }
 
     @Test

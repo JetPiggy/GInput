@@ -78,7 +78,7 @@ internal fun EmojiPanel(
         }
     }
 
-    KeyRow {
+    KeyRow(bottom = true) {
         BackToLettersKey(colors, onBackToLetters)
         LazyRow(
             modifier = Modifier

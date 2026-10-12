@@ -33,7 +33,7 @@ internal fun NumberPad(field: FieldKind, colors: KeyboardColors, onKey: (KeyActi
         PadKey("9", colors, onKey)
         PadKey(extras[1], colors, onKey, style = KeyStyle.Function)
     }
-    KeyRow {
+    KeyRow(bottom = true) {
         PadKey(extras[2], colors, onKey, style = KeyStyle.Function)
         PadKey("0", colors, onKey)
         PadKey(extras[3], colors, onKey, style = KeyStyle.Function)

@@ -9,12 +9,19 @@ class PunctuationTest {
 
     @Test
     fun fullWidthUnlessTheLastCharacterIsAnEnglishLetterOrDigit() {
-        assertTrue(Punctuation.fullWidthAfter(""))
         assertTrue(Punctuation.fullWidthAfter("你好"))
         assertTrue(Punctuation.fullWidthAfter("你好，"))
+        assertTrue(Punctuation.fullWidthAfter("你好 "))
         assertFalse(Punctuation.fullWidthAfter("ok"))
         assertFalse(Punctuation.fullWidthAfter("ok, "))
         assertFalse(Punctuation.fullWidthAfter("2026"))
+    }
+
+    @Test
+    fun halfWidthAtTheStartOfTheField() {
+        assertFalse(Punctuation.fullWidthAfter(""))
+        assertFalse(Punctuation.fullWidthAfter("  "))
+        assertFalse(Punctuation.fullWidthAfter("..."))
     }
 
     @Test

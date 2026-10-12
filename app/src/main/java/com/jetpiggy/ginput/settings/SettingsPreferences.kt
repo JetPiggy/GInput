@@ -17,9 +17,11 @@ internal object SettingsPreferences {
     private const val SHARED_CODE_ORDER = "shared_code_order"
     private const val REMEMBER_CANDIDATES = "remember_candidates"
     private const val LOOSE_SPELLING = "loose_spelling"
+    private const val CONTINUOUS_TYPING = "continuous_typing"
     private const val COLLOQUIAL_PRIORITY = "colloquial_priority"
     private const val SPACE_MODE = "space_mode"
     private const val SMART_SPACE_REMOVAL = "smart_space_removal"
+    private const val AUTO_CAPITALIZE = "auto_capitalize"
     private const val EMOJI_KEYWORDS = "emoji_keywords"
     private const val CLIPBOARD_HISTORY = "clipboard_history"
     private const val KEYBOARD_THEME = "keyboard_theme"
@@ -32,6 +34,7 @@ internal object SettingsPreferences {
     private const val USAGE_STATS = "usage_stats"
     private const val CLOUD_NOTICE_ACCEPTED = "cloud_notice_accepted"
     private const val SETUP_DONE = "setup_done"
+    private const val WHATS_NEW_SEEN = "whats_new_seen"
 
     private val SchemeCodes = mapOf(Scheme.Quick to "quick", Scheme.Cangjie to "cangjie", Scheme.Jyutping to "jyutping")
     private val GenerationCodes = mapOf(
@@ -66,6 +69,8 @@ internal object SettingsPreferences {
 
         fun flag(key: String, default: Boolean) = values[key] as? Boolean ?: default
 
+        fun number(key: String, default: Int) = values[key] as? Int ?: default
+
         fun <T> choice(key: String, codes: Map<T, String>, default: T): T =
             codes.entries.firstOrNull { it.value == values[key] }?.key ?: default
 
@@ -82,9 +87,11 @@ internal object SettingsPreferences {
             sharedCodeOrder = choice(SHARED_CODE_ORDER, OrderCodes, defaults.sharedCodeOrder),
             rememberCandidates = flag(REMEMBER_CANDIDATES, defaults.rememberCandidates),
             looseSpelling = flag(LOOSE_SPELLING, defaults.looseSpelling),
+            continuousTyping = flag(CONTINUOUS_TYPING, defaults.continuousTyping),
             colloquialPriority = flag(COLLOQUIAL_PRIORITY, defaults.colloquialPriority),
             spaceMode = choice(SPACE_MODE, SpaceModeCodes, defaults.spaceMode),
             smartSpaceRemoval = flag(SMART_SPACE_REMOVAL, defaults.smartSpaceRemoval),
+            autoCapitalize = flag(AUTO_CAPITALIZE, defaults.autoCapitalize),
             emojiKeywords = flag(EMOJI_KEYWORDS, defaults.emojiKeywords),
             clipboardHistory = flag(CLIPBOARD_HISTORY, defaults.clipboardHistory),
             keyboard = KeyboardSettings(
@@ -99,11 +106,12 @@ internal object SettingsPreferences {
             usageStats = flag(USAGE_STATS, defaults.usageStats),
             cloudNoticeAccepted = flag(CLOUD_NOTICE_ACCEPTED, defaults.cloudNoticeAccepted),
             setupDone = flag(SETUP_DONE, defaults.setupDone),
+            whatsNewSeen = number(WHATS_NEW_SEEN, defaults.whatsNewSeen),
         )
     }
 
     /**
-     * 使用統計報告裏的設定：和儲存時同樣的鍵和代號，但不包括私隱開關和同意、首次設定精靈、未啟用的輸入方案和主題。
+     * 使用統計報告裏的設定：和儲存時同樣的鍵和代號，但不包括私隱開關和同意、首次設定精靈、新版簡介、未啟用的輸入方案和主題。
      * backend/usage-stats 只接受這些鍵；加減項目要兩邊一起改。
      */
     fun forUsageStats(settings: UserSettings): Map<String, Any> =
@@ -115,9 +123,11 @@ internal object SettingsPreferences {
         SHARED_CODE_ORDER,
         REMEMBER_CANDIDATES,
         LOOSE_SPELLING,
+        CONTINUOUS_TYPING,
         COLLOQUIAL_PRIORITY,
         SPACE_MODE,
         SMART_SPACE_REMOVAL,
+        AUTO_CAPITALIZE,
         EMOJI_KEYWORDS,
         CLIPBOARD_HISTORY,
         KEYBOARD_HEIGHT,
@@ -127,7 +137,7 @@ internal object SettingsPreferences {
         KEY_SOUND,
     )
 
-    /** 全部設定，值是 String 或 Boolean。 */
+    /** 全部設定，值是 String、Boolean 或 Int。 */
     fun write(settings: UserSettings): Map<String, Any> = mapOf(
         SCHEME_ORDER to settings.schemeOrder.joinToString(",") { SchemeCodes.getValue(it) },
         SCHEMES_ENABLED to settings.schemeOrder.filter { it in settings.enabledSchemes }
@@ -136,9 +146,11 @@ internal object SettingsPreferences {
         SHARED_CODE_ORDER to OrderCodes.getValue(settings.sharedCodeOrder),
         REMEMBER_CANDIDATES to settings.rememberCandidates,
         LOOSE_SPELLING to settings.looseSpelling,
+        CONTINUOUS_TYPING to settings.continuousTyping,
         COLLOQUIAL_PRIORITY to settings.colloquialPriority,
         SPACE_MODE to SpaceModeCodes.getValue(settings.spaceMode),
         SMART_SPACE_REMOVAL to settings.smartSpaceRemoval,
+        AUTO_CAPITALIZE to settings.autoCapitalize,
         EMOJI_KEYWORDS to settings.emojiKeywords,
         CLIPBOARD_HISTORY to settings.clipboardHistory,
         KEYBOARD_THEME to ThemeCodes.getValue(settings.keyboard.theme),
@@ -151,5 +163,6 @@ internal object SettingsPreferences {
         USAGE_STATS to settings.usageStats,
         CLOUD_NOTICE_ACCEPTED to settings.cloudNoticeAccepted,
         SETUP_DONE to settings.setupDone,
+        WHATS_NEW_SEEN to settings.whatsNewSeen,
     )
 }

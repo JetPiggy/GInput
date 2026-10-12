@@ -56,8 +56,8 @@ sealed interface KeyAction {
     /** 打開設定 App 的常用短語頁。 */
     data object ManagePhrases : KeyAction
 
-    /** 在空白鍵上左右掃；steps 是負數向左，正數向右。 */
-    data class MoveCursor(val steps: Int) : KeyAction
+    /** 游標滑動：steps 是負數向左，正數向右；select 就伸展選取（按住 Shift 時）。 */
+    data class MoveCursor(val steps: Int, val select: Boolean = false) : KeyAction
 
     /** Delete 鍵向左掃：選取游標前 words 個字詞；wholeLine 就選取到行首。 */
     data class SelectBackward(val words: Int, val wholeLine: Boolean) : KeyAction
@@ -93,4 +93,7 @@ sealed interface KeyAction {
 
     /** 離開翻譯面板或改寫面板；未完成的處理不再理會。 */
     data object CloseCloudTool : KeyAction
+
+    /** 新版簡介的「知道了」：之後不再顯示這個版本的簡介。 */
+    data object DismissWhatsNew : KeyAction
 }

@@ -19,6 +19,8 @@ class FakeDictionary(
             .map { it.key }
             .take(limit)
 
+    override fun hasEnglishWord(key: String): Boolean = english.keys.any { it.lowercase().replace("'", "") == key }
+
     override fun jyutpingSyllables(): Set<String> =
         jyutping.flatMapTo(LinkedHashSet()) { it.syllables.split(' ') }
 
@@ -26,4 +28,13 @@ class FakeDictionary(
 
     override fun jyutpingStartingWith(syllables: String): List<JyutpingEntry> =
         jyutping.filter { it.syllables == syllables || it.syllables.startsWith("$syllables ") }
+
+    override fun codeTable(scheme: Scheme): List<CodedCharacter> =
+        characters.filterKeys { it.first == scheme }.flatMap { (key, entries) -> entries.map { CodedCharacter(key.second, it) } }
+
+    override fun characterFrequencies(): Map<String, Int> =
+        characters.values.flatten().associate { it.character to it.frequency }
+
+    override fun allWords(): List<WordFrequency> =
+        words.flatMap { (head, entries) -> entries.map { WordFrequency(head + it.rest, it.frequency) } }
 }

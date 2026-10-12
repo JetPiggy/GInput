@@ -18,6 +18,8 @@ enum class UsageEvent(val code: String) {
     KeywordEmoji("keywordEmoji"),
     CandidateGrid("candidateGrid"),
     PunctuationMenu("punctuationMenu"),
+
+    /** 開始一次游標滑動，在空白鍵或其他按鍵上都算。 */
     CursorSwipe("cursorSwipe"),
     DeleteSwipe("deleteSwipe"),
     Copy("copy"),

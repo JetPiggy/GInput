@@ -30,10 +30,10 @@ object Punctuation {
 
     /**
      * 游標前的文字決定出全形還是半形：略過空格和半形標點，看最近的那個字；
-     * 是英文字母或數字就出半形，其餘（中文、全形標點、欄位開頭）出全形。
+     * 是英文字母或數字、或者前面沒有字（欄位開頭）就出半形，其餘（中文、全形標點）出全形。
      */
     fun fullWidthAfter(textBefore: String): Boolean {
-        val last = textBefore.lastOrNull { !it.isWhitespace() && !it.isAsciiPunctuation() } ?: return true
+        val last = textBefore.lastOrNull { !it.isWhitespace() && !it.isAsciiPunctuation() } ?: return false
         return !(last in 'a'..'z' || last in 'A'..'Z' || last in '0'..'9')
     }
 

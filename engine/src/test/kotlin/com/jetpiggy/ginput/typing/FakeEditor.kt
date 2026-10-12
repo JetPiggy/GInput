@@ -16,18 +16,18 @@ class FakeEditor(
             selectionStart = null
         }
 
-    /** 有選取時是選取的起點，否則是 null。 */
+    /** 有選取時是選取的起點（不動的一端，可以在 cursor 之後），否則是 null。 */
     private var selectionStart: Int? = null
 
     val keys = mutableListOf<String>()
 
     val text: String get() = buffer.toString()
     val composing: String get() = if (composingStart < 0) "" else buffer.substring(composingStart, composingEnd)
-    val selected: String get() = selectionStart?.let { buffer.substring(it, cursor) }.orEmpty()
+    val selected: String get() = selectionStart?.let { buffer.substring(minOf(it, cursor), maxOf(it, cursor)) }.orEmpty()
 
-    /** 和 Android 一樣：有選取時，回傳選取起點之前的文字。 */
+    /** 和 Android 一樣：有選取時，回傳選取範圍之前的文字。 */
     override fun textBeforeCursor(length: Int): String {
-        val end = selectionStart ?: cursor
+        val end = selectionStart?.let { minOf(it, cursor) } ?: cursor
         return buffer.substring(maxOf(0, end - length), end)
     }
 
@@ -61,10 +61,11 @@ class FakeEditor(
 
     override fun sendDeleteKey() {
         keys += "DEL"
-        val start = selectionStart
+        val anchor = selectionStart
         when {
-            start != null -> {
-                buffer.delete(start, cursor)
+            anchor != null -> {
+                val start = minOf(anchor, cursor)
+                buffer.delete(start, maxOf(anchor, cursor))
                 cursor = start
             }
             cursor > 0 -> {
@@ -78,9 +79,12 @@ class FakeEditor(
         keys += "ENTER"
     }
 
-    override fun moveCursor(steps: Int) {
-        keys += if (steps < 0) "LEFT×${-steps}" else "RIGHT×$steps"
+    override fun moveCursor(steps: Int, select: Boolean) {
+        val arrow = if (steps < 0) "LEFT×${-steps}" else "RIGHT×$steps"
+        keys += if (select) "SHIFT+$arrow" else arrow
+        val anchor = selectionStart ?: cursor
         cursor = (cursor + steps).coerceIn(0, buffer.length)
+        if (select && anchor != cursor) selectionStart = anchor
     }
 
     override fun cursorPosition(): Int = cursor

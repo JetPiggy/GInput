@@ -32,16 +32,20 @@ import com.jetpiggy.ginput.cloudtext.SourceText
 import com.jetpiggy.ginput.cloudtext.TextTask
 import com.jetpiggy.ginput.dictionary.BundledDictionary
 import com.jetpiggy.ginput.dictionary.CandidateMemoryFile
+import com.jetpiggy.ginput.dictionary.PairMemoryFile
 import com.jetpiggy.ginput.emoji.EmojiCatalog
 import com.jetpiggy.ginput.emoji.EmojiCategory
 import com.jetpiggy.ginput.emoji.EmojiRecentsFile
 import com.jetpiggy.ginput.engine.CandidateEngine
 import com.jetpiggy.ginput.engine.CandidateMemory
 import com.jetpiggy.ginput.engine.EmojiKeywords
+import com.jetpiggy.ginput.engine.LearnedPair
+import com.jetpiggy.ginput.engine.PairMemory
 import com.jetpiggy.ginput.engine.Scheme
 import com.jetpiggy.ginput.keyboard.ClipboardContent
 import com.jetpiggy.ginput.keyboard.KeyAction
 import com.jetpiggy.ginput.keyboard.KeyboardScreen
+import com.jetpiggy.ginput.keyboard.NavigationBarSpace
 import com.jetpiggy.ginput.keyboard.VoiceInputKey
 import com.jetpiggy.ginput.settings.KeyboardSettings
 import com.jetpiggy.ginput.settings.MainActivity
@@ -50,6 +54,7 @@ import com.jetpiggy.ginput.typing.FieldKind
 import com.jetpiggy.ginput.typing.KeyboardState
 import com.jetpiggy.ginput.typing.TypingSession
 import com.jetpiggy.ginput.typing.WriteKind
+import com.jetpiggy.ginput.update.WhatsNew
 import com.jetpiggy.ginput.usagestats.UsageEvent
 import com.jetpiggy.ginput.usagestats.UsageStats
 import com.jetpiggy.ginput.ui.theme.GInputTheme
@@ -90,6 +95,15 @@ class GInputImeService : LifecycleInputMethodService() {
     private var phrases by mutableStateOf(SavedPhrases())
     private var cloudText by mutableStateOf(CloudTextState())
 
+    /** 更新了 GInput 之後，還未按「知道了」的新版簡介；見 WhatsNew。 */
+    private var whatsNew by mutableStateOf(false)
+
+    /** 導航列在鍵盤視窗裏佔的位置。 */
+    private val navigationBar = NavigationBarSpace()
+
+    /** 鍵盤視窗正在顯示；由隱藏變成顯示時，先向系統讀導航列的高度。 */
+    private var windowVisible = false
+
     private var clipboardManager: ClipboardManager? = null
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener { recordClip(startup = false) }
     private var purgeJob: Job? = null
@@ -112,6 +126,9 @@ class GInputImeService : LifecycleInputMethodService() {
     private val memoryWriter = LatestWriter<Map<String, Int>>("記憶字") {
         CandidateMemoryFile.save(applicationContext, it)
     }
+    private val pairsWriter = LatestWriter<List<LearnedPair>>("搭配記憶") {
+        PairMemoryFile.save(applicationContext, it)
+    }
     private val recentsWriter = LatestWriter<List<String>>("最近使用的 Emoji") {
         EmojiRecentsFile.save(applicationContext, it)
     }
@@ -127,6 +144,7 @@ class GInputImeService : LifecycleInputMethodService() {
         settingsStore = SettingsStore.get(this)
         phraseStore = PhraseStore.get(this)
         keyboardSettings = settingsStore.settings.value.keyboardOnScreen
+        whatsNew = checkWhatsNew()
         usageStats = UsageStats(applicationContext, settingsStore, lifecycleScope).also { it.load() }
         lifecycleScope.launch {
             var stats = settingsStore.settings.value.usageStats
@@ -139,6 +157,11 @@ class GInputImeService : LifecycleInputMethodService() {
                 stats = it.usageStats
                 // 關了剪貼簿歷史，就刪除已記下的全部項目（連檔案）。
                 if (!it.clipboardHistory) updateHistory(ClipboardHistory())
+                // 開了連打，就在背景載入碼表，第一次打字才不會卡一下；已經載入的話甚麼都不做。
+                val loaded = engine
+                if (loaded != null && it.continuousTyping) {
+                    launch(Dispatchers.IO) { loaded.loadContinuousTyping(it.typing.engine) }
+                }
             }
         }
         lifecycleScope.launch {
@@ -154,9 +177,12 @@ class GInputImeService : LifecycleInputMethodService() {
             runCatching {
                 withContext(Dispatchers.IO) {
                     val memory = CandidateMemory(CandidateMemoryFile.load(applicationContext), onChanged = memoryWriter::save)
-                    CandidateEngine(BundledDictionary.open(applicationContext), memory).also {
-                        // 粵拼的拼法在背景先載入，第一次打粵拼時才不會卡一下。
-                        if (Scheme.Jyutping in settingsStore.settings.value.enabledSchemes) it.loadJyutping()
+                    val pairs = PairMemory(PairMemoryFile.load(applicationContext), onChanged = pairsWriter::save)
+                    CandidateEngine(BundledDictionary.open(applicationContext), memory, pairs).also {
+                        // 粵拼的拼法和連打的碼表在背景先載入，第一次打字時才不會卡一下。
+                        val settings = settingsStore.settings.value
+                        if (Scheme.Jyutping in settings.enabledSchemes) it.loadJyutping()
+                        if (settings.continuousTyping) it.loadContinuousTyping(settings.typing.engine)
                     }
                 }
             }.onSuccess { loaded ->
@@ -209,13 +235,28 @@ class GInputImeService : LifecycleInputMethodService() {
                             phrases = phrases.items,
                         ),
                         onKey = ::handleKey,
+                        navigationBar = navigationBar,
                         voiceInput = voiceInput,
                         cloudText = cloudText,
                         onUsage = ::recordUsage,
+                        whatsNew = whatsNew,
                     )
                 }
             }
+            navigationBar.follow(this)
         }
+    }
+
+    override fun onWindowShown() {
+        super.onWindowShown()
+        // 鍵盤視窗由隱藏變成顯示：先向系統讀導航列現在的高度，視窗第一次量度就計在內。
+        if (!windowVisible) navigationBar.beforeShow()
+        windowVisible = true
+    }
+
+    override fun onWindowHidden() {
+        windowVisible = false
+        super.onWindowHidden()
     }
 
     // 橫向時也不用全螢幕的抽取文字框。
@@ -304,6 +345,10 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.RunTextTask -> runTextTask(action.task)
             KeyAction.ApplyTextResult -> applyTextResult()
             KeyAction.CloseCloudTool -> closeCloudTool()
+            KeyAction.DismissWhatsNew -> {
+                whatsNew = false
+                settingsStore.update { it.copy(whatsNewSeen = WhatsNew.VERSION) }
+            }
             else -> session?.let { type(it, action) }
         }
     }
@@ -333,7 +378,7 @@ class GInputImeService : LifecycleInputMethodService() {
             }
             is KeyAction.WriteClipboardItem -> session.symbol(action.text)
             is KeyAction.WritePhrase -> session.symbol(action.text)
-            is KeyAction.MoveCursor -> session.moveCursor(action.steps)
+            is KeyAction.MoveCursor -> session.moveCursor(action.steps, action.select)
             is KeyAction.SelectBackward -> session.selectBackward(action.words, action.wholeLine)
             is KeyAction.FinishBackwardSelection -> session.finishBackwardSelection(action.delete)
             KeyAction.ShowInputMethodPicker,
@@ -353,8 +398,17 @@ class GInputImeService : LifecycleInputMethodService() {
             KeyAction.AcceptCloudNotice,
             is KeyAction.RunTextTask,
             KeyAction.ApplyTextResult,
-            KeyAction.CloseCloudTool -> Unit
+            KeyAction.CloseCloudTool,
+            KeyAction.DismissWhatsNew -> Unit
         }
+    }
+
+    /** 要不要顯示新版簡介。全新安裝的話當作已經看過，之後更新了才顯示新的簡介。 */
+    private fun checkWhatsNew(): Boolean {
+        if (settingsStore.settings.value.whatsNewSeen >= WhatsNew.VERSION) return false
+        val updated = WhatsNew.updated(this)
+        if (!updated) settingsStore.update { it.copy(whatsNewSeen = WhatsNew.VERSION) }
+        return updated
     }
 
     /** 密碼欄位和要求不學習的欄位（無痕模式）不數。 */

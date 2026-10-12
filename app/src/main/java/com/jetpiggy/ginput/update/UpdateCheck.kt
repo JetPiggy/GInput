@@ -6,11 +6,11 @@ import java.net.HttpURLConnection
 import java.net.URL
 import org.json.JSONObject
 
-/** GInput-updates 的 latest.json 公佈的新版本。 */
+/** 網站的 latest.json 公佈的新版本。 */
 data class AvailableUpdate(val versionName: String, val pageUrl: String, val notes: String?)
 
 /**
- * 更新提示（規格「發佈」）：不是從 Google Play 安裝的版本，才讀 GInput-updates 的 latest.json；
+ * 更新提示（規格「發佈」）：不是從 Google Play 安裝的版本，才讀網站的 latest.json；
  * 有新版本就提示，並打開下載頁，不在 App 內下載。
  */
 object UpdateCheck {

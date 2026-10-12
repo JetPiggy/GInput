@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jetpiggy.ginput.R
@@ -36,7 +38,11 @@ internal fun CandidateGrid(
             .fillMaxWidth()
             .height(keyArea),
     ) {
-        itemsIndexed(state.candidates) { index, candidate ->
+        // 整句候選長，佔一整行。
+        itemsIndexed(
+            state.candidates,
+            span = { _, candidate -> GridItemSpan(if (candidate.sentence) maxLineSpan else 1) },
+        ) { index, candidate ->
             PressableBox(
                 modifier = Modifier
                     .height(dimensions.rowHeight)
@@ -58,6 +64,8 @@ internal fun CandidateGrid(
                     text = candidate.text,
                     color = if (candidate.remembered) colors.remembered else colors.label,
                     fontSize = dimensions.candidateSize,
+                    maxLines = if (candidate.sentence) 1 else Int.MAX_VALUE,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

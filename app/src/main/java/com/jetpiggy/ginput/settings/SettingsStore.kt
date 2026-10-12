@@ -33,6 +33,7 @@ class SettingsStore private constructor(private val preferences: SharedPreferenc
             when (value) {
                 is Boolean -> editor.putBoolean(key, value)
                 is String -> editor.putString(key, value)
+                is Int -> editor.putInt(key, value)
             }
         }
         editor.apply()

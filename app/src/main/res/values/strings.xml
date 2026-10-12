@@ -67,9 +67,11 @@
     <string name="order_frequency">Most common first</string>
     <string name="order_windows">Windows order</string>
     <string name="remember_candidates">Remember picks</string>
-    <string name="remember_candidates_summary">Characters you pick twice move to the front, highlighted in green. Most-common-first order only.</string>
+    <string name="remember_candidates_summary">Characters you pick twice move to the front, highlighted in green (most-common-first order only). With continuous typing on, GInput also remembers which characters you type together, so whole-sentence suggestions get better</string>
+    <string name="continuous_typing">Continuous typing</string>
+    <string name="continuous_typing_summary">Type the codes of several characters in a row in Quick or Cangjie and pick the whole sentence. Quick can guess wrong, so check before you pick</string>
     <string name="clear_memory">Clear remembered characters</string>
-    <string name="clear_memory_summary">Puts every remembered character back in its usual place</string>
+    <string name="clear_memory_summary">Puts every remembered character back in its usual place and forgets the characters continuous typing remembered together</string>
     <string name="clear_memory_confirm_title">Clear all remembered characters?</string>
     <string name="clear_memory_confirm">Clear</string>
     <string name="clear_memory_done">Remembered characters cleared</string>
@@ -82,6 +84,8 @@
     <string name="space_chinese">Picks the first Chinese candidate</string>
     <string name="smart_space_removal">Smart space removal</string>
     <string name="smart_space_removal_summary">Removes the space after an English word when Chinese or punctuation follows</string>
+    <string name="auto_capitalize">Auto-capitalisation</string>
+    <string name="auto_capitalize_summary">Capitalises the first English letter of each sentence</string>
     <string name="emoji_keywords">Emoji keywords</string>
     <string name="emoji_keywords_summary">Suggests related emoji at the right of the candidate bar after Chinese words, e.g. 😊 after 開心</string>
 
@@ -221,6 +225,15 @@
     <string name="cloud_busy">Too many people are using it right now. Try again later.</string>
     <string name="cloud_failed">Something went wrong. Try again.</string>
     <string name="cloud_changed">The text has changed. Try again.</string>
+
+    <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
+    <string name="whats_new_title">GInput updated to %1$s</string>
+    <string-array name="whats_new_items">
+        <item>New setting, Continuous typing: type the codes of several characters in a row in Quick or Cangjie and pick the whole sentence. It is off by default; turn it on under Chinese input in Settings.</item>
+        <item>Slide left or right on the keys to move the cursor. Hold Shift while sliding to select text. Keys are also easier to hit.</item>
+        <item>The 123 and 😊 keys have swapped places, and auto-capitalisation can now be turned off in Settings.</item>
+    </string-array>
+    <string name="whats_new_ok">Got it</string>
 
     <!-- TalkBack 讀出的按鍵標籤 -->
     <string name="key_letter_radical">%1$s, %2$s</string>

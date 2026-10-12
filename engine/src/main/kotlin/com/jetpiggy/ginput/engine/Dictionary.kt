@@ -14,6 +14,9 @@ interface Dictionary {
      */
     fun englishWords(prefix: String, limit: Int): List<String>
 
+    /** 英文詞庫有沒有查找鍵剛好是 key 的詞。 */
+    fun hasEnglishWord(key: String): Boolean
+
     /** 字庫裏全部粵拼音節（不含聲調），例如 nei、hou。 */
     fun jyutpingSyllables(): Set<String>
 
@@ -25,7 +28,24 @@ interface Dictionary {
      * 例如 "nei" 會找到「你」和「你好」（nei hou），但不會找到 neoi 開頭的。
      */
     fun jyutpingStartingWith(syllables: String): List<JyutpingEntry>
+
+    /** 某個輸入方案的全部碼和字。連打用，在背景執行緒一次載入記憶體。 */
+    fun codeTable(scheme: Scheme): List<CodedCharacter>
+
+    /** 全部字在 words.hk 語料裏出現的次數。 */
+    fun characterFrequencies(): Map<String, Int>
+
+    /** 全部詞（二至四個字）和詞頻。 */
+    fun allWords(): List<WordFrequency>
 }
+
+data class CodedCharacter(val code: String, val entry: CharacterEntry)
+
+data class WordFrequency(
+    val word: String,
+    /** 在 words.hk 語料裏出現的次數。 */
+    val frequency: Int,
+)
 
 data class CharacterEntry(
     val character: String,

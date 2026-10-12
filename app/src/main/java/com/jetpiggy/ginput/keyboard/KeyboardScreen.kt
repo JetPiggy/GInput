@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -16,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -65,12 +65,16 @@ fun KeyboardScreen(
     recentEmoji: List<String>,
     clipboard: ClipboardContent,
     onKey: (KeyAction) -> Unit,
+    /** 導航列在鍵盤視窗裏佔的位置，鍵盤要讓出來。 */
+    navigationBar: NavigationBarSpace,
     /** 工具列最右邊的語音輸入按鈕。 */
     voiceInput: VoiceInputKey = VoiceInputKey.Hidden,
     /** 翻譯面板和改寫面板的內容。 */
     cloudText: CloudTextState = CloudTextState(),
-    /** 只有鍵盤自己知道的動作（打開候選字格、標點選單、在空白鍵上掃），給使用統計。 */
+    /** 只有鍵盤自己知道的動作（打開候選字格、標點選單、游標滑動），給使用統計。 */
     onUsage: (UsageEvent) -> Unit = {},
+    /** 更新了 GInput 之後，還未按「知道了」的新版簡介。 */
+    whatsNew: Boolean = false,
 ) {
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val base = if (landscape) LandscapeDimensions else PortraitDimensions
@@ -84,7 +88,10 @@ fun KeyboardScreen(
         LocalKeyFeedback provides feedback,
         LocalKeyPreview provides previews,
     ) {
-        KeyboardContent(state, settings, field, emojiCategories, recentEmoji, clipboard, onKey, voiceInput, cloudText, onUsage)
+        KeyboardContent(
+            state, settings, field, emojiCategories, recentEmoji, clipboard, onKey, navigationBar, voiceInput, cloudText,
+            onUsage, whatsNew,
+        )
     }
 }
 
@@ -97,9 +104,11 @@ private fun KeyboardContent(
     recentEmoji: List<String>,
     clipboard: ClipboardContent,
     onKey: (KeyAction) -> Unit,
+    navigationBar: NavigationBarSpace,
     voiceInput: VoiceInputKey,
     cloudText: CloudTextState,
     onUsage: (UsageEvent) -> Unit,
+    whatsNew: Boolean,
 ) {
     val colors = keyboardColors(settings.theme)
     val previews = LocalKeyPreview.current
@@ -115,6 +124,14 @@ private fun KeyboardContent(
         prompt = null
         onKey(action)
     }
+    val currentHandle by rememberUpdatedState(handle)
+    val currentOnUsage by rememberUpdatedState(onUsage)
+    val slide = remember {
+        CursorSlide(
+            onMove = { steps, select -> currentHandle(KeyAction.MoveCursor(steps, select)) },
+            onStart = { currentOnUsage(UsageEvent.CursorSwipe) },
+        )
+    }
     // 按鍵區（不計候選列）的高度。候選字格、各個面板和 123 頁用同一高度，切換時鍵盤不會跳動。
     val dimensions = LocalKeyboardDimensions.current
     val keyArea = dimensions.rowHeight * 4 + if (settings.numberRow) dimensions.numberRowHeight else 0.dp
@@ -125,7 +142,7 @@ private fun KeyboardContent(
         modifier = Modifier
             .fillMaxWidth()
             .background(colors.background)
-            .navigationBarsPadding()
+            .navigationBarSpace(navigationBar)
             .onGloballyPositioned {
                 origin = it.positionInRoot()
                 width = it.size.width.toFloat()
@@ -134,10 +151,10 @@ private fun KeyboardContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 3.dp, vertical = 4.dp),
+                .padding(horizontal = KeyboardPaddingX, vertical = KeyboardPaddingY),
         ) {
             if (field.usesNumberPad) {
-                NumberPad(field, colors, handle)
+                TypingKeys(slide) { NumberPad(field, colors, handle) }
             } else {
                 CandidateBar(
                     state = state,
@@ -166,6 +183,9 @@ private fun KeyboardContent(
                     },
                 )
                 when {
+                    // 密碼欄位不顯示，等下次在一般文字框打開鍵盤。
+                    whatsNew && field != FieldKind.Password ->
+                        WhatsNewPanel(keyArea, colors, onDismiss = { handle(KeyAction.DismissWhatsNew) })
                     gridOpen && state.candidates.isNotEmpty() ->
                         CandidateGrid(state, keyArea, colors, handle, onAskForget = { prompt = BarPrompt.Forget(it) })
                     page == Page.Emoji -> EmojiPanel(
@@ -210,7 +230,7 @@ private fun KeyboardContent(
                         },
                         onBackToLetters = { page = Page.Letters },
                     )
-                    else -> {
+                    else -> TypingKeys(slide) {
                         when (page) {
                             Page.Symbols -> FillRows(keyArea) {
                                 SymbolRows(
@@ -248,7 +268,6 @@ private fun KeyboardContent(
                                 onUsage(UsageEvent.PunctuationMenu)
                                 menu = BarMenu(Punctuation.more(state.fullWidthPunctuation)) { KeyAction.Text(it) }
                             },
-                            onSwipe = { onUsage(UsageEvent.CursorSwipe) },
                         )
                     }
                 }
@@ -256,6 +275,19 @@ private fun KeyboardContent(
         }
         if (previews != null) KeyPreviewBubble(previews, origin, width, colors)
     }
+}
+
+/**
+ * 打字用的按鍵區：字母頁、123 頁、最底一行和數字鍵盤。這裏的按鍵可以游標滑動，
+ * 一行裏不是按鍵的地方（a 行兩端的空位、鍵盤左右的邊距）都算同一行最近的鍵。
+ */
+@Composable
+private fun TypingKeys(slide: CursorSlide, content: @Composable () -> Unit) {
+    CompositionLocalProvider(
+        LocalCursorSlide provides slide,
+        LocalNearestKeyInRow provides true,
+        content = content,
+    )
 }
 
 /** 123 頁只有三行符號，加上最底一行；開了數字行時三行符號加高，令按鍵區的高度和字母頁一樣。 */
@@ -340,6 +372,7 @@ private fun RowScope.ShiftKey(
             ShiftState.OneShot, ShiftState.Auto -> stringResource(R.string.state_uppercase)
         },
         onTap = { onKey(KeyAction.Shift) },
+        shift = true,
     ) {
         when (shift) {
             ShiftState.Off -> KeyIcon(R.drawable.ic_shift, colors.label)
@@ -400,9 +433,17 @@ private fun BottomRow(
     onOpenEmoji: () -> Unit,
     onSwitchPage: () -> Unit,
     onOpenMenu: () -> Unit,
-    onSwipe: () -> Unit,
 ) {
-    KeyRow {
+    KeyRow(bottom = true) {
+        Key(
+            colors,
+            weight = 1.5f,
+            description = stringResource(if (lettersShown) R.string.key_symbols else R.string.key_letters),
+            style = KeyStyle.Function,
+            onTap = onSwitchPage,
+        ) {
+            FunctionLabel(if (lettersShown) "123" else "ABC", colors)
+        }
         Key(
             colors,
             weight = 1f,
@@ -414,26 +455,17 @@ private fun BottomRow(
         ) {
             KeyIcon(R.drawable.ic_mood, colors.label)
         }
-        Key(
-            colors,
-            weight = 1.5f,
-            description = stringResource(if (lettersShown) R.string.key_symbols else R.string.key_letters),
-            style = KeyStyle.Function,
-            onTap = onSwitchPage,
-        ) {
-            FunctionLabel(if (lettersShown) "123" else "ABC", colors)
-        }
         // 電郵欄位：@ 在空白鍵左邊，只有「.」，.com 在打「.」之後的相關符號。網址欄位用一般的「，」「。」鍵（出半形）。
         if (field == FieldKind.Email) {
             Key(colors, weight = 1f, description = "@", preview = "@", onTap = { onKey(KeyAction.Text("@")) }) {
                 KeyLabel("@", colors)
             }
-            SpaceKey(colors, weight = 4f, onKey = onKey, onSwipe = onSwipe)
+            SpaceKey(colors, weight = 4f, onKey = onKey)
             Key(colors, weight = 1f, description = ".", preview = ".", onTap = { onKey(KeyAction.Text(".")) }) {
                 KeyLabel(".", colors)
             }
         } else {
-            SpaceKey(colors, weight = 4f, onKey = onKey, onSwipe = onSwipe)
+            SpaceKey(colors, weight = 4f, onKey = onKey)
             val comma = if (fullWidth) "，" else ","
             val period = if (fullWidth) "。" else "."
             val more = stringResource(R.string.key_more_punctuation)

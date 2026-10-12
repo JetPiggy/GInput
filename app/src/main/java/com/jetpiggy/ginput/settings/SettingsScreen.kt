@@ -56,6 +56,7 @@ import com.jetpiggy.ginput.BuildConfig
 import com.jetpiggy.ginput.R
 import com.jetpiggy.ginput.clipboard.ClipboardHistoryFile
 import com.jetpiggy.ginput.dictionary.CandidateMemoryFile
+import com.jetpiggy.ginput.dictionary.PairMemoryFile
 import com.jetpiggy.ginput.engine.CangjieGeneration
 import com.jetpiggy.ginput.engine.Scheme
 import com.jetpiggy.ginput.engine.SharedCodeOrder
@@ -228,6 +229,14 @@ private fun SchemeSection(
             onCheckedChange = { value -> onChange { it.copy(looseSpelling = value) } },
         )
     }
+    if (settings.enabledSchemes.any { it != Scheme.Jyutping }) {
+        SwitchRow(
+            title = stringResource(R.string.continuous_typing),
+            summary = stringResource(R.string.continuous_typing_summary),
+            checked = settings.continuousTyping,
+            onCheckedChange = { value -> onChange { it.copy(continuousTyping = value) } },
+        )
+    }
     ChoiceRow(
         title = stringResource(R.string.shared_code_order),
         options = listOf(
@@ -320,7 +329,10 @@ private fun ClearMemoryRow(snackbar: SnackbarHostState) {
                 onClick = {
                     confirming = false
                     scope.launch {
-                        withContext(Dispatchers.IO) { CandidateMemoryFile.delete(context) }
+                        withContext(Dispatchers.IO) {
+                            CandidateMemoryFile.delete(context)
+                            PairMemoryFile.delete(context)
+                        }
                         CandidateMemoryFile.clears.emit(Unit)
                         snackbar.showSnackbar(done)
                     }
@@ -358,6 +370,12 @@ private fun TypingSection(settings: UserSettings, onChange: ((UserSettings) -> U
         summary = stringResource(R.string.smart_space_removal_summary),
         checked = settings.smartSpaceRemoval,
         onCheckedChange = { value -> onChange { it.copy(smartSpaceRemoval = value) } },
+    )
+    SwitchRow(
+        title = stringResource(R.string.auto_capitalize),
+        summary = stringResource(R.string.auto_capitalize_summary),
+        checked = settings.autoCapitalize,
+        onCheckedChange = { value -> onChange { it.copy(autoCapitalize = value) } },
     )
     SwitchRow(
         title = stringResource(R.string.emoji_keywords),

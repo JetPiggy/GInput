@@ -55,7 +55,13 @@ class UsageStatsTest {
 
     @Test
     fun reportHasNoIdentifiersOnlyTheDaySettingsAndCounts() {
-        val settings = UserSettings(keyboard = KeyboardSettings(numberRow = true), usageStats = true, setupDone = true)
+        val settings = UserSettings(
+            continuousTyping = true,
+            keyboard = KeyboardSettings(numberRow = false),
+            usageStats = true,
+            setupDone = true,
+            whatsNewSeen = 8,
+        )
         val json = UsageReport.json(
             day = today.minusDays(1),
             counts = mapOf(UsageEvent.Chinese to 12, UsageEvent.Emoji to 0, UsageEvent.EnglishSuggestion to 3),
@@ -72,12 +78,15 @@ class UsageStatsTest {
         assertEquals(34, report.getInt("sdk"))
         val reportedSettings = report.getJSONObject("settings")
         assertEquals("quick", reportedSettings.getString("schemes_enabled"))
-        assertTrue(reportedSettings.getBoolean("number_row"))
+        assertFalse(reportedSettings.getBoolean("number_row"))
         assertFalse(reportedSettings.getBoolean("emoji_keywords"))
+        assertTrue(reportedSettings.getBoolean("auto_capitalize"))
+        assertTrue(reportedSettings.getBoolean("continuous_typing"))
         assertTrue(reportedSettings.getBoolean("clipboard_history"))
         assertFalse(reportedSettings.has("usage_stats"))
         assertFalse(reportedSettings.has("crash_reports"))
         assertFalse(reportedSettings.has("setup_done"))
+        assertFalse(reportedSettings.has("whats_new_seen"))
         val counts = report.getJSONObject("counts")
         assertEquals(setOf("chinese", "englishSuggestion"), counts.keySet())
         assertEquals(12, counts.getInt("chinese"))

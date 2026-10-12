@@ -51,8 +51,8 @@ data class KeyboardSettings(
     val theme: KeyboardTheme = KeyboardTheme.Default,
     val height: KeyboardHeight = KeyboardHeight.Standard,
     val labels: KeyLabels = KeyLabels.LettersLarge,
-    /** 字母上面常駐的數字行。 */
-    val numberRow: Boolean = false,
+    /** 字母上面常駐的數字行；預設開啟。 */
+    val numberRow: Boolean = true,
     /** 按鍵放大預覽 */
     val keyPreview: Boolean = true,
     val keySound: Boolean = false,
@@ -74,9 +74,13 @@ data class UserSettings(
     val rememberCandidates: Boolean = true,
     /** 粵拼的寬鬆拼法：也接受懶音和港式拼法。 */
     val looseSpelling: Boolean = true,
+    /** 連打：速成和倉頡可以連續打幾個字的碼，出整句候選；預設關閉。 */
+    val continuousTyping: Boolean = false,
     val colloquialPriority: Boolean = true,
     val spaceMode: SpaceMode = SpaceMode.WriteEnglish,
     val smartSpaceRemoval: Boolean = true,
+    /** 句首自動大寫。 */
+    val autoCapitalize: Boolean = true,
     /** Emoji 關鍵字；預設關閉。 */
     val emojiKeywords: Boolean = false,
     /** 剪貼簿歷史；關了就不再記錄，並刪除已記下的。 */
@@ -90,6 +94,8 @@ data class UserSettings(
     val cloudNoticeAccepted: Boolean = false,
     /** 已經完成首次設定精靈。 */
     val setupDone: Boolean = false,
+    /** 已經看過（按了「知道了」）的新版簡介，是 WhatsNew.VERSION 的值；全新安裝時直接當作看過。 */
+    val whatsNewSeen: Int = 0,
 ) {
     /** 打字用的設定，交給 TypingSession。 */
     val typing: TypingSettings = TypingSettings(
@@ -100,9 +106,11 @@ data class UserSettings(
             colloquialPriority = colloquialPriority,
             rememberCandidates = rememberCandidates,
             looseSpelling = looseSpelling,
+            continuousTyping = continuousTyping,
         ),
         spaceMode = spaceMode,
         smartSpaceRemoval = smartSpaceRemoval,
+        autoCapitalize = autoCapitalize,
         emojiKeywords = emojiKeywords,
     )
 

@@ -132,7 +132,7 @@ internal fun ClipboardPanel(
         }
     }
 
-    KeyRow {
+    KeyRow(bottom = true) {
         BackToLettersKey(colors, onBackToLetters)
         Row(
             modifier = Modifier

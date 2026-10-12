@@ -71,7 +71,7 @@ internal fun CloudTextPanel(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         )
-        KeyRow {
+        KeyRow(bottom = true) {
             BackToLettersKey(colors, onBackToLetters)
             Spacer(Modifier.weight(5f))
             ActionKey(stringResource(R.string.cloud_accept), enabled = true, colors) { onKey(KeyAction.AcceptCloudNotice) }
@@ -150,7 +150,7 @@ internal fun CloudTextPanel(
         }
     }
 
-    KeyRow {
+    KeyRow(bottom = true) {
         BackToLettersKey(colors, onBackToLetters)
         Box(
             modifier = Modifier
@@ -209,9 +209,9 @@ private val TextTask.label: Int
         TextTask.Fix -> R.string.rewrite_fix
     }
 
-/** 最底一行右邊的「同意」或「取代」；停用時是灰字。 */
+/** 面板最底一行右邊的「同意」「取代」，新版簡介也用來做「知道了」；停用時是灰字。 */
 @Composable
-private fun RowScope.ActionKey(label: String, enabled: Boolean, colors: KeyboardColors, onTap: () -> Unit) {
+internal fun RowScope.ActionKey(label: String, enabled: Boolean, colors: KeyboardColors, onTap: () -> Unit) {
     Key(
         colors,
         weight = 3.5f,

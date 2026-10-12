@@ -26,8 +26,11 @@ interface Editor {
     /** 像實體鍵盤一樣按一下 Enter：欄位有動作（例如送出）就執行，否則換行。 */
     fun sendEnterKey()
 
-    /** 像實體鍵盤的方向鍵一樣移動游標；steps 是負數向左，正數向右。 */
-    fun moveCursor(steps: Int)
+    /**
+     * 像實體鍵盤的方向鍵一樣移動游標；steps 是負數向左，正數向右。
+     * select 就像按住 Shift 再按方向鍵：選取的起點不動，終點跟着移。
+     */
+    fun moveCursor(steps: Int, select: Boolean)
 
     /** 游標在整段文字裏的位置；讀不到就回傳 null。 */
     fun cursorPosition(): Int?

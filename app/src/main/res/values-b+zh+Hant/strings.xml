@@ -67,9 +67,11 @@
     <string name="order_frequency">常用度次序</string>
     <string name="order_windows">Windows 次序</string>
     <string name="remember_candidates">記憶字</string>
-    <string name="remember_candidates_summary">選過兩次的字排在最前，以淺綠底標示；只在常用度次序生效</string>
+    <string name="remember_candidates_summary">選過兩次的字排在最前，以淺綠底標示（只在常用度次序生效）；開了連打的話，也記住你打過的前後兩個字，令整句候選更準</string>
+    <string name="continuous_typing">連打</string>
+    <string name="continuous_typing_summary">速成和倉頡可以不選字、連續打幾個字的碼，候選列出整句；速成會猜錯，要看清楚才選</string>
     <string name="clear_memory">清除全部記憶</string>
-    <string name="clear_memory_summary">全部記憶字回到原來的位置</string>
+    <string name="clear_memory_summary">全部記憶字回到原來的位置，連打記住的前後兩個字也會忘記</string>
     <string name="clear_memory_confirm_title">清除全部記憶？</string>
     <string name="clear_memory_confirm">清除</string>
     <string name="clear_memory_done">已清除全部記憶</string>
@@ -82,6 +84,8 @@
     <string name="space_chinese">選中文：有候選字時寫入首選字</string>
     <string name="smart_space_removal">智能刪空格</string>
     <string name="smart_space_removal_summary">英文之後接中文或標點時，自動刪掉英文後面的空格</string>
+    <string name="auto_capitalize">自動大寫</string>
+    <string name="auto_capitalize_summary">句子開頭的第一個英文字母自動大寫</string>
     <string name="emoji_keywords">Emoji 關鍵字</string>
     <string name="emoji_keywords_summary">寫入中文後，在候選列最右邊提示相關的 Emoji，例如「開心」後出 😊</string>
 
@@ -221,6 +225,15 @@
     <string name="cloud_busy">現在太多人使用，請稍後再試。</string>
     <string name="cloud_failed">未能完成，請再試一次。</string>
     <string name="cloud_changed">文字已經改動，請再試一次。</string>
+
+    <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
+    <string name="whats_new_title">GInput 已更新到 %1$s</string>
+    <string-array name="whats_new_items">
+        <item>新設定「連打」：速成和倉頡可以連續打幾個字的碼，候選列出整句。預設關閉，在設定的「輸入方案」開啟。</item>
+        <item>在按鍵上左右滑動，可以移動游標；按住 Shift 鍵再滑動，就可以選取文字。按鍵也更容易按中。</item>
+        <item>123 鍵和 😊 鍵對調；句首自動大寫可以在設定關掉。</item>
+    </string-array>
+    <string name="whats_new_ok">知道了</string>
 
     <!-- TalkBack 讀出的按鍵標籤 -->
     <string name="key_letter_radical">%1$s，%2$s</string>

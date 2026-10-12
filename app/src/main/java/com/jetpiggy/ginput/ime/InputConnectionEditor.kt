@@ -1,6 +1,8 @@
 package com.jetpiggy.ginput.ime
 
 import android.inputmethodservice.InputMethodService
+import android.os.SystemClock
+import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.inputmethod.ExtractedTextRequest
 import com.jetpiggy.ginput.cloudtext.SourceField
@@ -47,9 +49,32 @@ class InputConnectionEditor(private val service: InputMethodService) : Editor, S
         service.sendKeyChar('\n')
     }
 
-    override fun moveCursor(steps: Int) {
+    override fun moveCursor(steps: Int, select: Boolean) {
         val key = if (steps < 0) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
-        repeat(abs(steps)) { service.sendDownUpKeyEvents(key) }
+        if (!select) {
+            repeat(abs(steps)) { service.sendDownUpKeyEvents(key) }
+            return
+        }
+        // 像實體鍵盤一樣按住 Shift 再按方向鍵。TextView 要先收到 Shift 鍵按下才會選取；
+        // Compose 和網頁的文字框看方向鍵事件上的 Shift。每次都放開 Shift，手勢中斷也不會留下按着的 Shift。
+        val shift = KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON
+        sendKey(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT, shift)
+        repeat(abs(steps)) {
+            sendKey(KeyEvent.ACTION_DOWN, key, shift)
+            sendKey(KeyEvent.ACTION_UP, key, shift)
+        }
+        sendKey(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT, 0)
+    }
+
+    /** 和 InputMethodService.sendDownUpKeyEvents 送出的按鍵事件一樣，另加 meta 狀態。 */
+    private fun sendKey(action: Int, code: Int, meta: Int) {
+        val time = SystemClock.uptimeMillis()
+        connection?.sendKeyEvent(
+            KeyEvent(
+                time, time, action, code, 0, meta, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+                KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_KEEP_TOUCH_MODE,
+            ),
+        )
     }
 
     override fun cursorPosition(): Int? {

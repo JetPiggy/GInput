@@ -33,8 +33,8 @@ android {
         applicationId = "com.jetpiggy.ginput"
         minSdk = 28
         targetSdk = 36
-        versionCode = 7
-        versionName = "0.10.0"
+        versionCode = 8
+        versionName = "0.11.0"
 
         // 當機回報（ADR 0001）：沒有 DSN 就不啟用 Sentry。
         buildConfigField("String", "SENTRY_DSN", localProperty("SENTRY_DSN").asBuildConfigString())
@@ -50,7 +50,7 @@ android {
             "CLOUD_TEXT_URL",
             localProperty("CLOUD_TEXT_URL", "https://ginput-ai.jetpiggy.com/v1/text").asBuildConfigString(),
         )
-        // GInput-updates 的 GitHub Pages：下載頁、私隱政策和 latest.json。
+        // GInput 的網站：下載頁、私隱政策和 latest.json。
         buildConfigField(
             "String",
             "SITE_URL",

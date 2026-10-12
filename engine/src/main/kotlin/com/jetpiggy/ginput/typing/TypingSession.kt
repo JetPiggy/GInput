@@ -19,7 +19,7 @@ class TypingSession(
     /** 載入完成前是 null，那時不出 Emoji 關鍵字的 Emoji。 */
     private val emojiKeywords: () -> EmojiKeywords? = { null },
     private val clock: () -> Long = System::currentTimeMillis,
-    /** 記錄使用者選的字（記憶字）；要求不學習的欄位（無痕模式）是 false。設定關了記憶字也不記錄。 */
+    /** 記錄使用者選的字（記憶字和搭配記憶）；要求不學習的欄位（無痕模式）是 false。設定關了記憶字也不記錄。 */
     private val learning: Boolean = true,
     /** 提供英文建議的補全；欄位要求不出建議時是 false，只出照打的字母。 */
     private val offerCompletions: Boolean = true,
@@ -46,6 +46,9 @@ class TypingSession(
     /** 新的組字已經送出，但文字框還未回報組字的範圍。 */
     private var awaitingComposingEcho = false
 
+    /** 連打的上文：組字開始時游標前的文字，分段寫入後是剛寫入的字詞。有些 App 稍後才套用寫入，所以不每次都讀文字框。 */
+    private var contextBefore = ""
+
     var state = KeyboardState()
         private set
 
@@ -59,7 +62,10 @@ class TypingSession(
             editor.commitText(typed.toString())
             autoSpace = null
         } else {
-            if (composition.isEmpty()) awaitingComposingEcho = true
+            if (composition.isEmpty()) {
+                awaitingComposingEcho = true
+                contextBefore = if (settings().engine.continuousTyping) editor.textBeforeCursor(CHARACTER_CONTEXT_LENGTH) else ""
+            }
             composition.append(typed)
             if (composing) editor.setComposingText(composition.toString()) else editor.commitText(typed.toString())
             refreshCandidates()
@@ -75,7 +81,9 @@ class TypingSession(
                 autoSpace = null
             }
             settings().spaceMode == SpaceMode.SelectChinese && candidates.isNotEmpty() ->
-                candidates.first().let { writeChinese(it.text, picked = true, codeLength = it.codeLength) }
+                candidates.first().let {
+                    writeChinese(it.text, picked = true, codeLength = it.codeLength, sentence = it.sentence)
+                }
             else -> writeEnglish(typedEnglish(), withSpace = true)
         }
         finishAction()
@@ -157,8 +165,9 @@ class TypingSession(
     }
 
     fun candidate(text: String) {
-        val codeLength = candidates.firstOrNull { it.text == text }?.codeLength ?: composition.length
-        writeChinese(text, picked = true, codeLength = codeLength)
+        val candidate = candidates.firstOrNull { it.text == text }
+        val codeLength = candidate?.codeLength ?: composition.length
+        writeChinese(text, picked = true, codeLength = codeLength, sentence = candidate?.sentence == true)
         finishAction()
     }
 
@@ -174,11 +183,14 @@ class TypingSession(
         publish()
     }
 
-    /** 在空白鍵上左右掃：移動游標。有組字的話，字母先留在文字框，當作英文。 */
-    fun moveCursor(steps: Int) {
+    /**
+     * 游標滑動（在空白鍵或其他按鍵上左右滑動）：移動游標；select 就伸展選取（按住 Shift 時）。
+     * 有組字的話，字母先留在文字框，當作英文。
+     */
+    fun moveCursor(steps: Int, select: Boolean = false) {
         if (steps == 0) return
         leaveComposition()
-        editor.moveCursor(steps)
+        editor.moveCursor(steps, select)
         finishAction()
     }
 
@@ -301,9 +313,18 @@ class TypingSession(
     /**
      * picked：使用者從候選字選的（要記錄成記憶字），不是聯想。
      * codeLength：候選字用了組字前面多少個字母；其餘字母留在組字，繼續選字（分段寫入），這時不出聯想。
+     * sentence：整句候選，不記錄成記憶字。開了連打的話，寫入的字和上文的搭配都記下（搭配記憶）。
      */
-    private fun writeChinese(text: String, picked: Boolean, codeLength: Int = composition.length) {
+    private fun writeChinese(text: String, picked: Boolean, codeLength: Int = composition.length, sentence: Boolean = false) {
         clearFollowUps()
+        val engineSettings = settings().engine
+        val recordPairs = learning && engineSettings.rememberCandidates && engineSettings.continuousTyping
+        // 聯想沒有組字，上文就是游標前的文字。
+        val before = when {
+            !recordPairs -> ""
+            composition.isEmpty() -> editor.textBeforeCursor(CHARACTER_CONTEXT_LENGTH)
+            else -> contextBefore
+        }
         val rest = composition.substring(codeLength.coerceIn(0, composition.length))
         val removeSpace = shouldRemoveAutoSpace(text)
         editor.beginBatchEdit()
@@ -325,7 +346,9 @@ class TypingSession(
         clearComposition()
         autoSpace = null
         val engine = engine()
-        if (picked && learning && settings().engine.rememberCandidates) engine?.recordPick(text)
+        if (picked && !sentence && learning && engineSettings.rememberCandidates) engine?.recordPick(text)
+        if (recordPairs) engine?.rememberPairs(before, text)
+        contextBefore = text
         if (rest.isEmpty()) {
             associations = engine?.associations(text, settings().engine).orEmpty()
             keywordEmoji = if (settings().emojiKeywords) keywordEmojiAfter(text) else emptyList()
@@ -376,7 +399,7 @@ class TypingSession(
     private fun refreshCandidates() {
         val typed = composition.toString()
         val engine = engine()
-        candidates = if (typed.isEmpty()) emptyList() else engine?.candidates(typed, settings().engine).orEmpty()
+        candidates = if (typed.isEmpty()) emptyList() else engine?.candidates(typed, settings().engine, contextBefore).orEmpty()
         completions = if (typed.isEmpty() || !offerCompletions) emptyList() else engine?.englishSuggestions(typed).orEmpty()
     }
 
@@ -411,7 +434,8 @@ class TypingSession(
 
     private fun finishAction() {
         if (shift != ShiftState.OneShot && shift != ShiftState.Locked) {
-            shift = if (composition.isEmpty() && editor.capsModeAtCursor()) ShiftState.Auto else ShiftState.Off
+            val auto = settings().autoCapitalize && composition.isEmpty() && editor.capsModeAtCursor()
+            shift = if (auto) ShiftState.Auto else ShiftState.Off
         }
         publish()
     }
@@ -439,6 +463,9 @@ class TypingSession(
 
     private companion object {
         const val CONTEXT_LENGTH = 32
+
+        /** 上文只看游標前一個字；BMP 以外的字佔兩個 char。 */
+        const val CHARACTER_CONTEXT_LENGTH = 2
 
         /** 智能全形標點最多看游標前多少字元；「)」要找前面未配對的括號，所以比 CONTEXT_LENGTH 長。 */
         const val PUNCTUATION_CONTEXT_LENGTH = 200

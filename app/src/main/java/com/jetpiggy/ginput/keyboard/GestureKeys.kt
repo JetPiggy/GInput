@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
@@ -37,9 +36,6 @@ import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** 空白鍵上每掃過這個距離，游標移一格。 */
-private val CursorStep = 12.dp
-
 /** Delete 鍵向左掃，每掃過這個距離多選取一個字詞。 */
 private val WordStep = 28.dp
 
@@ -51,18 +47,16 @@ private const val REPEAT_FIRST_INTERVAL_MILLIS = 90L
 private const val REPEAT_SPEEDUP_MILLIS = 6L
 private const val REPEAT_FASTEST_INTERVAL_MILLIS = 30L
 
-/** 空白鍵：按一下打空格；按住左右掃就移動游標，每次開始掃都通知 onSwipe。 */
+/** 空白鍵：按一下打空格；按住左右掃，移過 touch slop 就開始游標滑動，不用像其他鍵移那麼遠。 */
 @Composable
 internal fun RowScope.SpaceKey(
     colors: KeyboardColors,
     weight: Float,
     onKey: (KeyAction) -> Unit,
-    onSwipe: () -> Unit = {},
 ) {
     val view = LocalView.current
-    val stepPx = with(LocalDensity.current) { CursorStep.toPx() }
+    val slide = LocalCursorSlide.current
     val currentOnKey by rememberUpdatedState(onKey)
-    val currentOnSwipe by rememberUpdatedState(onSwipe)
     val feedback by rememberUpdatedState(LocalKeyFeedback.current)
     val description = stringResource(R.string.key_space)
     var pressed by remember { mutableStateOf(false) }
@@ -80,34 +74,21 @@ internal fun RowScope.SpaceKey(
                 role = Role.Button
                 onClick { currentOnKey(KeyAction.Space); true }
             }
-            .pointerInput(Unit) {
+            .pointerInput(slide) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     pressed = true
                     feedback.press(view, KeySound.Space)
-                    var dragging = false
-                    var pending = 0f
                     try {
                         while (true) {
                             val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
                             if (!change.pressed) {
-                                if (!dragging) currentOnKey(KeyAction.Space)
+                                currentOnKey(KeyAction.Space)
                                 break
                             }
-                            pending += change.positionChange().x
-                            if (!dragging && abs(pending) > viewConfiguration.touchSlop) {
-                                dragging = true
-                                pending = 0f
-                                currentOnSwipe()
-                            }
-                            if (dragging) {
-                                change.consume()
-                                val steps = (pending / stepPx).toInt()
-                                if (steps != 0) {
-                                    currentOnKey(KeyAction.MoveCursor(steps))
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                                    pending -= steps * stepPx
-                                }
+                            if (slide != null && abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) {
+                                followCursorSlide(down.id, slide, view)
+                                break
                             }
                         }
                     } finally {

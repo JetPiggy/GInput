@@ -8,6 +8,8 @@ import com.jetpiggy.ginput.engine.EmojiKeywords
 import com.jetpiggy.ginput.engine.EngineSettings
 import com.jetpiggy.ginput.engine.FakeDictionary
 import com.jetpiggy.ginput.engine.JyutpingEntry
+import com.jetpiggy.ginput.engine.LearnedPair
+import com.jetpiggy.ginput.engine.PairMemory
 import com.jetpiggy.ginput.engine.Scheme
 import com.jetpiggy.ginput.engine.WordEntry
 import org.junit.Assert.assertEquals
@@ -218,12 +220,14 @@ class TypingSessionTest {
     fun punctuationFollowsThePreviousCharacter() {
         val editor = FakeEditor()
         val session = session(editor)
-        assertTrue(session.state.fullWidthPunctuation)
+        // 欄位開頭出半形，中文之後出全形。
+        assertFalse(session.state.fullWidthPunctuation)
         session.punctuation(PunctuationKey.Comma)
         session.type("ab")
         session.candidate("明")
+        assertTrue(session.state.fullWidthPunctuation)
         session.punctuation(PunctuationKey.Period)
-        assertEquals("，明。", editor.text)
+        assertEquals(",明。", editor.text)
     }
 
     @Test
@@ -430,6 +434,22 @@ class TypingSessionTest {
         session.space()
         assertEquals("Hi. ", editor.text)
         assertEquals(ShiftState.Auto, session.state.shift)
+    }
+
+    @Test
+    fun autoCapitalisationCanBeTurnedOff() {
+        settings = TypingSettings(autoCapitalize = false)
+        val editor = FakeEditor(capsMode = { it.isEmpty() || it.endsWith(". ") })
+        val session = session(editor)
+        assertEquals(ShiftState.Off, session.state.shift)
+        session.type("hi")
+        session.punctuation(PunctuationKey.Period)
+        session.space()
+        assertEquals(ShiftState.Off, session.state.shift)
+        // 單獨的「i」照樣寫成「I」。
+        session.type("i")
+        session.space()
+        assertEquals("hi. I ", editor.text)
     }
 
     @Test
@@ -653,6 +673,29 @@ class TypingSessionTest {
     }
 
     @Test
+    fun slidingWithShiftExtendsTheSelectionFromWhereItStarted() {
+        val editor = FakeEditor("hello world")
+        val session = session(editor)
+        session.moveCursor(-5, select = true)
+        assertEquals("world", editor.selected)
+        session.moveCursor(2, select = true)
+        assertEquals("rld", editor.selected)
+        assertEquals(listOf("SHIFT+LEFT×5", "SHIFT+RIGHT×2"), editor.keys)
+    }
+
+    @Test
+    fun selectingWithShiftLeavesComposingLettersAsEnglish() {
+        val editor = FakeEditor()
+        val session = session(editor)
+        session.type("ab")
+        session.moveCursor(-1, select = true)
+        assertEquals("ab", editor.text)
+        assertEquals("", editor.composing)
+        assertEquals("b", editor.selected)
+        assertEquals("", session.state.composition)
+    }
+
+    @Test
     fun swipingLeftOnDeleteSelectsWordByWordThenDeletes() {
         val editor = FakeEditor("call me 2026 你好")
         val session = session(editor)
@@ -776,5 +819,117 @@ class TypingSessionTest {
         session.type("ab")
         assertTrue(session.state.candidates.isEmpty())
         assertEquals(listOf("ab"), session.state.englishSuggestions)
+    }
+
+    private val continuousCharacters = mapOf(
+        (Scheme.Quick to "hi") to listOf(entry("我", 1000)),
+        (Scheme.Quick to "vd") to listOf(entry("妹", 600), entry("好", 500)),
+        (Scheme.Quick to "of") to listOf(entry("你", 800)),
+    )
+
+    private fun continuousEngine(memory: CandidateMemory = CandidateMemory(), pairs: PairMemory = PairMemory()) =
+        CandidateEngine(
+            FakeDictionary(characters = continuousCharacters, words = mapOf("我" to listOf(WordEntry("哋", 1, true)))),
+            memory,
+            pairs,
+        )
+
+    private val continuousSettings = TypingSettings(engine = EngineSettings(continuousTyping = true))
+
+    @Test
+    fun continuousTypingOffersAndWritesTheWholeSentence() {
+        settings = continuousSettings
+        val editor = FakeEditor()
+        val session = session(editor, engine = continuousEngine())
+        session.type("hivdof")
+        assertEquals(listOf("我妹你", "我"), session.candidateTexts)
+        assertEquals(listOf("hivdof"), session.state.englishSuggestions)
+        session.candidate("我妹你")
+        assertEquals("我妹你", editor.text)
+        assertEquals("", session.state.composition)
+    }
+
+    @Test
+    fun selectChineseModeWritesTheSentenceWithSpace() {
+        settings = continuousSettings.copy(spaceMode = SpaceMode.SelectChinese)
+        val editor = FakeEditor()
+        val session = session(editor, engine = continuousEngine())
+        session.type("hivdof")
+        assertTrue(session.state.markTopCandidate)
+        session.space()
+        assertEquals("我妹你", editor.text)
+    }
+
+    @Test
+    fun pickingTheFirstCharacterComposesTheRestWithItAsContext() {
+        settings = continuousSettings
+        val editor = FakeEditor()
+        val session = session(editor, engine = continuousEngine(pairs = PairMemory(listOf(LearnedPair("我", "好", 1)))))
+        session.type("hivdof")
+        session.candidate("我")
+        assertEquals("我vdof", editor.text)
+        assertEquals("vdof", session.state.composition)
+        assertEquals("好你", session.candidateTexts.first())
+        assertTrue(session.state.associations.isEmpty())
+    }
+
+    @Test
+    fun theCharacterBeforeTheCursorIsContext() {
+        settings = continuousSettings
+        val engine = continuousEngine(pairs = PairMemory(listOf(LearnedPair("我", "好", 1))))
+        val afterMe = session(FakeEditor("我"), engine = engine).apply { type("vdof") }
+        assertEquals("好你", afterMe.candidateTexts.first())
+        val alone = session(FakeEditor(), engine = engine).apply { type("vdof") }
+        assertEquals("妹你", alone.candidateTexts.first())
+    }
+
+    @Test
+    fun sentencesAreNotRememberedButTheirPairsAre() {
+        settings = continuousSettings
+        val picks = mutableListOf<Map<String, Int>>()
+        val learned = mutableListOf<List<LearnedPair>>()
+        val engine = continuousEngine(CandidateMemory(onChanged = { picks += it }), PairMemory(onChanged = { learned += it }))
+        val session = session(FakeEditor("佢"), engine = engine)
+        session.type("hivdof")
+        session.candidate("我妹你")
+        assertTrue(picks.isEmpty())
+        assertEquals(listOf(LearnedPair("佢", "我", 1), LearnedPair("我", "妹", 1), LearnedPair("妹", "你", 1)), learned.last())
+        session.type("hi")
+        session.candidate("我")
+        assertEquals(listOf(mapOf("我" to 1)), picks)
+        assertEquals(LearnedPair("你", "我", 1), learned.last().last())
+    }
+
+    @Test
+    fun associationsArePairedWithTheCharacterBeforeThem() {
+        settings = continuousSettings
+        val learned = mutableListOf<List<LearnedPair>>()
+        val session = session(FakeEditor(), engine = continuousEngine(pairs = PairMemory(onChanged = { learned += it })))
+        session.type("hi")
+        session.candidate("我")
+        assertTrue(learned.isEmpty())
+        session.association("哋")
+        assertEquals(listOf(listOf(LearnedPair("我", "哋", 1))), learned)
+    }
+
+    @Test
+    fun pairsNeedContinuousTypingAndMemoryAndAFieldThatAllowsLearning() {
+        val learned = mutableListOf<List<LearnedPair>>()
+        val engine = continuousEngine(pairs = PairMemory(onChanged = { learned += it }))
+        fun typeTwoCharacters(learning: Boolean = true) = session(FakeEditor(), engine = engine, learning = learning).apply {
+            type("hi")
+            candidate("我")
+            type("of")
+            candidate("你")
+        }
+        settings = TypingSettings()
+        typeTwoCharacters()
+        settings = TypingSettings(engine = EngineSettings(continuousTyping = true, rememberCandidates = false))
+        typeTwoCharacters()
+        settings = continuousSettings
+        typeTwoCharacters(learning = false)
+        assertTrue(learned.isEmpty())
+        typeTwoCharacters()
+        assertEquals(listOf(LearnedPair("我", "你", 1)), learned.last())
     }
 }
