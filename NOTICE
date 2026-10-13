@@ -15,6 +15,7 @@ Except as noted below, this project is licensed under the Apache License 2.0
 
    - app/src/main/res/mipmap-*/ic_launcher_foreground.png
    - app/src/main/res/mipmap-*/ic_launcher_monochrome.png
+   - app/src/main/res/drawable-nodpi/brand_*.webp
    - tools/icon/art/
    - docs/play/graphics/
 

@@ -37,4 +37,31 @@ class UpdateCheckTest {
         val bare = """{"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://ginput.jetpiggy.com/"}"""
         assertEquals(AvailableUpdate("0.6.0", "https://ginput.jetpiggy.com/", null), UpdateCheck.parse(bare, 4, true))
     }
+
+    @Test
+    fun brokenJsonIsNoUpdate() {
+        assertNull(UpdateCheck.parse("<html>", currentVersionCode = 4, chinese = true))
+        assertNull(UpdateCheck.announcement("<html>", chinese = true))
+        assertEquals(0, UpdateCheck.versionCode("<html>"))
+    }
+
+    @Test
+    fun announcementIsInTheUsersLanguageWithAnOptionalHttpsLink() {
+        val withNotice = """
+            {"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://ginput.jetpiggy.com/",
+             "notice": {"id": "a1", "zh-Hant": "翻譯暫停", "en": "Translate is paused", "url": "https://ginput.jetpiggy.com/"}}
+        """.trimIndent()
+        assertEquals(Announcement("a1", "翻譯暫停", "https://ginput.jetpiggy.com/"), UpdateCheck.announcement(withNotice, true))
+        assertEquals("Translate is paused", UpdateCheck.announcement(withNotice, false)?.text)
+        val insecure = withNotice.replace("https://ginput.jetpiggy.com/\"}", "http://example.com/\"}")
+        assertEquals(Announcement("a1", "翻譯暫停", null), UpdateCheck.announcement(insecure, true))
+    }
+
+    @Test
+    fun announcementNeedsAnIdAndText() {
+        assertNull(UpdateCheck.announcement(latest, chinese = true))
+        assertNull(UpdateCheck.announcement("""{"notice": {"zh-Hant": "沒有編號"}}""", chinese = true))
+        assertNull(UpdateCheck.announcement("""{"notice": {"id": "a1"}}""", chinese = true))
+        assertEquals("只有中文", UpdateCheck.announcement("""{"notice": {"id": "a1", "zh-Hant": "只有中文"}}""", false)?.text)
+    }
 }

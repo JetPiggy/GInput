@@ -11,6 +11,8 @@
 | `docs/play/graphics/icon-512.png` | Play 商店圖示（512 × 512） |
 | `docs/play/graphics/feature-graphic-zh-HK.png`、`-en.png` | Play 商店主題圖片（1024 × 500）：左邊是飛行插圖，右邊是墨黑（`#1C1C1C`）的字 |
 | `docs/play/graphics/monochrome-preview.png` | 主題圖示的預覽，紅色虛線是 66dp 安全圈；不用上傳 |
+| `app/src/main/res/drawable-nodpi/brand_flying.webp` | 設定頁品牌橫額的飛行插圖：去掉青綠背景（透明底），只取飛豬、屁雲和鍵盤；也用於「關於」的彩蛋 |
+| `app/src/main/res/drawable-nodpi/brand_sitting.webp` | 設定頁品牌卡的坐姿插圖，透明底 |
 
 背景色在 `app/src/main/res/values/ic_launcher_background.xml`。App 設定頁的主題色（`ui/theme/Theme.kt`）用同一種青綠和墨黑。
 
@@ -41,7 +43,13 @@ JetPiggy 是粗糙馬克筆風格的四腳粉紅豬：藍色泳鏡、細小的�
 python -I -X utf8 tools/icon/build_icon.py
 ```
 
-Chrome 只用來畫主題圖片的字。
+Chrome 只用來畫主題圖片的字。只更新設定頁的兩張插圖的話，加 `--settings-art`，不用 Chrome：
+
+```bash
+python -I -X utf8 tools/icon/build_icon.py --settings-art
+```
+
+改了 `brand_flying.webp` 的闊高比，要一併改 `settings/Brand.kt` 的 `FLYING_RATIO`。
 
 ## 規則
 
@@ -50,4 +58,4 @@ Chrome 只用來畫主題圖片的字。
 - App 圖示要簡潔：不畫屁雲，也不寫字，只保留泳鏡、白翼、披風和鍵盤。
 - 主題圖片不可以和 App 圖示太相似（Google 的指引），所以用放屁飛行的插圖，不用圖示的坐姿。插圖本身不寫字。
 - 主題圖片的字是 Noto Sans HK（SIL Open Font License），只畫成圖片，沒有把字型放進 App。
-- JetPiggy 飛豬是品牌圖像：圖示、`art/` 的圖片和 Play 商店圖片保留所有權利，不在開源授權的範圍內（`NOTICE`）。
+- JetPiggy 飛豬是品牌圖像：圖示、`art/` 的圖片、設定頁的插圖和 Play 商店圖片保留所有權利，不在開源授權的範圍內（`NOTICE`）。

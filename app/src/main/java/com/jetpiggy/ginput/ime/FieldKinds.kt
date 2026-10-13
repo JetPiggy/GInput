@@ -4,22 +4,38 @@ import android.text.InputType
 import android.view.inputmethod.EditorInfo
 import com.jetpiggy.ginput.typing.FieldKind
 
-internal fun EditorInfo.fieldKind(): FieldKind {
+internal fun EditorInfo.fieldKind(): FieldKind = fieldKind(inputType)
+
+/** inputType 決定的欄位種類。只收數字的密碼（例如 PIN）仍然用數字鍵盤；是不是密碼要看 isPassword。 */
+internal fun fieldKind(inputType: Int): FieldKind {
     val variation = inputType and InputType.TYPE_MASK_VARIATION
     return when (inputType and InputType.TYPE_MASK_CLASS) {
         InputType.TYPE_CLASS_NUMBER -> FieldKind.Number
         InputType.TYPE_CLASS_PHONE -> FieldKind.Phone
         InputType.TYPE_CLASS_DATETIME -> FieldKind.DateTime
-        InputType.TYPE_CLASS_TEXT -> when (variation) {
-            InputType.TYPE_TEXT_VARIATION_PASSWORD,
-            InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
-            InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD -> FieldKind.Password
-            InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-            InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> FieldKind.Email
-            InputType.TYPE_TEXT_VARIATION_URI -> FieldKind.Url
+        InputType.TYPE_CLASS_TEXT -> when {
+            isPassword(inputType) -> FieldKind.Password
+            variation == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS ||
+                variation == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS -> FieldKind.Email
+            variation == InputType.TYPE_TEXT_VARIATION_URI -> FieldKind.Url
             else -> FieldKind.Text
         }
         else -> FieldKind.Text
+    }
+}
+
+/** 密碼欄位，包括只收數字的密碼（例如 PIN）：不記錄剪貼簿歷史，也不數使用次數。 */
+internal fun EditorInfo.isPassword(): Boolean = isPassword(inputType)
+
+internal fun isPassword(inputType: Int): Boolean {
+    val variation = inputType and InputType.TYPE_MASK_VARIATION
+    return when (inputType and InputType.TYPE_MASK_CLASS) {
+        InputType.TYPE_CLASS_TEXT ->
+            variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
+                variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+        InputType.TYPE_CLASS_NUMBER -> variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD
+        else -> false
     }
 }
 

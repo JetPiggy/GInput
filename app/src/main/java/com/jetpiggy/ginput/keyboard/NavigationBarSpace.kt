@@ -26,6 +26,9 @@ import androidx.core.view.doOnAttach
  * 收到導航列的高度後，不一定在同一次量度就用上（例如系統的動畫期間要等動畫完結）；打開鍵盤時視窗可能先用了
  * 不計導航列的高度，之後再長高（閃一下），或者停在矮了的高度，最底一行被擋住、壓扁。所以這裏自己接收視窗的
  * insets，在量度時才讀，收到就在同一次量度用上；鍵盤視窗顯示之前，也先向系統讀一次導航列現在的高度。
+ *
+ * 手勢導航時，系統在鍵盤底部加上輸入法的按鈕（收起鍵盤、切換輸入法）。較新的 Android 把這排按鈕當作 caption bar
+ * 報給鍵盤，導航列的 insets 只有手勢條的高度（例如 Pixel），所以兩樣都要讓出，否則最底一行被按鈕擋住。
  */
 @Stable
 class NavigationBarSpace {
@@ -36,8 +39,11 @@ class NavigationBarSpace {
 
     private var view: View? = null
 
-    /** 鍵盤畫面最近收到的導航列 insets；未收到過是 null。 */
+    /** 鍵盤畫面最近收到的導航列 insets（連輸入法的按鈕）；未收到過是 null。 */
     private var received: Insets? = null
+
+    /** 輸入法的按鈕最近佔的高度（caption bar）；導航列的 insets 已經包括按鈕的話是 0。 */
+    private var buttonsBottom = 0
 
     /**
      * 導航列在畫面底部時，鍵盤視窗收不收到它的高度：Android 15 起輸入法視窗伸到導航列下面，會收到；
@@ -50,8 +56,10 @@ class NavigationBarSpace {
         this.view = view
         received = null
         ViewCompat.setOnApplyWindowInsetsListener(view) { target, windowInsets ->
-            val bar = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            val buttons = windowInsets.getInsets(WindowInsetsCompat.Type.captionBar())
+            val bar = Insets.max(windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars()), buttons)
             received = bar
+            buttonsBottom = buttons.bottom
             systemBarBottom(target)?.takeIf { it > 0 }?.let { receivesBar = bar.bottom > 0 }
             set(target, bar)
             windowInsets
@@ -63,12 +71,13 @@ class NavigationBarSpace {
     /**
      * 鍵盤視窗由隱藏變成顯示之前：向系統讀導航列現在的高度，視窗第一次量度就計在內。
      * 例如上次在全螢幕的 App 打開鍵盤時導航列收起了，這次就不會沿用上次的高度。
-     * 只估計底部；確實的數字以視窗之後收到的 insets 為準。
+     * 只估計底部：系統讀不到輸入法的按鈕，所以導航列在的話，沿用上次按鈕的高度。確實的數字以視窗之後收到的 insets 為準。
      */
     fun beforeShow() {
         val view = view ?: return
         val bottom = systemBarBottom(view) ?: return
-        set(view, Insets.of(insets.left, 0, insets.right, if (receivesBar == false) 0 else bottom))
+        val estimate = if (receivesBar == false || bottom == 0) 0 else maxOf(bottom, buttonsBottom)
+        set(view, Insets.of(insets.left, 0, insets.right, estimate))
         // 估計錯了而視窗的 insets 沒有變的話，系統不會再派 insets；畫好之後改回視窗收到的。
         view.post { received?.let { set(view, it) } }
     }
@@ -87,6 +96,10 @@ class NavigationBarSpace {
         // 讓在量度時讀 insets 的地方即時知道改了，並要求重新量度，不用等下一格畫面重組。
         Snapshot.sendApplyNotifications()
         view.requestLayout()
+        // 系統排版途中才收到的 insets（例如全螢幕的 App 收起了導航列，估計是 0，視窗排好後才收到輸入法的按鈕），
+        // 上面的要求會被那次排版吞掉：那次只在視窗現有的高度內量度，視窗不會長高，最底一行被切走，
+        // 要等到下次按鍵才變回正常。排版完成後再要求一次，視窗就按新的高度重新排版。
+        view.post { view.requestLayout() }
     }
 }
 

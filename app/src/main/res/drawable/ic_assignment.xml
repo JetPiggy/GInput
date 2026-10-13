@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Material Symbols Rounded 的 assignment 圖示，Apache 2.0 授權，聲明見 assets/licenses/apache-2.0.txt。工具列的「剪貼簿」用。 -->
+<!-- Material Symbols Rounded 的 assignment 圖示，Apache 2.0 授權，聲明見 assets/licenses/apache-2.0.txt。工具列的「剪貼簿」和設定主頁的「剪貼簿和常用短語」分類用。 -->
 <!-- 路徑照 Material Symbols 原樣保留，所以較長；圖示只有 18 至 24dp，由 Compose 畫好後快取，不影響效能。 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"

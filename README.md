@@ -6,10 +6,13 @@
 
 GInput 是為香港人而設的 Android 輸入法：同一個鍵盤打中文和英文，不用切換。打英文照打，打中文就打速成、倉頡碼或粵拼，再在候選列選字。
 
+**[下載最新版 APK](https://github.com/JetPiggy/GInput/releases/latest/download/GInput.apk)**　·　[如何安裝](#如何安裝)　·　[所有版本](https://github.com/JetPiggy/GInput/releases)
+
 ## 功能
 
 - 中英混打：同一個鍵盤，不用切換
 - 速成和倉頡：三代和五代的碼都接受
+- 連打：速成和倉頡可以連續打幾個字的碼，候選列出整句（hivddpof →「我好想你」），會記住你打過的搭配；預設關閉
 - 粵拼：不用打聲調，可以打整個詞（neihou →「你好」）；也接受懶音和港式拼法（lei →「你」、cheung →「張」）
 - 幾種輸入方案可以同時啟用
 - 粵語口語字優先：嘅、咗、啲、冇排在前面，聯想加入口語詞
@@ -19,7 +22,32 @@ GInput 是為香港人而設的 Android 輸入法：同一個鍵盤打中文和�
 
 ## 下載
 
-GInput 正在封閉測試，即將在 Google Play 推出。下載頁：<https://ginput.jetpiggy.com/>
+GInput 暫時以 APK 發佈，未在 Google Play 上架。免費，無廣告。
+
+**[下載最新版 APK](https://github.com/JetPiggy/GInput/releases/latest/download/GInput.apk)**：按下就直接下載 `GInput.apk`。每個版本的更新內容見 [Releases](https://github.com/JetPiggy/GInput/releases)；網站：<https://ginput.jetpiggy.com/>
+
+## 如何安裝
+
+需要 Android 9 或以上。
+
+1. 用手機按上面的「下載最新版 APK」。
+2. 下載完成後打開 `GInput.apk`。第一次從瀏覽器或檔案管理員安裝 App，Android 會要求允許這個來源安裝 App：按「設定」，開啟允許這個來源的選項，返回再按「安裝」。
+3. 如果 Google Play 保護機制彈出提示，按「更多詳情」再按「仍要安裝」。Samsung 手機開了自動封鎖程式（Auto Blocker）的話，要先在設定裏關閉它才可以安裝。
+4. 打開 GInput，跟着設定精靈做：在手機的鍵盤設定開啟 GInput，再選它做目前的輸入法。Android 開啟任何輸入法都會提醒它可以收集你打的字；GInput 打的內容只留在手機上，見下面的「私隱」。
+
+### 更新
+
+有新版本時，GInput 設定頁的最上面會顯示提示。再按「下載最新版 APK」，直接安裝蓋過舊版就可以，設定和記憶字都會保留；不要先解除安裝，否則記憶字和剪貼簿歷史會一併刪除。
+
+### 核對 APK（可選）
+
+GInput 的 APK 全部用同一把金鑰簽署，簽署憑證的 SHA-256 指紋是：
+
+```text
+CF:DB:16:7E:A8:A9:0C:D2:5D:0F:E8:7D:D0:D3:07:7A:F3:E8:5F:D7:A6:0C:A8:6C:FC:FE:C6:18:5A:6F:58:07
+```
+
+Android 只容許同一把金鑰簽署的版本蓋過舊版；指紋不同的 APK 不是 JetPiggy 發佈的。
 
 ## 私隱
 
@@ -73,10 +101,13 @@ GInput 以 [Apache License 2.0](LICENSE) 授權，以下除外（詳見 [NOTICE]
 
 GInput is an Android keyboard made for Hong Kong. Type English as usual, or type Quick (Sucheng), Cangjie or Jyutping and pick the Chinese from the candidate bar, without switching keyboards.
 
+**[Download the latest APK](https://github.com/JetPiggy/GInput/releases/latest/download/GInput.apk)**　·　[How to install](#how-to-install)　·　[All releases](https://github.com/JetPiggy/GInput/releases)
+
 ### Features
 
 - Chinese and English on one keyboard, no switching
 - Quick and Cangjie, accepting both 3rd and 5th generation codes
+- Continuous typing: type the codes of several characters in a row in Quick or Cangjie and pick the whole sentence (hivddpof → 我好想你); it learns the character pairs you type. Off by default
 - Jyutping without tones, including whole words (neihou → 你好), lazy pronunciations and Hong Kong spellings (lei → 你, cheung → 張)
 - Turn on more than one input scheme at the same time
 - Colloquial Cantonese first: 嘅, 咗, 啲 and 冇 come first, and suggestions include colloquial words
@@ -86,7 +117,32 @@ GInput is an Android keyboard made for Hong Kong. Type English as usual, or type
 
 ### Download
 
-GInput is in closed testing and coming soon to Google Play. Website: <https://ginput.jetpiggy.com/>
+For now GInput is released as an APK and is not on Google Play. It's free, with no ads.
+
+**[Download the latest APK](https://github.com/JetPiggy/GInput/releases/latest/download/GInput.apk)**: the link downloads `GInput.apk` straight away. See [Releases](https://github.com/JetPiggy/GInput/releases) for what's new in each version. Website: <https://ginput.jetpiggy.com/>
+
+### How to install
+
+You need Android 9 or later.
+
+1. On your phone, tap "Download the latest APK" above.
+2. When the download finishes, open `GInput.apk`. The first time you install an app from your browser or file manager, Android asks you to allow that source: tap Settings, turn on "Allow from this source", go back and tap Install.
+3. If Google Play Protect shows a warning, tap "More details" and then "Install anyway". On a Samsung phone with Auto Blocker turned on, turn it off first in Settings.
+4. Open GInput and follow the setup: turn on GInput in your phone's keyboard settings, then pick it as your current keyboard. Android warns that any keyboard can collect what you type; with GInput, what you type stays on your phone (see Privacy below).
+
+#### Updating
+
+When a new version is out, the top of GInput's settings shows a notice. Tap "Download the latest APK" again and install it over the old version: your settings and remembered characters are kept. Don't uninstall first, or your remembered characters and clipboard history are deleted too.
+
+#### Checking the APK (optional)
+
+Every GInput APK is signed with the same key. The SHA-256 fingerprint of the signing certificate is:
+
+```text
+CF:DB:16:7E:A8:A9:0C:D2:5D:0F:E8:7D:D0:D3:07:7A:F3:E8:5F:D7:A6:0C:A8:6C:FC:FE:C6:18:5A:6F:58:07
+```
+
+Android only lets an APK signed with the same key replace the installed version; an APK with a different fingerprint wasn't released by JetPiggy.
 
 ### Privacy
 

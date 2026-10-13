@@ -40,12 +40,22 @@
     <string name="setup_try_hint">在這裏試打</string>
 
     <!-- 設定頁 -->
-    <string name="settings_title">GInput 設定</string>
+    <string name="settings_banner">設定</string>
     <string name="try_keyboard_hint">在這裏試打，改設定時鍵盤會留着</string>
     <string name="try_keyboard_not_default">GInput 不是目前的輸入法，試打會用另一個鍵盤</string>
     <string name="try_keyboard_clear">清除試打的文字</string>
     <string name="status_not_enabled">GInput 未啟用。</string>
     <string name="status_not_default">GInput 不是目前的輸入法。</string>
+    <!-- 主頁分類的摘要，例如「剪貼簿歷史：開」「速成、粵拼」 -->
+    <string name="summary_setting">%1$s：%2$s</string>
+    <string name="setting_on">開</string>
+    <string name="setting_off">關</string>
+    <string name="list_separator">、</string>
+    <string name="space_mode_short_english">空白鍵寫英文</string>
+    <string name="space_mode_short_chinese">空白鍵選中文</string>
+    <plurals name="phrase_count">
+        <item quantity="other">%1$d 個常用短語</item>
+    </plurals>
 
     <string name="section_schemes">輸入方案</string>
     <string name="scheme_quick">速成</string>
@@ -67,9 +77,9 @@
     <string name="order_frequency">常用度次序</string>
     <string name="order_windows">Windows 次序</string>
     <string name="remember_candidates">記憶字</string>
-    <string name="remember_candidates_summary">選過兩次的字排在最前，以淺綠底標示（只在常用度次序生效）；開了連打的話，也記住你打過的前後兩個字，令整句候選更準</string>
+    <string name="remember_candidates_summary">選過兩次的字排在最前，以淺綠底標示（只限常用度次序）；開了連打的話，也記住前後兩個字，令整句候選更準</string>
     <string name="continuous_typing">連打</string>
-    <string name="continuous_typing_summary">速成和倉頡可以不選字、連續打幾個字的碼，候選列出整句；速成會猜錯，要看清楚才選</string>
+    <string name="continuous_typing_summary">速成和倉頡可以連續打幾個字的碼，候選列出整句；速成會猜錯，要看清楚才選</string>
     <string name="clear_memory">清除全部記憶</string>
     <string name="clear_memory_summary">全部記憶字回到原來的位置，連打記住的前後兩個字也會忘記</string>
     <string name="clear_memory_confirm_title">清除全部記憶？</string>
@@ -108,7 +118,10 @@
     <string name="phrase_move_up">把「%1$s」上移</string>
     <string name="phrase_move_down">把「%1$s」下移</string>
 
-    <string name="section_keyboard">鍵盤</string>
+    <string name="section_appearance">鍵盤外觀</string>
+    <string name="section_layout">版面</string>
+    <string name="keyboard_preview">鍵盤預覽</string>
+    <string name="keyboard_preview_hint">預覽跟着下面的設定即時改變；按鍵只供預覽。</string>
     <string name="keyboard_theme">主題</string>
     <string name="keyboard_theme_summary">淺色或深色跟隨系統的設定</string>
     <string name="theme_default">預設</string>
@@ -127,6 +140,7 @@
     <string name="labels_letters_only">只顯示英文字母</string>
     <string name="number_row">數字行</string>
     <string name="number_row_summary">字母上面常駐一行數字</string>
+    <string name="section_feel">手感</string>
     <string name="key_preview">按鍵放大預覽</string>
     <string name="key_preview_summary">按住按鍵時，在上方放大顯示</string>
     <string name="key_sound">按鍵音</string>
@@ -139,9 +153,13 @@
     <string name="usage_stats_summary">傳送匿名的功能使用次數；不包括你打的任何內容</string>
 
     <string name="section_about">關於</string>
-    <string name="version">版本</string>
+    <string name="brand_by">JetPiggy 出品</string>
+    <string name="brand_by_version">JetPiggy 出品 · %1$s</string>
+    <string name="version_name">版本 %1$s</string>
+    <string name="website">網站</string>
+    <string name="source_code">原始碼</string>
     <string name="contact">聯絡我們</string>
-    <string name="no_email_app">找不到可以寄電郵的 App</string>
+    <string name="no_email_app">找不到可以寄電郵的 App。電郵地址：%1$s</string>
     <string name="privacy_policy">私隱政策</string>
     <string name="licenses">開源授權</string>
     <string name="licenses_summary">GInput 用到的程式庫和資料</string>
@@ -149,6 +167,9 @@
     <!-- 更新提示（不是從 Google Play 安裝的版本） -->
     <string name="update_available">有新版本：%1$s</string>
     <string name="update_open">前往下載頁</string>
+    <string name="notice_title">GInput 公告</string>
+    <string name="notice_more">了解更多</string>
+    <string name="notice_dismiss">知道了</string>
 
     <!-- 開源授權頁 -->
     <string name="license_public_domain">公有領域</string>
@@ -176,6 +197,7 @@
     <string name="toolbar_translate">翻譯</string>
     <string name="toolbar_rewrite">改寫</string>
     <string name="toolbar_settings">設定</string>
+    <string name="toolbar_settings_badge">設定，有新版本或公告</string>
     <string name="toolbar_voice_input">語音輸入</string>
 
     <!-- 按了語音輸入，但手機未啟用語音輸入法 -->
@@ -229,9 +251,9 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>新設定「連打」：速成和倉頡可以連續打幾個字的碼，候選列出整句。預設關閉，在設定的「輸入方案」開啟。</item>
-        <item>在按鍵上左右滑動，可以移動游標；按住 Shift 鍵再滑動，就可以選取文字。按鍵也更容易按中。</item>
-        <item>123 鍵和 😊 鍵對調；句首自動大寫可以在設定關掉。</item>
+        <item>設定頁重新整理，分成六類；在「鍵盤外觀」改主題、高度和按鍵標示，即時看到效果。按鍵放大預覽和按鍵音移到「打字」。</item>
+        <item>有新版本或公告時，鍵盤工具列的「設定」會加一個小點。</item>
+        <item>修正 Pixel 等手機的收起鍵盤按鈕擋住最底一行，以及全螢幕遊戲裏最底一行被切走。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 

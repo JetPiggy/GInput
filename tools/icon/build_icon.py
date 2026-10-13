@@ -12,12 +12,17 @@
     docs/play/graphics/icon-512.png                         Play 商店圖示
     docs/play/graphics/monochrome-preview.png               主題圖示的預覽
     docs/play/graphics/feature-graphic-zh-HK.png、-en.png    Play 商店主題圖片（1024 × 500）
+    app/src/main/res/drawable-nodpi/brand_flying.webp       設定頁頂部橫額的飛行插圖（透明底）
+    app/src/main/res/drawable-nodpi/brand_sitting.webp      設定頁「關於」的坐姿插圖（透明底）
+只更新設定頁的插圖（不用 Chrome）：
+    python -I -X utf8 tools/icon/build_icon.py --settings-art
 詳情見同一資料夾的 README.md。
 """
 
 import math
 import random
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -42,6 +47,12 @@ VISIBLE = 72  # 啟動器遮罩內看得到的範圍（dp）
 SAFE = 66  # 安全圈的直徑（dp）：任何啟動器形狀都不會裁到
 
 DENSITIES = {"mdpi": 108, "hdpi": 162, "xhdpi": 216, "xxhdpi": 324, "xxxhdpi": 432}
+
+# 設定頁的插圖只出一種大小（drawable-nodpi），由 App 按需要縮放。
+# 橫額的飛豬約 150dp 高，「關於」的飛豬約 86dp 闊；這個大小在 xxhdpi 和 xxxhdpi 的手機上都清楚，檔案也細。
+FLYING_HEIGHT = 480
+SITTING_WIDTH = 320
+WEBP_QUALITY = 88
 
 
 # ---- 圖示 ----
@@ -213,6 +224,40 @@ def banner_art() -> tuple[Image.Image, int]:
     return canvas, BANNER_LEFT + size[0] + TEXT_GAP
 
 
+# ---- 設定頁的插圖 ----
+
+
+def flying_cutout() -> Image.Image:
+    """飛行插圖去掉青綠背景，只取飛豬、屁雲和鍵盤的範圍（透明底）。
+
+    透明度按和背景色的距離漸變，和 banner_art 一樣；邊緣混進的青綠也減掉，所以放在任何底色上都沒有青綠的邊。
+    """
+    rgb = np.asarray(Image.open(BANNER).convert("RGB"), dtype=np.float32)
+    edges = np.concatenate([rgb[:8].reshape(-1, 3), rgb[-8:].reshape(-1, 3)])
+    background = np.median(edges, axis=0)
+    distance = np.linalg.norm(rgb - background, axis=2)
+    alpha = np.clip((distance - 8) / 32, 0, 1)[..., None]
+    colour = (rgb - background * (1 - alpha)) / np.maximum(alpha, 1e-3)
+    rgba = np.concatenate([np.clip(colour, 0, 255), alpha * 255], axis=2).round().astype(np.uint8)
+    ys, xs = np.nonzero(distance > 25)
+    pad = 4
+    return Image.fromarray(rgba, "RGBA").crop((max(0, xs.min() - pad), max(0, ys.min() - pad),
+                                               min(rgb.shape[1], xs.max() + 1 + pad), min(rgb.shape[0], ys.max() + 1 + pad)))
+
+
+def settings_art(res: Path) -> None:
+    """設定頁的插圖：頂部橫額的飛行插圖和「關於」的坐姿插圖，都是透明底的 WebP。"""
+    out = res / "drawable-nodpi"
+    out.mkdir(parents=True, exist_ok=True)
+    flying = flying_cutout()
+    flying = flying.resize((round(flying.width * FLYING_HEIGHT / flying.height), FLYING_HEIGHT), Image.LANCZOS)
+    flying.save(out / "brand_flying.webp", quality=WEBP_QUALITY, method=6)
+    sitting = Image.open(TYPING).convert("RGBA")
+    sitting = sitting.crop(sitting.getchannel("A").getbbox())
+    sitting = sitting.resize((SITTING_WIDTH, round(sitting.height * SITTING_WIDTH / sitting.width)), Image.LANCZOS)
+    sitting.save(out / "brand_sitting.webp", quality=WEBP_QUALITY, method=6)
+
+
 def feature_html(art_href: str, text_left: int, text: dict) -> str:
     width = FEATURE_W - text_left - TEXT_RIGHT
     return f"""<!doctype html>
@@ -241,6 +286,10 @@ p{{margin:14px 0 0;font-size:25px;font-weight:700;opacity:.82;line-height:1.35}}
 
 def main() -> None:
     res = ROOT / "app" / "src" / "main" / "res"
+    settings_art(res)
+    if "--settings-art" in sys.argv[1:]:
+        print("完成：", res / "drawable-nodpi")
+        return
     graphics = ROOT / "docs" / "play" / "graphics"
     graphics.mkdir(parents=True, exist_ok=True)
 

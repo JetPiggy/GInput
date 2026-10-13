@@ -75,6 +75,8 @@ fun KeyboardScreen(
     onUsage: (UsageEvent) -> Unit = {},
     /** 更新了 GInput 之後，還未按「知道了」的新版簡介。 */
     whatsNew: Boolean = false,
+    /** 有未在設定頁看過的新版本或公告：工具列的「設定」加一個小點。 */
+    settingsBadge: Boolean = false,
 ) {
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val base = if (landscape) LandscapeDimensions else PortraitDimensions
@@ -90,7 +92,7 @@ fun KeyboardScreen(
     ) {
         KeyboardContent(
             state, settings, field, emojiCategories, recentEmoji, clipboard, onKey, navigationBar, voiceInput, cloudText,
-            onUsage, whatsNew,
+            onUsage, whatsNew, settingsBadge,
         )
     }
 }
@@ -109,6 +111,7 @@ private fun KeyboardContent(
     cloudText: CloudTextState,
     onUsage: (UsageEvent) -> Unit,
     whatsNew: Boolean,
+    settingsBadge: Boolean,
 ) {
     val colors = keyboardColors(settings.theme)
     val previews = LocalKeyPreview.current
@@ -162,6 +165,7 @@ private fun KeyboardContent(
                     prompt = prompt,
                     gridOpen = gridOpen,
                     voiceInput = voiceInput,
+                    settingsBadge = settingsBadge,
                     cloudTools = field != FieldKind.Password,
                     radicals = settings.radicals,
                     colors = colors,

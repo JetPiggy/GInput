@@ -10,11 +10,14 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
+import com.jetpiggy.ginput.BuildConfig
 import com.jetpiggy.ginput.R
 import com.jetpiggy.ginput.clipboard.ClipboardHistory
 import com.jetpiggy.ginput.clipboard.ClipboardHistoryFile
@@ -54,6 +57,7 @@ import com.jetpiggy.ginput.typing.FieldKind
 import com.jetpiggy.ginput.typing.KeyboardState
 import com.jetpiggy.ginput.typing.TypingSession
 import com.jetpiggy.ginput.typing.WriteKind
+import com.jetpiggy.ginput.update.UpdateNotices
 import com.jetpiggy.ginput.update.WhatsNew
 import com.jetpiggy.ginput.usagestats.UsageEvent
 import com.jetpiggy.ginput.usagestats.UsageStats
@@ -77,6 +81,9 @@ class GInputImeService : LifecycleInputMethodService() {
     private lateinit var phraseStore: PhraseStore
     private lateinit var usageStats: UsageStats
 
+    /** 網站公佈的新版本和公告。 */
+    private lateinit var updates: UpdateNotices
+
     /** 字庫載入完成前收到「清除全部記憶」，載入後再清。 */
     private var memoryClearPending = false
 
@@ -84,6 +91,9 @@ class GInputImeService : LifecycleInputMethodService() {
 
     /** 目前的文字框容許學習（不是無痕模式）：記錄記憶字和最近使用的 Emoji。 */
     private var learning = true
+
+    /** 目前的文字框是密碼欄位，包括只收數字的密碼（例如 PIN）。 */
+    private var passwordField = false
     private var keyboardState by mutableStateOf(KeyboardState())
     private var keyboardSettings by mutableStateOf(KeyboardSettings())
     private var field by mutableStateOf(FieldKind.Text)
@@ -146,6 +156,7 @@ class GInputImeService : LifecycleInputMethodService() {
         keyboardSettings = settingsStore.settings.value.keyboardOnScreen
         whatsNew = checkWhatsNew()
         usageStats = UsageStats(applicationContext, settingsStore, lifecycleScope).also { it.load() }
+        updates = UpdateNotices.get(applicationContext).also { it.load(lifecycleScope) }
         lifecycleScope.launch {
             var stats = settingsStore.settings.value.usageStats
             settingsStore.settings.collect {
@@ -222,6 +233,8 @@ class GInputImeService : LifecycleInputMethodService() {
         installViewTreeOwners()
         return ComposeView(this).apply {
             setContent {
+                val updateState by updates.state.collectAsState()
+                val settingsBadge = remember(updateState) { updateState.unseen(BuildConfig.VERSION_CODE) }
                 GInputTheme {
                     KeyboardScreen(
                         state = keyboardState,
@@ -240,6 +253,7 @@ class GInputImeService : LifecycleInputMethodService() {
                         cloudText = cloudText,
                         onUsage = ::recordUsage,
                         whatsNew = whatsNew,
+                        settingsBadge = settingsBadge,
                     )
                 }
             }
@@ -270,9 +284,10 @@ class GInputImeService : LifecycleInputMethodService() {
         field = info.fieldKind()
         hasSelection = info.initialSelStart >= 0 && info.initialSelStart != info.initialSelEnd
         learning = info.allowsLearning()
+        passwordField = info.isPassword()
         // 每次打開鍵盤都重新查看，使用者剛到系統設定啟用了語音輸入法也看得到。
         voiceInput = when {
-            field == FieldKind.Password || info.disallowsMicrophone() -> VoiceInputKey.Hidden
+            passwordField || info.disallowsMicrophone() -> VoiceInputKey.Hidden
             findVoiceInput() != null -> VoiceInputKey.Available
             else -> VoiceInputKey.NotEnabled
         }
@@ -298,6 +313,7 @@ class GInputImeService : LifecycleInputMethodService() {
             }
         }
         usageStats.sendIfDue()
+        updates.checkIfDue(lifecycleScope)
         purgeClipboard()
     }
 
@@ -413,7 +429,7 @@ class GInputImeService : LifecycleInputMethodService() {
 
     /** 密碼欄位和要求不學習的欄位（無痕模式）不數。 */
     private fun recordUsage(event: UsageEvent) {
-        if (learning && field != FieldKind.Password) usageStats.record(event)
+        if (learning && !passwordField) usageStats.record(event)
     }
 
     private val WriteKind.usageEvent: UsageEvent
@@ -606,6 +622,7 @@ class GInputImeService : LifecycleInputMethodService() {
 
     /**
      * 系統剪貼簿有新複製的內容時記下；startup 是 GInput 啟動時補記 1 小時內複製、未見過的文字。
+     * 鍵盤正在密碼欄位或無痕欄位的話，補記也不記，只當作見過：GInput 剛啟動時，那段文字可能是在這個欄位複製的。
      * 規則見 docs/spec/v1.md 的「剪貼簿和常用短語」。
      */
     private fun recordClip(startup: Boolean) {
@@ -617,17 +634,17 @@ class GInputImeService : LifecycleInputMethodService() {
         if (startup && (copiedAt <= clipboardHistory.lastSeen || ClipboardHistory.expired(copiedAt, now))) return
         // 只收文字：圖片、檔案等只有 URI 的內容，text 是 null。
         val text = if (clip.itemCount > 0) clip.getItemAt(0).text?.toString() else null
-        val record = !clip.description.isSensitive() && (startup || clipboardAllowedHere())
+        val record = !clip.description.isSensitive() && clipboardAllowedHere()
         updateHistory(
             if (text != null && record) clipboardHistory.add(text, copiedAt) else clipboardHistory.seen(copiedAt),
         )
     }
 
-    /** 鍵盤正在密碼欄位或要求不學習的欄位（例如無痕模式）時，複製的不記錄。 */
+    /** 鍵盤正在密碼欄位（包括數字密碼）或要求不學習的欄位（例如無痕模式）時，複製的不記錄。 */
     private fun clipboardAllowedHere(): Boolean {
         val info = currentInputEditorInfo
         if (!currentInputStarted || info == null) return true
-        return info.fieldKind() != FieldKind.Password && info.allowsLearning()
+        return !info.isPassword() && info.allowsLearning()
     }
 
     private fun updateHistory(next: ClipboardHistory) {

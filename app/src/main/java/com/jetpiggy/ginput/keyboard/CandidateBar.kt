@@ -12,13 +12,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -82,6 +85,8 @@ internal fun CandidateBar(
     prompt: BarPrompt?,
     gridOpen: Boolean,
     voiceInput: VoiceInputKey,
+    /** 工具列的「設定」加一個小點：有未看過的新版本或公告。 */
+    settingsBadge: Boolean,
     /** 工具列有沒有「翻譯」和「改寫」；密碼欄位沒有。 */
     cloudTools: Boolean,
     /** 打開候選字格時，組字後面顯示倉頡字根；只啟用粵拼時不顯示。 */
@@ -227,7 +232,7 @@ internal fun CandidateBar(
                 CloseButton(colors) { onKey(KeyAction.DismissFollowUps) }
             }
             else -> {
-                Toolbar(colors, cloudTools, onKey, onOpenClipboard, onOpenCloudTool)
+                Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool)
                 // 語音輸入在最右邊，和 ✕ ▼ 一樣只有圖示，不擠走其他按鈕的文字。
                 if (voiceInput != VoiceInputKey.Hidden) {
                     BarButton(R.drawable.ic_mic, stringResource(R.string.toolbar_voice_input), colors, iconSize = 22.dp) {
@@ -241,12 +246,20 @@ internal fun CandidateBar(
 
 private val Whitespace = Regex("""\s+""")
 
-internal class ToolbarItem(@DrawableRes val icon: Int, val label: String, val onTap: () -> Unit)
+/** badge：圖示右上角加一個小點；description 是 TalkBack 讀出的文字。 */
+internal class ToolbarItem(
+    @DrawableRes val icon: Int,
+    val label: String,
+    val badge: Boolean = false,
+    val description: String = label,
+    val onTap: () -> Unit,
+)
 
 private val ToolbarPadding = 4.dp
 private val ToolbarIconSize = 18.dp
 private val ToolbarGap = 4.dp
 private val ToolbarTextSize = 13.sp
+private val BadgeSize = 7.dp
 
 /**
  * 候選列空閒時的工具列：剪貼簿、翻譯、改寫和設定（密碼欄位沒有翻譯和改寫）。圖示和文字並排，
@@ -257,12 +270,14 @@ private val ToolbarTextSize = 13.sp
 private fun RowScope.Toolbar(
     colors: KeyboardColors,
     cloudTools: Boolean,
+    settingsBadge: Boolean,
     onKey: (KeyAction) -> Unit,
     onOpenClipboard: () -> Unit,
     onOpenCloudTool: (CloudTool) -> Unit,
 ) {
+    val settingsLabel = stringResource(R.string.toolbar_settings)
     val items = listOfNotNull(
-        ToolbarItem(R.drawable.ic_assignment, stringResource(R.string.toolbar_clipboard), onOpenClipboard),
+        ToolbarItem(R.drawable.ic_assignment, stringResource(R.string.toolbar_clipboard), onTap = onOpenClipboard),
         if (cloudTools) {
             ToolbarItem(R.drawable.ic_translate, stringResource(R.string.toolbar_translate)) { onOpenCloudTool(CloudTool.Translation) }
         } else {
@@ -273,7 +288,12 @@ private fun RowScope.Toolbar(
         } else {
             null
         },
-        ToolbarItem(R.drawable.ic_settings, stringResource(R.string.toolbar_settings)) { onKey(KeyAction.OpenSettings) },
+        ToolbarItem(
+            icon = R.drawable.ic_settings,
+            label = settingsLabel,
+            badge = settingsBadge,
+            description = if (settingsBadge) stringResource(R.string.toolbar_settings_badge) else settingsLabel,
+        ) { onKey(KeyAction.OpenSettings) },
     )
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
@@ -306,14 +326,25 @@ internal fun RowScope.ToolbarButton(item: ToolbarItem, showLabel: Boolean, color
             .padding(ToolbarPadding),
         color = Color.Transparent,
         pressedColor = colors.pressedKey,
-        description = item.label,
+        description = item.description,
         onTap = item.onTap,
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(ToolbarGap),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            KeyIcon(item.icon, colors.secondaryLabel, size = ToolbarIconSize)
+            Box {
+                KeyIcon(item.icon, colors.secondaryLabel, size = ToolbarIconSize)
+                if (item.badge) {
+                    Box(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 2.dp, y = (-2).dp)
+                            .size(BadgeSize)
+                            .background(colors.accent, CircleShape),
+                    )
+                }
+            }
             if (showLabel) {
                 Text(
                     text = item.label,
