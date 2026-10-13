@@ -2,6 +2,7 @@ package com.jetpiggy.ginput.keyboard
 
 import android.os.Build
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.compose.runtime.Stable
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.offset
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.children
 import androidx.core.view.doOnAttach
 
 /**
@@ -71,12 +73,13 @@ class NavigationBarSpace {
     /**
      * 鍵盤視窗由隱藏變成顯示之前：向系統讀導航列現在的高度，視窗第一次量度就計在內。
      * 例如上次在全螢幕的 App 打開鍵盤時導航列收起了，這次就不會沿用上次的高度。
-     * 只估計底部：系統讀不到輸入法的按鈕，所以導航列在的話，沿用上次按鈕的高度。確實的數字以視窗之後收到的 insets 為準。
+     * 只估計底部：系統讀不到輸入法的按鈕，所以沿用上次按鈕的高度；全螢幕的 App 收起了導航列，按鈕仍然在。
+     * 確實的數字以視窗之後收到的 insets 為準。
      */
     fun beforeShow() {
         val view = view ?: return
         val bottom = systemBarBottom(view) ?: return
-        val estimate = if (receivesBar == false || bottom == 0) 0 else maxOf(bottom, buttonsBottom)
+        val estimate = if (receivesBar == false) 0 else maxOf(bottom, buttonsBottom)
         set(view, Insets.of(insets.left, 0, insets.right, estimate))
         // 估計錯了而視窗的 insets 沒有變的話，系統不會再派 insets；畫好之後改回視窗收到的。
         view.post { received?.let { set(view, it) } }
@@ -95,12 +98,25 @@ class NavigationBarSpace {
         insets = next
         // 讓在量度時讀 insets 的地方即時知道改了，並要求重新量度，不用等下一格畫面重組。
         Snapshot.sendApplyNotifications()
-        view.requestLayout()
-        // 系統排版途中才收到的 insets（例如全螢幕的 App 收起了導航列，估計是 0，視窗排好後才收到輸入法的按鈕），
-        // 上面的要求會被那次排版吞掉：那次只在視窗現有的高度內量度，視窗不會長高，最底一行被切走，
-        // 要等到下次按鍵才變回正常。排版完成後再要求一次，視窗就按新的高度重新排版。
-        view.post { view.requestLayout() }
+        view.remeasure()
+        // 系統排版途中才收到的 insets，上面的要求會被那次排版吞掉：那次只在視窗現有的高度內量度，視窗不會長高。
+        // 排版完成後再要求一次，視窗就按新的高度重新排版。
+        view.post { view.remeasure() }
     }
+}
+
+/**
+ * 要求連同裏面的 view 一起重新量度。只要求外層的話，Compose 裏面的 view 收到量過的尺寸要求時會沿用上次的結果
+ * （View 的量度快取），讀不到新的 insets：視窗不會長高，最底一行被切走，要等到按鍵令 Compose 自己要求重新量度。
+ */
+private fun View.remeasure() {
+    forceLayoutTree()
+    requestLayout()
+}
+
+private fun View.forceLayoutTree() {
+    forceLayout()
+    if (this is ViewGroup) children.forEach { it.forceLayoutTree() }
 }
 
 /** 讓出導航列的位置。在量度時才讀 space，導航列的高度一變就即時重新量度。 */

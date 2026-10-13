@@ -167,7 +167,7 @@
 
     <!-- 更新提示（不是從 Google Play 安裝的版本） -->
     <string name="update_available">Version %1$s is available</string>
-    <string name="update_open">Go to download page</string>
+    <string name="update_open">Download update</string>
     <string name="notice_title">GInput notice</string>
     <string name="notice_more">Learn more</string>
     <string name="notice_dismiss">Got it</string>

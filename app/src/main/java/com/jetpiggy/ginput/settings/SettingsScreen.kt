@@ -145,7 +145,7 @@ private fun ImeStatusCard(status: ImeStatus) {
 
 /**
  * 不是從 Google Play 安裝的版本：網站的 latest.json 有公告或新版本時，在設定主頁最上面顯示（規格「發佈」）。
- * 新版本只打開下載頁，不在 App 內下載。在這裏看過之後，鍵盤工具列的「設定」不再加小點。
+ * 新版本的按鈕交給瀏覽器下載 APK，不在 App 內下載。在這裏看過之後，鍵盤工具列的「設定」不再加小點。
  */
 @Composable
 private fun UpdateCards() {

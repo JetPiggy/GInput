@@ -166,7 +166,7 @@
 
     <!-- 更新提示（不是從 Google Play 安裝的版本） -->
     <string name="update_available">有新版本：%1$s</string>
-    <string name="update_open">前往下載頁</string>
+    <string name="update_open">下載新版本</string>
     <string name="notice_title">GInput 公告</string>
     <string name="notice_more">了解更多</string>
     <string name="notice_dismiss">知道了</string>

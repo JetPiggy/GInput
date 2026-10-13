@@ -14,7 +14,7 @@ data class Announcement(val id: String, val text: String, val url: String?)
 
 /**
  * 更新提示（規格「發佈」）：不是從 Google Play 安裝的版本，才讀網站的 latest.json；
- * 有新版本就提示，並打開下載頁，不在 App 內下載。latest.json 也可以帶一則公告。
+ * 有新版本就提示，按鈕交給瀏覽器下載 APK，不在 App 內下載。latest.json 也可以帶一則公告。
  */
 object UpdateCheck {
 
@@ -53,7 +53,7 @@ object UpdateCheck {
 
     /**
      * latest.json 的格式（notice 可以沒有；url 可以沒有）：
-     * {"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://ginput.jetpiggy.com/",
+     * {"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://github.com/…/GInput.apk",
      *  "notes": {"zh-Hant": "…", "en": "…"},
      *  "notice": {"id": "2026-10-20", "zh-Hant": "…", "en": "…", "url": "https://…"}}
      * 格式有問題就當作沒有新版本。
