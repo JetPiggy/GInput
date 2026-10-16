@@ -80,7 +80,7 @@
     <string name="remember_candidates">Remember picks</string>
     <string name="remember_candidates_summary">Characters you pick twice move to the front, highlighted in green (most-common-first order only). With continuous typing on, it also remembers which characters go together, for better sentences</string>
     <string name="continuous_typing">Continuous typing</string>
-    <string name="continuous_typing_summary">Type the codes of several characters in a row in Quick or Cangjie and pick the whole sentence. Quick can guess wrong, so check before you pick</string>
+    <string name="continuous_typing_summary">Type the codes of several characters in a row in Quick or Cangjie and pick the whole sentence. Quick can guess wrong, so check before you pick. Long-press the sentence to fix a character</string>
     <string name="clear_memory">Clear remembered characters</string>
     <string name="clear_memory_summary">Puts every remembered character back in its usual place and forgets the characters continuous typing remembered together</string>
     <string name="clear_memory_confirm_title">Clear all remembered characters?</string>
@@ -209,6 +209,11 @@
     <string name="forget_prompt">Stop putting “%1$s” first?</string>
     <string name="forget_button">Forget</string>
 
+    <!-- Character fix: long-press the sentence candidate -->
+    <string name="fix_character">Fix a character</string>
+    <string name="fix_part">%1$s, %2$s</string>
+    <string name="fix_current">Current character</string>
+
     <!-- 剪貼簿面板 -->
     <string name="clipboard_copy">Copy</string>
     <string name="clipboard_paste">Paste</string>
@@ -252,9 +257,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput updated to %1$s</string>
     <string-array name="whats_new_items">
-        <item>Settings are now grouped into six sections. Under Keyboard appearance, changes to the theme, height and key labels show up right away. Key preview and key sound have moved to Typing.</item>
-        <item>When a new version or announcement is out, a dot appears on Settings in the keyboard toolbar.</item>
-        <item>Fixed the bottom row being covered by the hide-keyboard button on Pixel and other phones, or cut off in full-screen games.</item>
+        <item>Continuous typing can now fix a character: if the sentence has one wrong character, long-press the sentence, slide across the keyboard to that character, then let go and pick the right one.</item>
+        <item>Continuous typing is off by default. Turn it on in Settings under Chinese input.</item>
     </string-array>
     <string name="whats_new_ok">Got it</string>
 

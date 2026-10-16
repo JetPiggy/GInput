@@ -1,10 +1,14 @@
 package com.jetpiggy.ginput.keyboard
 
+import android.view.HapticFeedbackConstants
+import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -26,9 +30,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -37,8 +45,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -48,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jetpiggy.ginput.R
 import com.jetpiggy.ginput.cloudtext.CloudTool
+import com.jetpiggy.ginput.engine.SentencePart
 import com.jetpiggy.ginput.typing.KeyboardState
 
 /** 候選字超過這個數目，候選列最右邊才出 ▼ 鍵。 */
@@ -75,8 +88,9 @@ internal sealed interface BarPrompt {
 }
 
 /**
- * 候選列。依次序顯示：長按後的確認、選單、打開候選字格時的組字和字根、組字的候選字和英文建議、
+ * 候選列。依次序顯示：長按後的確認、選單、打開候選字格時的組字和字根、改字時可以換上的字、組字的候選字和英文建議、
  * 相關符號、聯想（Emoji 關鍵字的 Emoji 固定在最右）；都沒有時顯示工具列。在候選列向下掃就收起鍵盤。
+ * 長按整句候選再左右滑動揀字（改字）時，整句逐個字鋪在上面。
  */
 @Composable
 internal fun CandidateBar(
@@ -102,147 +116,362 @@ internal fun CandidateBar(
 ) {
     val hidePx = with(LocalDensity.current) { HideSwipeDistance.toPx() }
     val currentOnKey by rememberUpdatedState(onKey)
-    Row(
+    val view = LocalView.current
+    // 改字：長按整句候選後揀中的是第幾個字（手指未放）；開了 TalkBack 的話，改為逐個字列出讓使用者按。
+    var choosing by remember(state.composition) { mutableStateOf<Int?>(null) }
+    var choosingByTap by remember(state) { mutableStateOf(false) }
+    val fix = state.characterFix
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(LocalKeyboardDimensions.current.barHeight)
-            .pointerInput(Unit) {
-                var travelled = 0f
-                detectVerticalDragGestures(
-                    onDragStart = { travelled = 0f },
-                    onVerticalDrag = { change, dragAmount ->
-                        travelled += dragAmount
-                        change.consume()
-                    },
-                    onDragEnd = { if (travelled > hidePx) currentOnKey(KeyAction.HideKeyboard) },
-                )
-            },
-        verticalAlignment = Alignment.CenterVertically,
+            .height(LocalKeyboardDimensions.current.barHeight),
     ) {
-        when {
-            prompt != null -> {
-                Text(
-                    text = when (prompt) {
-                        is BarPrompt.Forget -> stringResource(R.string.forget_prompt, prompt.text)
-                        // 只顯示一行，讓使用者認得是哪一項。
-                        is BarPrompt.ClipboardItem -> prompt.text.replace(Whitespace, " ").trim()
-                        is BarPrompt.Phrase -> stringResource(R.string.phrase_delete_prompt)
-                        BarPrompt.NoVoiceInput -> stringResource(R.string.voice_input_not_enabled)
-                    },
-                    color = colors.label,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp, end = 4.dp),
-                )
-                when (prompt) {
-                    is BarPrompt.Forget ->
-                        BarItem(stringResource(R.string.forget_button), colors, marked = true, english = true) {
-                            onKey(KeyAction.ForgetCandidate(prompt.text))
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    var travelled = 0f
+                    detectVerticalDragGestures(
+                        onDragStart = { travelled = 0f },
+                        onVerticalDrag = { change, dragAmount ->
+                            travelled += dragAmount
+                            change.consume()
+                        },
+                        onDragEnd = { if (travelled > hidePx) currentOnKey(KeyAction.HideKeyboard) },
+                    )
+                },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            when {
+                prompt != null -> {
+                    Text(
+                        text = when (prompt) {
+                            is BarPrompt.Forget -> stringResource(R.string.forget_prompt, prompt.text)
+                            // 只顯示一行，讓使用者認得是哪一項。
+                            is BarPrompt.ClipboardItem -> prompt.text.replace(Whitespace, " ").trim()
+                            is BarPrompt.Phrase -> stringResource(R.string.phrase_delete_prompt)
+                            BarPrompt.NoVoiceInput -> stringResource(R.string.voice_input_not_enabled)
+                        },
+                        color = colors.label,
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp, end = 4.dp),
+                    )
+                    when (prompt) {
+                        is BarPrompt.Forget ->
+                            BarItem(stringResource(R.string.forget_button), colors, marked = true, english = true) {
+                                onKey(KeyAction.ForgetCandidate(prompt.text))
+                            }
+                        is BarPrompt.ClipboardItem -> {
+                            BarItem(stringResource(R.string.clipboard_save_phrase), colors, marked = true, english = true) {
+                                onKey(KeyAction.SavePhrase(prompt.text))
+                            }
+                            BarItem(stringResource(R.string.clipboard_delete), colors, english = true) {
+                                onKey(KeyAction.DeleteClipboardItem(prompt.text))
+                            }
                         }
-                    is BarPrompt.ClipboardItem -> {
-                        BarItem(stringResource(R.string.clipboard_save_phrase), colors, marked = true, english = true) {
-                            onKey(KeyAction.SavePhrase(prompt.text))
-                        }
-                        BarItem(stringResource(R.string.clipboard_delete), colors, english = true) {
-                            onKey(KeyAction.DeleteClipboardItem(prompt.text))
-                        }
+                        is BarPrompt.Phrase ->
+                            BarItem(stringResource(R.string.clipboard_delete), colors, marked = true, english = true) {
+                                onKey(KeyAction.DeletePhrase(prompt.text))
+                            }
+                        BarPrompt.NoVoiceInput ->
+                            BarItem(stringResource(R.string.voice_input_settings), colors, marked = true, english = true) {
+                                onKey(KeyAction.VoiceInputSettings)
+                            }
                     }
-                    is BarPrompt.Phrase ->
-                        BarItem(stringResource(R.string.clipboard_delete), colors, marked = true, english = true) {
-                            onKey(KeyAction.DeletePhrase(prompt.text))
-                        }
-                    BarPrompt.NoVoiceInput ->
-                        BarItem(stringResource(R.string.voice_input_settings), colors, marked = true, english = true) {
-                            onKey(KeyAction.VoiceInputSettings)
-                        }
+                    CloseButton(colors, onClosePrompt)
                 }
-                CloseButton(colors, onClosePrompt)
-            }
-            menu != null -> {
-                ItemsRow(resetKey = menu.items) {
-                    items(menu.items) { item ->
-                        BarItem(item, colors) { onKey(menu.action(item)) }
-                    }
-                }
-                CloseButton(colors, onCloseMenu)
-            }
-            state.composition.isNotEmpty() && gridOpen -> {
-                val radicalText = if (radicals) "  " + state.composition.map(::cangjieRadical).joinToString("") else ""
-                Text(
-                    text = state.composition + radicalText,
-                    color = colors.secondaryLabel,
-                    fontSize = 17.sp,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 12.dp),
-                )
-                BarButton(R.drawable.ic_keyboard_arrow_up, stringResource(R.string.bar_hide_all), colors, onTap = onToggleGrid)
-            }
-            state.composition.isNotEmpty() -> {
-                ItemsRow(resetKey = state.composition) {
-                    itemsIndexed(state.candidates) { index, candidate ->
-                        BarItem(
-                            text = candidate.text,
-                            colors = colors,
-                            marked = state.markTopCandidate && index == 0,
-                            remembered = candidate.remembered,
-                            onLongPress = if (candidate.remembered) ({ onPrompt(BarPrompt.Forget(candidate.text)) }) else null,
-                        ) {
-                            onKey(KeyAction.PickCandidate(candidate.text))
+                menu != null -> {
+                    ItemsRow(resetKey = menu.items) {
+                        items(menu.items) { item ->
+                            BarItem(item, colors) { onKey(menu.action(item)) }
                         }
                     }
-                    if (state.candidates.isNotEmpty() && state.englishSuggestions.isNotEmpty()) {
-                        item { BarDivider(colors) }
-                    }
-                    items(state.englishSuggestions) { word ->
-                        BarItem(word, colors, english = true) { onKey(KeyAction.PickEnglish(word)) }
-                    }
+                    CloseButton(colors, onCloseMenu)
                 }
-                if (state.candidates.size > CANDIDATE_GRID_THRESHOLD) {
-                    BarButton(R.drawable.ic_keyboard_arrow_down, stringResource(R.string.bar_show_all), colors, onTap = onToggleGrid)
+                state.composition.isNotEmpty() && gridOpen -> {
+                    val radicalText = if (radicals) "  " + state.composition.map(::cangjieRadical).joinToString("") else ""
+                    Text(
+                        text = state.composition + radicalText,
+                        color = colors.secondaryLabel,
+                        fontSize = 17.sp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp),
+                    )
+                    BarButton(R.drawable.ic_keyboard_arrow_up, stringResource(R.string.bar_hide_all), colors, onTap = onToggleGrid)
                 }
-            }
-            state.relatedSymbols.isNotEmpty() -> {
-                // 換了符號，列表不變，也不重新捲動，方便再換。
-                ItemsRow(resetKey = state.relatedSymbols) {
-                    items(state.relatedSymbols) { symbol ->
-                        BarItem(symbol, colors, marked = symbol == state.writtenSymbol) {
-                            onKey(KeyAction.PickRelatedSymbol(symbol))
+                // 改字：揀中了整句候選的一個字，列出可以換上的字，原本的字加框。
+                fix != null -> {
+                    ItemsRow(resetKey = fix) {
+                        items(fix.choices) { choice ->
+                            BarItem(
+                                text = choice.text,
+                                colors = colors,
+                                remembered = choice.remembered,
+                                framed = choice.text == fix.part.text,
+                            ) {
+                                onKey(KeyAction.FixCharacter(choice.text))
+                            }
                         }
                     }
+                    if (fix.choices.size > CANDIDATE_GRID_THRESHOLD) {
+                        BarButton(R.drawable.ic_keyboard_arrow_down, stringResource(R.string.bar_show_all), colors, onTap = onToggleGrid)
+                    }
+                    CloseButton(colors) { onKey(KeyAction.DismissFollowUps) }
                 }
-                CloseButton(colors) { onKey(KeyAction.DismissFollowUps) }
-            }
-            state.associations.isNotEmpty() || state.keywordEmoji.isNotEmpty() -> {
-                ItemsRow(resetKey = state.associations) {
-                    items(state.associations) { text ->
-                        BarItem(text, colors) { onKey(KeyAction.PickAssociation(text)) }
+                state.composition.isNotEmpty() -> {
+                    val forgetLabel = stringResource(R.string.forget_button)
+                    val fixLabel = stringResource(R.string.fix_character)
+                    ItemsRow(resetKey = state.composition) {
+                        itemsIndexed(state.candidates) { index, candidate ->
+                            val parts = candidate.parts
+                            BarItem(
+                                text = candidate.text,
+                                colors = colors,
+                                marked = state.markTopCandidate && index == 0,
+                                remembered = candidate.remembered,
+                                onLongPress = when {
+                                    candidate.remembered -> ({ onPrompt(BarPrompt.Forget(candidate.text)) })
+                                    // 整句候選：TalkBack 的長按改為逐個字列出；用手指的話由 onLongPressSlide 跟着手指揀字。
+                                    parts.isNotEmpty() -> ({ choosingByTap = true })
+                                    else -> null
+                                },
+                                onLongPressSlide = if (parts.isEmpty()) {
+                                    null
+                                } else {
+                                    { down ->
+                                        followFixSlide(
+                                            down = down,
+                                            count = parts.size,
+                                            view = view,
+                                            onMove = { choosing = it },
+                                            onRelease = {
+                                                choosing = null
+                                                onKey(KeyAction.StartCharacterFix(it))
+                                            },
+                                            onCancel = { choosing = null },
+                                        )
+                                    }
+                                },
+                                longPressLabel = if (parts.isNotEmpty()) fixLabel else forgetLabel,
+                            ) {
+                                onKey(KeyAction.PickCandidate(candidate.text))
+                            }
+                        }
+                        if (state.candidates.isNotEmpty() && state.englishSuggestions.isNotEmpty()) {
+                            item { BarDivider(colors) }
+                        }
+                        items(state.englishSuggestions) { word ->
+                            BarItem(word, colors, english = true) { onKey(KeyAction.PickEnglish(word)) }
+                        }
+                    }
+                    if (state.candidates.size > CANDIDATE_GRID_THRESHOLD) {
+                        BarButton(R.drawable.ic_keyboard_arrow_down, stringResource(R.string.bar_show_all), colors, onTap = onToggleGrid)
                     }
                 }
-                // Emoji 關鍵字的 Emoji 固定在最右（✕ 前面），聯想再多也不會被擠走。
-                if (state.keywordEmoji.isNotEmpty()) {
-                    if (state.associations.isNotEmpty()) BarDivider(colors)
-                    state.keywordEmoji.forEach { emoji ->
-                        BarItem(emoji, colors) { onKey(KeyAction.PickKeywordEmoji(emoji)) }
+                state.relatedSymbols.isNotEmpty() -> {
+                    // 換了符號，列表不變，也不重新捲動，方便再換。
+                    ItemsRow(resetKey = state.relatedSymbols) {
+                        items(state.relatedSymbols) { symbol ->
+                            BarItem(symbol, colors, marked = symbol == state.writtenSymbol) {
+                                onKey(KeyAction.PickRelatedSymbol(symbol))
+                            }
+                        }
                     }
+                    CloseButton(colors) { onKey(KeyAction.DismissFollowUps) }
                 }
-                CloseButton(colors) { onKey(KeyAction.DismissFollowUps) }
-            }
-            else -> {
-                Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool)
-                // 語音輸入在最右邊，和 ✕ ▼ 一樣只有圖示，不擠走其他按鈕的文字。
-                if (voiceInput != VoiceInputKey.Hidden) {
-                    BarButton(R.drawable.ic_mic, stringResource(R.string.toolbar_voice_input), colors, iconSize = 22.dp) {
-                        if (voiceInput == VoiceInputKey.Available) onKey(KeyAction.VoiceInput) else onPrompt(BarPrompt.NoVoiceInput)
+                state.associations.isNotEmpty() || state.keywordEmoji.isNotEmpty() -> {
+                    ItemsRow(resetKey = state.associations) {
+                        items(state.associations) { text ->
+                            BarItem(text, colors) { onKey(KeyAction.PickAssociation(text)) }
+                        }
+                    }
+                    // Emoji 關鍵字的 Emoji 固定在最右（✕ 前面），聯想再多也不會被擠走。
+                    if (state.keywordEmoji.isNotEmpty()) {
+                        if (state.associations.isNotEmpty()) BarDivider(colors)
+                        state.keywordEmoji.forEach { emoji ->
+                            BarItem(emoji, colors) { onKey(KeyAction.PickKeywordEmoji(emoji)) }
+                        }
+                    }
+                    CloseButton(colors) { onKey(KeyAction.DismissFollowUps) }
+                }
+                else -> {
+                    Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool)
+                    // 語音輸入在最右邊，和 ✕ ▼ 一樣只有圖示，不擠走其他按鈕的文字。
+                    if (voiceInput != VoiceInputKey.Hidden) {
+                        BarButton(R.drawable.ic_mic, stringResource(R.string.toolbar_voice_input), colors, iconSize = 22.dp) {
+                            if (voiceInput == VoiceInputKey.Available) onKey(KeyAction.VoiceInput) else onPrompt(BarPrompt.NoVoiceInput)
+                        }
                     }
                 }
             }
         }
+        // 揀字時鋪在候選列上面。下面的候選字要留着：長按的手指仍然由整句候選跟着。
+        val parts = state.candidates.firstOrNull { it.sentence }?.parts.orEmpty()
+        if (parts.isNotEmpty() && (choosing != null || choosingByTap)) {
+            SentenceParts(
+                parts = parts,
+                composition = state.composition,
+                chosen = choosing,
+                colors = colors,
+                onPick = if (choosingByTap) {
+                    { index ->
+                        choosingByTap = false
+                        onKey(KeyAction.StartCharacterFix(index))
+                    }
+                } else {
+                    null
+                },
+                onClose = { choosingByTap = false },
+            )
+        }
     }
 }
+
+/** 改字時，手指每左右移過這個距離，揀中的字就移一個。比游標滑動的一格大：一句只有幾個字，大一點較易揀得準。 */
+private val FixStep = 24.dp
+
+/**
+ * 長按整句候選之後跟着手指揀字，直到放手：先揀中手指下面的字，之後每左右移過 FixStep 移一個字，到了頭尾就停，
+ * 每移一個字輕輕震一下。只計左右距離；這隻手指的事件都會用掉，所以移到按鍵上也不會按到按鍵，候選列也不會捲動或收起鍵盤。
+ */
+private suspend fun AwaitPointerEventScope.followFixSlide(
+    down: PointerInputChange,
+    count: Int,
+    view: View,
+    onMove: (Int) -> Unit,
+    onRelease: (Int) -> Unit,
+    onCancel: () -> Unit,
+) {
+    // 整句候選左右各有 CandidatePadding 的空位，每個字的闊度大致相同。
+    val padding = CandidatePadding.toPx()
+    val width = ((size.width - padding * 2) / count).coerceAtLeast(1f)
+    var index = ((down.position.x - padding) / width).toInt().coerceIn(0, count - 1)
+    val stepPx = FixStep.toPx()
+    onMove(index)
+    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+    var pending = 0f
+    while (true) {
+        val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id }
+        if (change == null) {
+            onCancel()
+            return
+        }
+        if (!change.pressed) {
+            change.consume()
+            onRelease(index)
+            return
+        }
+        pending += change.positionChange().x
+        change.consume()
+        val steps = (pending / stepPx).toInt()
+        if (steps != 0) {
+            pending -= steps * stepPx
+            val next = (index + steps).coerceIn(0, count - 1)
+            if (next != index) {
+                index = next
+                onMove(index)
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            }
+        }
+    }
+}
+
+/**
+ * 改字揀字時鋪在候選列上面：只留下整句，字距拉闊，揀中的字（chosen）加底色，下面寫它用了的字母。
+ * onPick 不是 null 的話（開了 TalkBack），每個字都寫出字母、都可以按，最右邊另有 ✕。
+ */
+@Composable
+private fun SentenceParts(
+    parts: List<SentencePart>,
+    composition: String,
+    chosen: Int?,
+    colors: KeyboardColors,
+    onPick: ((Int) -> Unit)?,
+    onClose: () -> Unit,
+) {
+    val dimensions = LocalKeyboardDimensions.current
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.background),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            parts.forEachIndexed { index, part ->
+                val letters = composition.substring(part.start, part.end)
+                val selected = index == chosen
+                // 滑動揀字時只有揀中的字寫出字母；其餘的照樣留位，字不會上下跳。
+                val lettersColor = when {
+                    selected -> colors.onAccentSoft
+                    chosen == null -> colors.secondaryLabel
+                    else -> Color.Transparent
+                }
+                // 中文字型的行高比字級高，上下疊起來會超出候選列；所以字母貼着底，字向上移開讓位。
+                val content: @Composable BoxScope.() -> Unit = {
+                    Text(
+                        text = part.text,
+                        color = if (selected) colors.onAccentSoft else colors.label,
+                        style = tightText(dimensions.candidateSize),
+                        modifier = Modifier.offset(y = -PartLettersRoom / 2),
+                    )
+                    Text(
+                        text = letters,
+                        color = lettersColor,
+                        style = tightText(PartLettersSize),
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 3.dp),
+                    )
+                }
+                val modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(vertical = 2.dp)
+                if (onPick != null) {
+                    PressableBox(
+                        modifier = modifier,
+                        color = Color.Transparent,
+                        pressedColor = colors.pressedKey,
+                        description = stringResource(R.string.fix_part, part.text, letters),
+                        onTap = { onPick(index) },
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .padding(horizontal = 8.dp),
+                            contentAlignment = Alignment.Center,
+                            content = content,
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = modifier
+                            .clip(KeyShape)
+                            .background(if (selected) colors.accentSoft else Color.Transparent)
+                            .padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.Center,
+                        content = content,
+                    )
+                }
+            }
+        }
+        if (onPick != null) CloseButton(colors, onClose)
+    }
+}
+
+/** 改字揀字時，每個字下面寫它用了的字母的字級，和字向上移開讓出的高度。 */
+private val PartLettersSize = 10.sp
+private val PartLettersRoom = 12.dp
 
 private val Whitespace = Regex("""\s+""")
 
@@ -402,7 +631,13 @@ internal fun KeyboardColors.candidateBackground(remembered: Boolean, marked: Boo
     else -> plain
 }
 
-/** 記憶字用淺綠底綠字；只有記憶字可以長按（選擇忘記它）。TalkBack 讀出字的本身，記憶字另外讀出「記憶字」。 */
+/** 候選字左右的空位。 */
+private val CandidatePadding = 12.dp
+
+/**
+ * 記憶字用淺綠底綠字；記憶字可以長按（選擇忘記它），整句候選也可以長按（改字）。framed：改字時原本的字，加框標示。
+ * TalkBack 讀出字的本身，記憶字另外讀出「記憶字」，原本的字讀出「原本的字」。
+ */
 @Composable
 private fun BarItem(
     text: String,
@@ -410,28 +645,37 @@ private fun BarItem(
     marked: Boolean = false,
     english: Boolean = false,
     remembered: Boolean = false,
+    framed: Boolean = false,
     onLongPress: (() -> Unit)? = null,
+    onLongPressSlide: (suspend AwaitPointerEventScope.(down: PointerInputChange) -> Unit)? = null,
+    longPressLabel: String? = null,
     onTap: () -> Unit,
 ) {
     val dimensions = LocalKeyboardDimensions.current
+    val states = listOfNotNull(
+        if (remembered) stringResource(R.string.candidate_remembered) else null,
+        if (framed) stringResource(R.string.fix_current) else null,
+    )
     PressableBox(
         modifier = Modifier
             .fillMaxHeight()
             // 記憶字的底色左右留空，連着幾個記憶字也分得開。
-            .padding(horizontal = if (remembered) 2.dp else 0.dp, vertical = 4.dp),
+            .padding(horizontal = if (remembered || framed) 2.dp else 0.dp, vertical = 4.dp)
+            .then(if (framed) Modifier.border(1.dp, colors.secondaryLabel, KeyShape) else Modifier),
         color = colors.candidateBackground(remembered, marked, plain = Color.Transparent),
         pressedColor = colors.pressedKey,
         description = text,
         onTap = onTap,
         onLongPress = onLongPress,
-        longPressLabel = if (onLongPress != null) stringResource(R.string.forget_button) else null,
-        stateDescription = if (remembered) stringResource(R.string.candidate_remembered) else null,
+        onLongPressSlide = onLongPressSlide,
+        longPressLabel = if (onLongPress != null) longPressLabel else null,
+        stateDescription = states.joinToString(", ").ifEmpty { null },
     ) {
         Text(
             text = text,
             color = if (remembered) colors.remembered else colors.label,
             fontSize = if (english) dimensions.englishSize else dimensions.candidateSize,
-            modifier = Modifier.padding(horizontal = 12.dp),
+            modifier = Modifier.padding(horizontal = CandidatePadding),
         )
     }
 }

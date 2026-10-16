@@ -372,6 +372,8 @@ private suspend fun AwaitPointerEventScope.awaitRelease(pointer: PointerId) {
  * 按鍵和候選字共用的按壓反饋：按下時震動（和按鍵音），底色變成 pressedColor；
  * 有 preview 就顯示按鍵放大預覽。description 是 TalkBack 讀出的標籤。
  * 放手才算按了一下；按住到長按時間就做 onLongPress，之後放手不再算按了一下。mode 決定手指移動了怎樣處理。
+ * 有 onLongPressSlide 的話，按住到長按時間就交給它跟着這隻手指直到放手，不做 onLongPress；
+ * onLongPress 仍然是 TalkBack 的長按動作。
  */
 @Composable
 internal fun PressableBox(
@@ -381,6 +383,7 @@ internal fun PressableBox(
     description: String,
     onTap: () -> Unit,
     onLongPress: (() -> Unit)? = null,
+    onLongPressSlide: (suspend AwaitPointerEventScope.(down: PointerInputChange) -> Unit)? = null,
     longPressLabel: String? = null,
     stateDescription: String? = null,
     preview: String? = null,
@@ -392,6 +395,7 @@ internal fun PressableBox(
     // pointerInput 只在 hasLongPress 或 mode 改變時重啟，避免重組時打斷正在進行的按壓；其他值經 State 讀最新的。
     val currentOnTap by rememberUpdatedState(onTap)
     val currentOnLongPress by rememberUpdatedState(onLongPress)
+    val currentOnLongPressSlide by rememberUpdatedState(onLongPressSlide)
     val feedback by rememberUpdatedState(LocalKeyFeedback.current)
     val previews by rememberUpdatedState(if (preview != null) LocalKeyPreview.current else null)
     val currentPreview by rememberUpdatedState(preview)
@@ -439,8 +443,14 @@ internal fun PressableBox(
                         }
                         when (end) {
                             null -> {
-                                currentOnLongPress?.invoke()
-                                awaitRelease(down.id)
+                                val slide = currentOnLongPressSlide
+                                if (slide != null) {
+                                    pressed = false
+                                    slide(down)
+                                } else {
+                                    currentOnLongPress?.invoke()
+                                    awaitRelease(down.id)
+                                }
                             }
                             PressEnd.Tap -> {
                                 pressed = false
@@ -608,7 +618,7 @@ private fun BoxScope.CornerLabel(text: String, alignment: Alignment, fontSize: T
 }
 
 /** 行高等於字級、上下不留空（像 CSS 的 line-height: 1），小字和大字的位置才準確。 */
-private fun tightText(fontSize: TextUnit) = TextStyle(
+internal fun tightText(fontSize: TextUnit) = TextStyle(
     fontSize = fontSize,
     lineHeight = fontSize,
     lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),

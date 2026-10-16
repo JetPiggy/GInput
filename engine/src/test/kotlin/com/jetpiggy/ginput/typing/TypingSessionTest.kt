@@ -11,6 +11,7 @@ import com.jetpiggy.ginput.engine.JyutpingEntry
 import com.jetpiggy.ginput.engine.LearnedPair
 import com.jetpiggy.ginput.engine.PairMemory
 import com.jetpiggy.ginput.engine.Scheme
+import com.jetpiggy.ginput.engine.SentencePart
 import com.jetpiggy.ginput.engine.WordEntry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -931,5 +932,99 @@ class TypingSessionTest {
         assertTrue(learned.isEmpty())
         typeTwoCharacters()
         assertEquals(listOf(LearnedPair("我", "你", 1)), learned.last())
+    }
+
+    @Test
+    fun fixingACharacterChangesTheSentenceWithoutWritingIt() {
+        settings = continuousSettings
+        val picks = mutableListOf<Map<String, Int>>()
+        val learned = mutableListOf<List<LearnedPair>>()
+        val engine = continuousEngine(CandidateMemory(onChanged = { picks += it }), PairMemory(onChanged = { learned += it }))
+        val editor = FakeEditor()
+        val session = session(editor, engine = engine)
+        session.type("hivdof")
+        assertEquals(listOf(SentencePart("我", 0, 2), SentencePart("妹", 2, 4), SentencePart("你", 4, 6)), session.state.candidates.first().parts)
+        session.startCharacterFix(1)
+        assertEquals(SentencePart("妹", 2, 4), session.state.characterFix?.part)
+        assertEquals(listOf("妹", "好"), session.state.characterFix?.choices?.map { it.text })
+        session.fixCharacter("好")
+        assertEquals(null, session.state.characterFix)
+        assertEquals("我好你", session.candidateTexts.first())
+        assertEquals("hivdof", editor.composing)
+        session.candidate("我好你")
+        assertEquals("我好你", editor.text)
+        // 改好的字跟整句候選一樣，不記錄成記憶字；搭配照常記下。
+        assertTrue(picks.isEmpty())
+        assertEquals(listOf(LearnedPair("我", "好", 1), LearnedPair("好", "你", 1)), learned.last())
+    }
+
+    @Test
+    fun onlyTheFixedCharacterChangesUntilMoreLettersAreTyped() {
+        settings = continuousSettings
+        // 「好」罕用，記下的「好他」不足以令整句用「好」。
+        val characters = continuousCharacters + mapOf(
+            (Scheme.Quick to "vd") to listOf(entry("妹", 600), entry("好", 1)),
+            (Scheme.Quick to "of") to listOf(entry("你", 800), entry("他", 700)),
+        )
+        val engine = CandidateEngine(
+            FakeDictionary(characters = characters),
+            pairs = PairMemory(listOf(LearnedPair("好", "他", 3))),
+        )
+        val session = session(FakeEditor(), engine = engine)
+        session.type("hivdof")
+        assertEquals("我妹你", session.candidateTexts.first())
+        session.startCharacterFix(1)
+        session.fixCharacter("好")
+        // 重新組句的話是「我好他」；剛改好時其餘的字不變。
+        assertEquals("我好你", session.candidateTexts.first())
+        session.type("hi")
+        assertEquals("我好他我", session.candidateTexts.first())
+    }
+
+    @Test
+    fun deletingTheLettersOfAFixedCharacterCancelsTheFix() {
+        settings = continuousSettings
+        val session = session(FakeEditor(), engine = continuousEngine())
+        session.type("hivdof")
+        session.startCharacterFix(1)
+        session.fixCharacter("好")
+        repeat(2) { session.delete() }
+        assertEquals("我好", session.candidateTexts.first())
+        session.delete()
+        session.type("d")
+        assertEquals("我妹", session.candidateTexts.first())
+    }
+
+    @Test
+    fun fixesAfterAPartialCommitAreKept() {
+        settings = continuousSettings
+        val editor = FakeEditor()
+        val session = session(editor, engine = continuousEngine())
+        session.type("hivdof")
+        session.startCharacterFix(1)
+        session.fixCharacter("好")
+        session.candidate("我")
+        assertEquals("vdof", session.state.composition)
+        assertEquals(listOf(SentencePart("好", 0, 2), SentencePart("你", 2, 4)), session.state.candidates.first().parts)
+    }
+
+    @Test
+    fun fixChoicesCloseWithOtherKeysAndTheCloseButton() {
+        settings = continuousSettings
+        val session = session(FakeEditor(), engine = continuousEngine())
+        session.type("hivdof")
+        session.startCharacterFix(2)
+        assertEquals(SentencePart("你", 4, 6), session.state.characterFix?.part)
+        session.dismissFollowUps()
+        assertEquals(null, session.state.characterFix)
+        assertEquals("我妹你", session.candidateTexts.first())
+        session.startCharacterFix(0)
+        session.delete()
+        assertEquals(null, session.state.characterFix)
+        session.type("f")
+        session.startCharacterFix(0)
+        session.type("hi")
+        assertEquals(null, session.state.characterFix)
+        assertEquals("hivdofhi", session.state.composition)
     }
 }

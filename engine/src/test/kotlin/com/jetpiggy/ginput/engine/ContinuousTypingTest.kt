@@ -181,4 +181,52 @@ class ContinuousTypingTest {
         engine.clearMemory()
         assertEquals("我妹", engine.sentence("hivd"))
     }
+
+    private fun CandidateEngine.parts(code: String, fixes: List<SentencePart> = emptyList()) =
+        candidates(code, on, fixes = fixes).singleOrNull { it.sentence }?.parts
+
+    @Test
+    fun sentenceListsEachCharacterWithItsLettersEvenInsideWords() {
+        val engine = engine(words = mapOf("我" to listOf(WordEntry("好", 300, false))))
+        assertEquals(
+            listOf(SentencePart("我", 0, 2), SentencePart("好", 2, 4), SentencePart("你", 4, 6)),
+            engine.parts("hivdof"),
+        )
+        // 其他候選字沒有逐個字列出。
+        assertTrue(engine.candidates("hivdof", on).filterNot { it.sentence }.all { it.parts.isEmpty() })
+    }
+
+    @Test
+    fun aFixedCharacterStaysAndBreaksTheWordItWasIn() {
+        val engine = engine(words = mapOf("我" to listOf(WordEntry("妹", 300, false))))
+        assertEquals("我妹你", engine.sentence("hivdof"))
+        val fixed = listOf(SentencePart("好", 2, 4))
+        assertEquals(listOf("我", "好", "你"), engine.parts("hivdof", fixed)?.map { it.text })
+        // 開頭部分的詞碰到改好的字，也不再列出。
+        assertEquals(listOf("我好你", "我", "手", "竹"), engine.candidates("hivdof", on, fixes = fixed).map { it.text })
+    }
+
+    @Test
+    fun rareCharactersCanBeFixedIn() {
+        val common = "丁七丈三上下丌不与丐".map { entry(it.toString(), 1000) }
+        val engine = engine(quickCodes + mapOf((Scheme.Quick to "rm") to common + entry("呀", 300)))
+        assertEquals("我丁", engine.sentence("hirm"))
+        assertEquals("我呀", engine.parts("hirm", listOf(SentencePart("呀", 2, 4)))?.joinToString("") { it.text })
+    }
+
+    @Test
+    fun noSentenceWhenNothingSplitsThroughTheFixedCharacter() {
+        val engine = engine(quickCodes - (Scheme.Quick to "d"))
+        assertEquals("我妹你", engine.sentence("hivdof"))
+        assertEquals(null, engine.parts("hivdof", listOf(SentencePart("女", 2, 3))))
+    }
+
+    @Test
+    fun fixChoicesUseTheSameLettersInTheUsualOrder() {
+        val part = SentencePart("妹", 2, 4)
+        assertEquals(listOf("妹", "好"), engine().fixChoices("hivdof", part, on).map { it.text })
+        val windows = on.copy(sharedCodeOrder = SharedCodeOrder.Windows)
+        val codes = quickCodes + mapOf((Scheme.Quick to "vd") to listOf(entry("好", 500, windowsRank = 1), entry("妹", 600, windowsRank = 2)))
+        assertEquals(listOf("好", "妹"), engine(codes).fixChoices("hivdof", part, windows).map { it.text })
+    }
 }

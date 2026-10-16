@@ -83,8 +83,17 @@ internal class CodeTable(val scheme: Scheme, entries: List<CodedCharacter>, mode
 }
 
 /**
+ * 整句候選裏的一個字，用了組字第 start 至第 end 個字母（不包括 end）。
+ * 改字之後也用它記下改好的字：那段字母一定是這個字。
+ */
+data class SentencePart(val text: String, val start: Int, val end: Int) {
+    internal fun matches(text: String, start: Int, end: Int) = this.text == text && this.start == start && this.end == end
+}
+
+/**
  * 拆碼格：組字第 start 至第 end 個字母剛好是一個字的碼，或者幾個字的碼剛好連成 words.hk 的一個詞，就有一條邊。
  * 每條邊的分數是字詞的分數，加上詞裏面記下的搭配；邊和邊之間的搭配在組句時才加。
+ * fixes 是改好的字：碰到那段字母的邊，要在同一段字母剛好是那個字才保留，所以組句一定經過它。
  */
 internal class Lattice(
     private val code: String,
@@ -92,10 +101,17 @@ internal class Lattice(
     private val generations: Set<CangjieGeneration>,
     private val model: SentenceModel,
     private val pairs: PairMemory,
+    private val fixes: List<SentencePart> = emptyList(),
 ) {
-    class Edge(val start: Int, val end: Int, val text: String, val score: Double, val word: Boolean) {
+    /** ends：每個字用的字母在哪裏完結；字的邊只有 end 一個。 */
+    class Edge(val start: Int, val end: Int, val text: String, val score: Double, val word: Boolean, val ends: List<Int> = listOf(end)) {
         val first: String = text.substring(0, text.offsetByCodePoints(0, 1))
         val last: String = text.lastCharacter()!!
+
+        /** 每個字和它用的字母。 */
+        fun parts(): List<SentencePart> = text.characters().mapIndexed { index, character ->
+            SentencePart(character, if (index == 0) start else ends[index - 1], ends[index])
+        }
     }
 
     private val maxCodeLength = tables.maxOf { it.maxCodeLength }
@@ -110,10 +126,10 @@ internal class Lattice(
     init {
         for (start in code.indices) {
             for (end in start + 1..minOf(start + maxCodeLength, code.length)) {
-                // 每個碼只取分數最高的幾個字組句，但記下過搭配的字一定取，學過的才用得着。
+                // 每個碼只取分數最高的幾個字組句，但記下過搭配的字一定取，學過的才用得着；改好的字也一定取。
                 spanCharacters(start, end).forEachIndexed { index, scored ->
                     val character = scored.entry.character
-                    if (index < CHARACTERS_PER_CODE || pairs.hasPairsBefore(character)) {
+                    if (index < CHARACTERS_PER_CODE || pairs.hasPairsBefore(character) || fixes.any { it.matches(character, start, end) }) {
                         add(Edge(start, end, character, scored.score, word = false))
                     }
                 }
@@ -144,33 +160,42 @@ internal class Lattice(
      * 走到完整的詞就加一條詞的邊。
      */
     private fun addWordsFrom(start: Int) {
-        val stack = ArrayDeque<Triple<Int, String, Int>>()
+        val stack = ArrayDeque<WordWalk>()
         for (end in start + 1..minOf(start + maxCodeLength, code.length)) {
             for (scored in spanCharacters(start, end)) {
-                if (scored.startsWord) stack.addLast(Triple(end, scored.entry.character, 1))
+                if (scored.startsWord) stack.addLast(WordWalk(scored.entry.character, listOf(end)))
             }
         }
         while (stack.isNotEmpty()) {
-            val (position, prefix, count) = stack.removeLast()
-            val next = model.nextInWords(prefix)
+            val walk = stack.removeLast()
+            val position = walk.ends.last()
+            val next = model.nextInWords(walk.text)
             for (end in position + 1..minOf(position + maxCodeLength, code.length)) {
                 val span = spanByCharacter(position, end)
                 for (character in next) {
                     if (character !in span) continue
-                    val text = prefix + character
-                    model.wordScore(text)?.let { add(Edge(start, end, text, it + pairBonus(text), word = true)) }
-                    if (count + 1 < SentenceModel.MAX_WORD_LENGTH && model.isWordPrefix(text)) {
-                        stack.addLast(Triple(end, text, count + 1))
+                    val text = walk.text + character
+                    val ends = walk.ends + end
+                    model.wordScore(text)?.let { add(Edge(start, end, text, it + pairBonus(text), word = true, ends)) }
+                    if (ends.size < SentenceModel.MAX_WORD_LENGTH && model.isWordPrefix(text)) {
+                        stack.addLast(WordWalk(text, ends))
                     }
                 }
             }
         }
     }
 
+    /** 沿着拆碼格找詞時已經接上的字，和每個字用的字母在哪裏完結。 */
+    private class WordWalk(val text: String, val ends: List<Int>)
+
     private fun add(edge: Edge) {
+        if (!fixes.all { edge.respects(it) }) return
         endingAt[edge.end] += edge
         startingAt[edge.start] += edge
     }
+
+    /** 不碰到改好的字那段字母，或者在同一段字母剛好是那個字。 */
+    private fun Edge.respects(fix: SentencePart): Boolean = end <= fix.start || start >= fix.end || fix in parts()
 
     private fun pairBonus(text: String): Double =
         text.characters().zipWithNext().sumOf { (a, b) -> learnedBonus(a, b) }
@@ -192,13 +217,13 @@ internal class Lattice(
         (1..minOf(maxCodeLength, code.length)).filter { reachable[it] && spanCharacters(0, it).isNotEmpty() }
 
     /**
-     * 分數最高的整句：k-best Viterbi，每個位置留 BEAM 個不同的句子。previous 是組字前面的那個字（上文），
+     * 分數最高的整句，逐個字列出：k-best Viterbi，每個位置留 BEAM 個不同的句子。previous 是組字前面的那個字（上文），
      * 它和第一個字的搭配也加分。
      */
-    fun bestSentence(previous: String?): String? {
+    fun bestSentence(previous: String?): List<SentencePart>? {
         if (!complete) return null
         val paths = arrayOfNulls<List<Path>>(code.length + 1)
-        paths[0] = listOf(Path(0.0, "", previous))
+        paths[0] = listOf(Path(0.0, "", previous, before = null, edge = null))
         for (end in 1..code.length) {
             val byText = HashMap<String, Path>()
             for (edge in endingAt[end]) {
@@ -207,15 +232,17 @@ internal class Lattice(
                     val score = path.score + edge.score + learnedBonus(path.last, edge.first)
                     val text = path.text + edge.text
                     val old = byText[text]
-                    if (old == null || old.score < score) byText[text] = Path(score, text, edge.last)
+                    if (old == null || old.score < score) byText[text] = Path(score, text, edge.last, path, edge)
                 }
             }
             paths[end] = byText.values.sortedWith(compareByDescending<Path> { it.score }.thenBy { it.text }).take(BEAM)
         }
-        return paths[code.length]?.firstOrNull()?.text
+        val best = paths[code.length]?.firstOrNull() ?: return null
+        return generateSequence(best) { it.before }.mapNotNull { it.edge }.toList().asReversed().flatMap { it.parts() }
     }
 
-    private class Path(val score: Double, val text: String, val last: String?)
+    /** 組句時的一句：before 和 edge 是它由哪一句加上哪一條邊而來，最後才逐個字列出。 */
+    private class Path(val score: Double, val text: String, val last: String?, val before: Path?, val edge: Edge?)
 
     companion object {
         private const val BEAM = 10

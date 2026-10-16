@@ -384,6 +384,8 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.PickRelatedSymbol -> session.relatedSymbol(action.text)
             KeyAction.DismissFollowUps -> session.dismissFollowUps()
             is KeyAction.ForgetCandidate -> session.forget(action.text)
+            is KeyAction.StartCharacterFix -> session.startCharacterFix(action.index)
+            is KeyAction.FixCharacter -> session.fixCharacter(action.text)
             is KeyAction.CommitEmoji -> {
                 session.symbol(action.emoji)
                 if (learning) rememberEmoji(action.emoji)

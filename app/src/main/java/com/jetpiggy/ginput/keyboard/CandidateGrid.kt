@@ -1,5 +1,6 @@
 package com.jetpiggy.ginput.keyboard
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,7 +19,7 @@ import com.jetpiggy.ginput.R
 import com.jetpiggy.ginput.typing.KeyboardState
 
 /**
- * 候選字格：按候選列的 ▼ 後鋪滿鍵盤的位置，列出全部候選字。
+ * 候選字格：按候選列的 ▼ 後鋪滿鍵盤的位置，列出全部候選字；改字時列出全部可以換上的字，原本的字加框。
  * 高度和按鍵區（keyArea）相同，鍵盤不會跳動。
  */
 @Composable
@@ -32,6 +33,8 @@ internal fun CandidateGrid(
     val dimensions = LocalKeyboardDimensions.current
     val forget = stringResource(R.string.forget_button)
     val remembered = stringResource(R.string.candidate_remembered)
+    val current = stringResource(R.string.fix_current)
+    val fix = state.characterFix
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 52.dp),
         modifier = Modifier
@@ -40,25 +43,29 @@ internal fun CandidateGrid(
     ) {
         // 整句候選長，佔一整行。
         itemsIndexed(
-            state.candidates,
+            fix?.choices ?: state.candidates,
             span = { _, candidate -> GridItemSpan(if (candidate.sentence) maxLineSpan else 1) },
         ) { index, candidate ->
+            val framed = fix != null && candidate.text == fix.part.text
             PressableBox(
                 modifier = Modifier
                     .height(dimensions.rowHeight)
                     .padding(2.dp)
-                    .keyShadow(colors.keyShadow),
+                    .keyShadow(colors.keyShadow)
+                    .then(if (framed) Modifier.border(1.dp, colors.secondaryLabel, KeyShape) else Modifier),
                 color = colors.candidateBackground(
                     remembered = candidate.remembered,
-                    marked = state.markTopCandidate && index == 0,
+                    marked = fix == null && state.markTopCandidate && index == 0,
                     plain = colors.key,
                 ),
                 pressedColor = colors.pressedKey,
                 description = candidate.text,
-                onTap = { onKey(KeyAction.PickCandidate(candidate.text)) },
-                onLongPress = if (candidate.remembered) ({ onAskForget(candidate.text) }) else null,
-                longPressLabel = if (candidate.remembered) forget else null,
-                stateDescription = if (candidate.remembered) remembered else null,
+                onTap = { onKey(if (fix != null) KeyAction.FixCharacter(candidate.text) else KeyAction.PickCandidate(candidate.text)) },
+                onLongPress = if (fix == null && candidate.remembered) ({ onAskForget(candidate.text) }) else null,
+                longPressLabel = if (fix == null && candidate.remembered) forget else null,
+                stateDescription = listOfNotNull(if (candidate.remembered) remembered else null, if (framed) current else null)
+                    .joinToString(", ")
+                    .ifEmpty { null },
             ) {
                 Text(
                     text = candidate.text,

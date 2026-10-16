@@ -3,9 +3,10 @@ package com.jetpiggy.ginput.typing
 import com.jetpiggy.ginput.engine.Candidate
 import com.jetpiggy.ginput.engine.CandidateEngine
 import com.jetpiggy.ginput.engine.EmojiKeywords
+import com.jetpiggy.ginput.engine.SentencePart
 
 /**
- * 一個文字框裏的打字過程：組字、寫入、候選字、聯想、Emoji 關鍵字、空白鍵模式、智能全形標點、相關符號和智能刪空格。
+ * 一個文字框裏的打字過程：組字、寫入、候選字、改字、聯想、Emoji 關鍵字、空白鍵模式、智能全形標點、相關符號和智能刪空格。
  * 對方的文字框每次取得焦點就開一個新的；所有方法都要在同一個執行緒呼叫。規則見 docs/spec/v1.md。
  */
 class TypingSession(
@@ -49,6 +50,15 @@ class TypingSession(
     /** 連打的上文：組字開始時游標前的文字，分段寫入後是剛寫入的字詞。有些 App 稍後才套用寫入，所以不每次都讀文字框。 */
     private var contextBefore = ""
 
+    /** 改字改好的字；Delete 刪到它用的字母、分段寫入了它或者組字清空，就不再保留。 */
+    private var fixes: List<SentencePart> = emptyList()
+
+    /** 剛改好字的整句：組字再變之前照樣顯示，其餘的字不會因為重新組句而變。 */
+    private var heldSentence: List<SentencePart>? = null
+
+    /** 改字時揀中的字和可以換上的字，候選列列出這些字。 */
+    private var fixChoices: CharacterFixChoices? = null
+
     var state = KeyboardState()
         private set
 
@@ -67,6 +77,7 @@ class TypingSession(
                 contextBefore = if (settings().engine.continuousTyping) editor.textBeforeCursor(CHARACTER_CONTEXT_LENGTH) else ""
             }
             composition.append(typed)
+            heldSentence = null
             if (composing) editor.setComposingText(composition.toString()) else editor.commitText(typed.toString())
             refreshCandidates()
         }
@@ -108,6 +119,10 @@ class TypingSession(
             editor.sendDeleteKey()
         } else {
             composition.setLength(composition.length - 1)
+            // 刪到改好的字用的字母，就取消那次改字。
+            fixes = fixes.filter { it.end <= composition.length }
+            heldSentence = null
+            fixChoices = null
             when {
                 !composing -> editor.sendDeleteKey()
                 composition.isEmpty() -> {
@@ -182,6 +197,29 @@ class TypingSession(
         refreshCandidates()
         publish()
     }
+
+    /** 改字：揀了整句候選的第 index 個字，候選列列出用同一段字母、可以換上的字。 */
+    fun startCharacterFix(index: Int) {
+        val part = sentenceParts()?.getOrNull(index) ?: return
+        val engine = engine() ?: return
+        clearFollowUps()
+        fixChoices = CharacterFixChoices(part, engine.fixChoices(composition.toString(), part, settings().engine))
+        publish()
+    }
+
+    /** 改字：把揀中的字換成 text。整句候選只換那個字，不寫入；之後再組句也一定經過它。 */
+    fun fixCharacter(text: String) {
+        val part = fixChoices?.part ?: return
+        val sentence = sentenceParts() ?: return
+        val fixed = part.copy(text = text)
+        clearFollowUps()
+        fixes = fixes.filterNot { it.start == part.start } + fixed
+        heldSentence = sentence.map { if (it == part) fixed else it }
+        refreshCandidates()
+        publish()
+    }
+
+    private fun sentenceParts(): List<SentencePart>? = candidates.firstOrNull { it.sentence }?.parts?.takeIf { it.isNotEmpty() }
 
     /**
      * 游標滑動（在空白鍵或其他按鍵上左右滑動）：移動游標；select 就伸展選取（按住 Shift 時）。
@@ -343,6 +381,8 @@ class TypingSession(
             if (composing) editor.setComposingText(rest) else editor.commitText(rest)
         }
         editor.endBatchEdit()
+        // 分段寫入：留在組字裏的改好的字照樣保留。
+        val keptFixes = fixes.filter { it.start >= codeLength }.map { it.copy(start = it.start - codeLength, end = it.end - codeLength) }
         clearComposition()
         autoSpace = null
         val engine = engine()
@@ -354,6 +394,7 @@ class TypingSession(
             keywordEmoji = if (settings().emojiKeywords) keywordEmojiAfter(text) else emptyList()
         } else {
             composition.append(rest)
+            fixes = keptFixes
             awaitingComposingEcho = true
             refreshCandidates()
         }
@@ -399,7 +440,15 @@ class TypingSession(
     private fun refreshCandidates() {
         val typed = composition.toString()
         val engine = engine()
-        candidates = if (typed.isEmpty()) emptyList() else engine?.candidates(typed, settings().engine, contextBefore).orEmpty()
+        val found = if (typed.isEmpty()) emptyList() else engine?.candidates(typed, settings().engine, contextBefore, fixes).orEmpty()
+        // 剛改好字：整句候選只換了那個字，其餘的字照舊。
+        val held = heldSentence
+        candidates = if (held == null) {
+            found
+        } else {
+            found.map { if (it.sentence) it.copy(text = held.joinToString("") { part -> part.text }, parts = held) else it }
+                .distinctBy { it.text }
+        }
         completions = if (typed.isEmpty() || !offerCompletions) emptyList() else engine?.englishSuggestions(typed).orEmpty()
     }
 
@@ -413,10 +462,11 @@ class TypingSession(
         return keywords.emojiAfter(if (before.endsWith(written)) before else written)
     }
 
-    /** 收起寫入之後候選列接着出的東西：聯想、Emoji 關鍵字的 Emoji 和相關符號。 */
+    /** 收起寫入之後候選列接着出的東西：聯想、Emoji 關鍵字的 Emoji 和相關符號；也收起改字時可以換上的字。 */
     private fun clearFollowUps() {
         associations = emptyList()
         keywordEmoji = emptyList()
+        fixChoices = null
         clearRelatedSymbols()
     }
 
@@ -429,6 +479,9 @@ class TypingSession(
         composition.clear()
         candidates = emptyList()
         completions = emptyList()
+        fixes = emptyList()
+        heldSentence = null
+        fixChoices = null
         awaitingComposingEcho = false
     }
 
@@ -456,6 +509,7 @@ class TypingSession(
             fullWidthCloseParenthesis = smartPunctuation && Punctuation.fullWidth(PunctuationKey.CloseParenthesis, before),
             relatedSymbols = relatedSymbols,
             writtenSymbol = writtenSymbol,
+            characterFix = fixChoices,
             shift = shift,
         )
         onStateChanged(state)

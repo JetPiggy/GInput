@@ -54,6 +54,17 @@ class SqlDictionaryTest {
     }
 
     @Test
+    fun fixingACharacterOfTheSentence() {
+        // hivdbeof 組成「我好受你」（「好受」是詞）；把 be 的字改成「愛」。
+        val quick = EngineSettings(continuousTyping = true)
+        val part = engine.candidates("hivdbeof", quick).first { it.sentence }.parts[2]
+        assertEquals(SentencePart(part.text, 4, 6), part)
+        assertTrue(engine.fixChoices("hivdbeof", part, quick).map { it.text }.containsAll(listOf("愛", "受")))
+        val fixed = listOf(SentencePart("愛", 4, 6))
+        assertEquals("我好愛你", engine.candidates("hivdbeof", quick, fixes = fixed).first { it.sentence }.text)
+    }
+
+    @Test
     fun quickInWindowsOrderMatchesWindows() {
         val windows = EngineSettings(sharedCodeOrder = SharedCodeOrder.Windows)
         assertEquals(listOf("伙", "你", "係", "偽", "氮", "焦", "無"), texts("of", windows).take(7))

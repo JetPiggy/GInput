@@ -31,6 +31,12 @@ sealed interface KeyAction {
     /** 忘記記憶字，讓它回到原來的位置。 */
     data class ForgetCandidate(val text: String) : KeyAction
 
+    /** 改字：揀了整句候選的第 index 個字，候選列列出可以換上的字。 */
+    data class StartCharacterFix(val index: Int) : KeyAction
+
+    /** 改字：把揀中的字換成 text。 */
+    data class FixCharacter(val text: String) : KeyAction
+
     /** Emoji 面板或膚色選單裏的 Emoji；會記進「最近使用」。 */
     data class CommitEmoji(val emoji: String) : KeyAction
 

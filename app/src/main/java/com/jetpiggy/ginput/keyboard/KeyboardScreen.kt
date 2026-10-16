@@ -125,6 +125,8 @@ private fun KeyboardContent(
     val handle: (KeyAction) -> Unit = { action ->
         menu = null
         prompt = null
+        // 改字換了字，組字不變，候選字格要另外收起。
+        if (action is KeyAction.FixCharacter) gridOpen = false
         onKey(action)
     }
     val currentHandle by rememberUpdatedState(handle)

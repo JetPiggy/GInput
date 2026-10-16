@@ -1,6 +1,10 @@
 package com.jetpiggy.ginput.typing
 
 import com.jetpiggy.ginput.engine.Candidate
+import com.jetpiggy.ginput.engine.SentencePart
+
+/** 改字時揀中的整句候選的字（part），和用同一段字母、可以換上的字（choices）。 */
+data class CharacterFixChoices(val part: SentencePart, val choices: List<Candidate>)
 
 /** 鍵盤畫面需要的狀態；TypingSession 每次變動後送出一份新的。 */
 data class KeyboardState(
@@ -20,6 +24,8 @@ data class KeyboardState(
     val relatedSymbols: List<String> = emptyList(),
     /** 相關符號裏現在寫在文字框的那一個，候選列標示它。 */
     val writtenSymbol: String? = null,
+    /** 改字：揀中了整句候選的哪個字和可以換上的字；有的話，候選列列出這些字，不顯示一般候選字。 */
+    val characterFix: CharacterFixChoices? = null,
     val shift: ShiftState = ShiftState.Off,
 ) {
     /** 現在按 key 會打出的標點，也是鍵上的標示。 */

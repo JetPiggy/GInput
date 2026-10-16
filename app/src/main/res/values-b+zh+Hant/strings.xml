@@ -79,7 +79,7 @@
     <string name="remember_candidates">記憶字</string>
     <string name="remember_candidates_summary">選過兩次的字排在最前，以淺綠底標示（只限常用度次序）；開了連打的話，也記住前後兩個字，令整句候選更準</string>
     <string name="continuous_typing">連打</string>
-    <string name="continuous_typing_summary">速成和倉頡可以連續打幾個字的碼，候選列出整句；速成會猜錯，要看清楚才選</string>
+    <string name="continuous_typing_summary">速成和倉頡可以連續打幾個字的碼，候選列出整句；速成會猜錯，要看清楚才選；長按整句可以改字</string>
     <string name="clear_memory">清除全部記憶</string>
     <string name="clear_memory_summary">全部記憶字回到原來的位置，連打記住的前後兩個字也會忘記</string>
     <string name="clear_memory_confirm_title">清除全部記憶？</string>
@@ -208,6 +208,11 @@
     <string name="forget_prompt">不再把「%1$s」排在前面？</string>
     <string name="forget_button">忘記</string>
 
+    <!-- 改字：長按整句候選 -->
+    <string name="fix_character">改字</string>
+    <string name="fix_part">%1$s，%2$s</string>
+    <string name="fix_current">原本的字</string>
+
     <!-- 剪貼簿面板 -->
     <string name="clipboard_copy">複製</string>
     <string name="clipboard_paste">貼上</string>
@@ -251,9 +256,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>設定頁重新整理，分成六類；在「鍵盤外觀」改主題、高度和按鍵標示，即時看到效果。按鍵放大預覽和按鍵音移到「打字」。</item>
-        <item>有新版本或公告時，鍵盤工具列的「設定」會加一個小點。</item>
-        <item>修正 Pixel 等手機的收起鍵盤按鈕擋住最底一行，以及全螢幕遊戲裏最底一行被切走。</item>
+        <item>連打可以改字：整句猜錯一個字時，長按整句候選，在鍵盤上左右滑動揀出那個字，放手後揀另一個字換上。</item>
+        <item>連打預設關閉，在設定的「輸入方案」開啟。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 

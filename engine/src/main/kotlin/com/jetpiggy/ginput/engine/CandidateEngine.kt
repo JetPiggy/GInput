@@ -9,6 +9,8 @@ data class Candidate(
     val remembered: Boolean = false,
     /** 整句候選：連打時由整串組字組成的一句。不記錄成記憶字。 */
     val sentence: Boolean = false,
+    /** 整句候選的每個字和它用的字母，改字時用；其他候選字是空的。 */
+    val parts: List<SentencePart> = emptyList(),
 )
 
 /** 按設定把碼變成候選字，並在寫入中文後提供聯想。 */
@@ -26,9 +28,14 @@ class CandidateEngine(
     /**
      * 各輸入方案的候選字按輸入方案次序合併；同一個字只出現一次，留在較前的位置。
      * 常用度次序下，用盡全部字母的記憶字再移到最前；Windows 次序完全不動。
-     * 開了連打的話，再加上整句候選和開頭部分的字詞；before 是組字前面的文字（上文）。
+     * 開了連打的話，再加上整句候選和開頭部分的字詞；before 是組字前面的文字（上文），fixes 是改好的字。
      */
-    fun candidates(code: String, settings: EngineSettings, before: String = ""): List<Candidate> {
+    fun candidates(
+        code: String,
+        settings: EngineSettings,
+        before: String = "",
+        fixes: List<SentencePart> = emptyList(),
+    ): List<Candidate> {
         val normalized = code.lowercase()
         if (normalized.isEmpty() || normalized.any { it !in 'a'..'z' }) return emptyList()
         val seen = HashSet<String>()
@@ -42,7 +49,7 @@ class CandidateEngine(
         val useMemory = settings.rememberCandidates && settings.sharedCodeOrder == SharedCodeOrder.Frequency
         val ordered = if (useMemory) memory.promote(merged, normalized.length) else merged
         if (!settings.continuousTyping) return ordered
-        return withContinuousTyping(code, normalized, ordered, settings, before)
+        return withContinuousTyping(code, normalized, ordered, settings, before, fixes)
     }
 
     /**
@@ -51,7 +58,7 @@ class CandidateEngine(
      * 2. 整句候選；
      * 3. 只用前面一部分字母的粵拼字詞；
      * 4. 開頭部分的詞，字多的先出，然後是開頭部分的字，碼長的先出、同一個碼照重碼次序。
-     * 選了開頭部分的字詞就分段寫入，其餘字母再組句。
+     * 選了開頭部分的字詞就分段寫入，其餘字母再組句。有改好的字的話，只用經過它們的拆法。
      */
     private fun withContinuousTyping(
         typed: String,
@@ -59,6 +66,7 @@ class CandidateEngine(
         ordered: List<Candidate>,
         settings: EngineSettings,
         before: String,
+        fixes: List<SentencePart>,
     ): List<Candidate> {
         val schemes = settings.schemes.filter { it in codeTables }
         if (schemes.isEmpty() || code.length < 2) return ordered
@@ -68,7 +76,7 @@ class CandidateEngine(
         val tables = schemes.map { codeTables.getValue(it).value }
         // 記憶字關了，搭配記憶也不加分。
         val learned = if (settings.rememberCandidates) pairs else NO_PAIRS
-        val lattice = Lattice(code, tables, settings.cangjieGenerations, sentenceModel, learned)
+        val lattice = Lattice(code, tables, settings.cangjieGenerations, sentenceModel, learned, fixes)
         val previous = before.lastCharacter()?.takeIf { it.isSingleIdeograph() }
         val sentence = lattice.bestSentence(previous) ?: return ordered
         val scheme = schemes.first()
@@ -83,8 +91,18 @@ class CandidateEngine(
                 .map { (entry, scheme) -> Candidate(entry.character, scheme, codeLength = length) }
         }
         val (whole, partial) = ordered.partition { it.codeLength == code.length }
-        return (whole + Candidate(sentence, scheme, code.length, sentence = true) + partial + words + characters)
-            .distinctBy { it.text }
+        val sentenceCandidate = Candidate(sentence.joinToString("") { it.text }, scheme, code.length, sentence = true, parts = sentence)
+        return (whole + sentenceCandidate + partial + words + characters).distinctBy { it.text }
+    }
+
+    /**
+     * 改字：整句候選的 part 可以換上的字，就是用同一段字母的速成和倉頡候選字，
+     * 次序和一般候選字一樣（重碼次序、記憶字、口語優先和倉頡版本照樣適用）。
+     */
+    fun fixChoices(code: String, part: SentencePart, settings: EngineSettings): List<Candidate> {
+        val schemes = settings.schemes.filter { it in codeTables }
+        val span = code.lowercase().substring(part.start, part.end)
+        return candidates(span, settings.copy(schemes = schemes, continuousTyping = false))
     }
 
     /**
