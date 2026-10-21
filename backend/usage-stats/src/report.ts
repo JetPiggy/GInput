@@ -41,6 +41,7 @@ export const SETTINGS: Readonly<Record<string, readonly (string | boolean)[]>> =
   key_labels: ["letters", "radicals", "letters_only"],
   number_row: [true, false],
   key_preview: [true, false],
+  key_vibration: ["system", "off", "light", "standard", "strong"],
   key_sound: [true, false],
 };
 

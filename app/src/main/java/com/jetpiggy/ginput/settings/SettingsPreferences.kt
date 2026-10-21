@@ -29,6 +29,7 @@ internal object SettingsPreferences {
     private const val KEY_LABELS = "key_labels"
     private const val NUMBER_ROW = "number_row"
     private const val KEY_PREVIEW = "key_preview"
+    private const val KEY_VIBRATION = "key_vibration"
     private const val KEY_SOUND = "key_sound"
     private const val CRASH_REPORTS = "crash_reports"
     private const val USAGE_STATS = "usage_stats"
@@ -61,6 +62,13 @@ internal object SettingsPreferences {
         KeyLabels.LettersLarge to "letters",
         KeyLabels.RadicalsLarge to "radicals",
         KeyLabels.LettersOnly to "letters_only",
+    )
+    private val VibrationCodes = mapOf(
+        KeyVibration.System to "system",
+        KeyVibration.Off to "off",
+        KeyVibration.Light to "light",
+        KeyVibration.Standard to "standard",
+        KeyVibration.Strong to "strong",
     )
 
     fun read(values: Map<String, *>): UserSettings {
@@ -100,6 +108,7 @@ internal object SettingsPreferences {
                 labels = choice(KEY_LABELS, LabelCodes, keyboard.labels),
                 numberRow = flag(NUMBER_ROW, keyboard.numberRow),
                 keyPreview = flag(KEY_PREVIEW, keyboard.keyPreview),
+                vibration = choice(KEY_VIBRATION, VibrationCodes, keyboard.vibration),
                 keySound = flag(KEY_SOUND, keyboard.keySound),
             ),
             crashReports = flag(CRASH_REPORTS, defaults.crashReports),
@@ -134,6 +143,7 @@ internal object SettingsPreferences {
         KEY_LABELS,
         NUMBER_ROW,
         KEY_PREVIEW,
+        KEY_VIBRATION,
         KEY_SOUND,
     )
 
@@ -158,6 +168,7 @@ internal object SettingsPreferences {
         KEY_LABELS to LabelCodes.getValue(settings.keyboard.labels),
         NUMBER_ROW to settings.keyboard.numberRow,
         KEY_PREVIEW to settings.keyboard.keyPreview,
+        KEY_VIBRATION to VibrationCodes.getValue(settings.keyboard.vibration),
         KEY_SOUND to settings.keyboard.keySound,
         CRASH_REPORTS to settings.crashReports,
         USAGE_STATS to settings.usageStats,

@@ -3,10 +3,14 @@ package com.jetpiggy.ginput.ime
 import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Build
 import android.provider.Settings
 import android.text.InputType
 import android.util.Log
 import android.view.View
+import android.view.WindowInsets
+import android.view.WindowManager.LayoutParams
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
@@ -47,9 +51,11 @@ import com.jetpiggy.ginput.engine.PairMemory
 import com.jetpiggy.ginput.engine.Scheme
 import com.jetpiggy.ginput.keyboard.ClipboardContent
 import com.jetpiggy.ginput.keyboard.KeyAction
+import com.jetpiggy.ginput.keyboard.KeyboardLayout
 import com.jetpiggy.ginput.keyboard.KeyboardScreen
 import com.jetpiggy.ginput.keyboard.NavigationBarSpace
 import com.jetpiggy.ginput.keyboard.VoiceInputKey
+import com.jetpiggy.ginput.keyboard.keyboardLayout
 import com.jetpiggy.ginput.settings.KeyboardSettings
 import com.jetpiggy.ginput.settings.MainActivity
 import com.jetpiggy.ginput.settings.SettingsStore
@@ -98,6 +104,9 @@ class GInputImeService : LifecycleInputMethodService() {
     private var keyboardSettings by mutableStateOf(KeyboardSettings())
     private var field by mutableStateOf(FieldKind.Text)
     private var voiceInput by mutableStateOf(VoiceInputKey.Hidden)
+
+    /** 手機有其他可以切換的輸入法：手機橫向版面的側欄才顯示切換輸入法。 */
+    private var canSwitchInputMethod by mutableStateOf(false)
     private var emojiCategories by mutableStateOf<List<EmojiCategory>>(emptyList())
     private var recentEmoji by mutableStateOf<List<String>>(emptyList())
     private var clipboardHistory by mutableStateOf(ClipboardHistory())
@@ -151,6 +160,12 @@ class GInputImeService : LifecycleInputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
+        // 手機打橫時開孔在鍵盤的左邊或右邊（螢幕的短邊）：鍵盤視窗伸到開孔旁邊，底色不會斷開；按鍵由鍵盤畫面避開開孔。
+        window.window?.let { softInput ->
+            softInput.attributes = softInput.attributes.apply {
+                layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
         settingsStore = SettingsStore.get(this)
         phraseStore = PhraseStore.get(this)
         keyboardSettings = settingsStore.settings.value.keyboardOnScreen
@@ -254,6 +269,7 @@ class GInputImeService : LifecycleInputMethodService() {
                         onUsage = ::recordUsage,
                         whatsNew = whatsNew,
                         settingsBadge = settingsBadge,
+                        canSwitchInputMethod = canSwitchInputMethod,
                     )
                 }
             }
@@ -276,6 +292,27 @@ class GInputImeService : LifecycleInputMethodService() {
     // 橫向時也不用全螢幕的抽取文字框。
     override fun onEvaluateFullscreenMode(): Boolean = false
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        updateImeButtons()
+    }
+
+    /**
+     * 手機橫向版面收起系統在鍵盤底部加的按鈕列（手勢導航時的收起鍵盤和切換輸入法），改由側欄提供，鍵盤貼近螢幕底部；
+     * 其他版面照樣顯示。Android 15 起系統才讓輸入法收起這排按鈕：較舊的版本收起了，按鈕仍然畫在按鍵上面。
+     */
+    private fun updateImeButtons() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+        val controller = window.window?.insetsController ?: return
+        val configuration = resources.configuration
+        val landscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        if (keyboardLayout(configuration.smallestScreenWidthDp, landscape) == KeyboardLayout.PhoneLandscape) {
+            controller.hide(WindowInsets.Type.captionBar())
+        } else {
+            controller.show(WindowInsets.Type.captionBar())
+        }
+    }
+
     override fun onStartInputView(editorInfo: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(editorInfo, restarting)
         session?.finish()
@@ -291,6 +328,8 @@ class GInputImeService : LifecycleInputMethodService() {
             findVoiceInput() != null -> VoiceInputKey.Available
             else -> VoiceInputKey.NotEnabled
         }
+        canSwitchInputMethod = shouldOfferSwitchingToNextInputMethod()
+        updateImeButtons()
         session = TypingSession(
             editor = editor,
             field = field,

@@ -56,6 +56,7 @@ test("reports with wrong values are rejected", () => {
     report({ sdk: 34.5 }),
     report({ settings: { space_mode: "sideways" } }),
     report({ settings: { number_row: "yes" } }),
+    report({ settings: { key_vibration: "buzz" } }),
     report({ counts: { chinese: -1 } }),
     report({ counts: { chinese: 1.5 } }),
     report({ counts: { chinese: 2_000_000 } }),

@@ -143,8 +143,14 @@
     <string name="section_feel">手感</string>
     <string name="key_preview">按鍵放大預覽</string>
     <string name="key_preview_summary">按住按鍵時，在上方放大顯示</string>
+    <string name="key_vibration">按鍵震動</string>
+    <string name="vibration_system">跟隨系統</string>
+    <string name="vibration_off">關</string>
+    <string name="vibration_light">輕</string>
+    <string name="vibration_standard">標準</string>
+    <string name="vibration_strong">強</string>
     <string name="key_sound">按鍵音</string>
-    <string name="key_sound_summary">按鍵時發聲；震動跟隨系統的設定</string>
+    <string name="key_sound_summary">按鍵時發聲，音量跟隨系統</string>
 
     <string name="section_privacy">私隱</string>
     <string name="crash_reports">當機回報</string>
@@ -199,6 +205,13 @@
     <string name="toolbar_settings">設定</string>
     <string name="toolbar_settings_badge">設定，有新版本或公告</string>
     <string name="toolbar_voice_input">語音輸入</string>
+
+    <!-- 手機橫向版面的側欄 -->
+    <string name="side_tools">工具</string>
+    <string name="side_tools_badge">工具，有新版本或公告</string>
+    <string name="side_hide_keyboard">收起鍵盤</string>
+    <string name="state_toolbar_open">工具列已打開</string>
+    <string name="state_toolbar_closed">工具列已收起</string>
 
     <!-- 按了語音輸入，但手機未啟用語音輸入法 -->
     <string name="voice_input_not_enabled">未啟用語音輸入法</string>
@@ -256,8 +269,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>連打可以改字：整句猜錯一個字時，長按整句候選，在鍵盤上左右滑動揀出那個字，放手後揀另一個字換上。</item>
-        <item>連打預設關閉，在設定的「輸入方案」開啟。</item>
+        <item>平板及手機打橫有新版面。</item>
+        <item>按鍵震動可以調校：在設定的「打字」揀跟隨系統、關、輕、標準或強。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 

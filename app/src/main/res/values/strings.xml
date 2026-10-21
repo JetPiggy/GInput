@@ -144,8 +144,14 @@
     <string name="section_feel">Key feedback</string>
     <string name="key_preview">Key preview</string>
     <string name="key_preview_summary">Shows a larger copy of the key while you press it</string>
+    <string name="key_vibration">Key vibration</string>
+    <string name="vibration_system">Follow system</string>
+    <string name="vibration_off">Off</string>
+    <string name="vibration_light">Light</string>
+    <string name="vibration_standard">Standard</string>
+    <string name="vibration_strong">Strong</string>
     <string name="key_sound">Key sound</string>
-    <string name="key_sound_summary">Plays a sound on each key press. Vibration follows your system setting.</string>
+    <string name="key_sound_summary">Plays a sound on each key press, at your system volume</string>
 
     <string name="section_privacy">Privacy</string>
     <string name="crash_reports">Crash reports</string>
@@ -200,6 +206,13 @@
     <string name="toolbar_settings">Settings</string>
     <string name="toolbar_settings_badge">Settings, new version or notice</string>
     <string name="toolbar_voice_input">Voice input</string>
+
+    <!-- 手機橫向版面的側欄 -->
+    <string name="side_tools">Tools</string>
+    <string name="side_tools_badge">Tools, new version or notice</string>
+    <string name="side_hide_keyboard">Hide keyboard</string>
+    <string name="state_toolbar_open">Toolbar open</string>
+    <string name="state_toolbar_closed">Toolbar closed</string>
 
     <!-- 按了語音輸入，但手機未啟用語音輸入法 -->
     <string name="voice_input_not_enabled">No voice typing is turned on</string>
@@ -257,8 +270,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput updated to %1$s</string>
     <string-array name="whats_new_items">
-        <item>Continuous typing can now fix a character: if the sentence has one wrong character, long-press the sentence, slide across the keyboard to that character, then let go and pick the right one.</item>
-        <item>Continuous typing is off by default. Turn it on in Settings under Chinese input.</item>
+        <item>New layouts for tablets and for phones in landscape.</item>
+        <item>Key vibration can now be adjusted: in Settings under Typing, choose Follow system, Off, Light, Standard or Strong.</item>
     </string-array>
     <string name="whats_new_ok">Got it</string>
 

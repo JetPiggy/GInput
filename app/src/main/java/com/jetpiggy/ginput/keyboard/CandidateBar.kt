@@ -1,6 +1,5 @@
 package com.jetpiggy.ginput.keyboard
 
-import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -91,6 +90,7 @@ internal sealed interface BarPrompt {
  * 候選列。依次序顯示：長按後的確認、選單、打開候選字格時的組字和字根、改字時可以換上的字、組字的候選字和英文建議、
  * 相關符號、聯想（Emoji 關鍵字的 Emoji 固定在最右）；都沒有時顯示工具列。在候選列向下掃就收起鍵盤。
  * 長按整句候選再左右滑動揀字（改字）時，整句逐個字鋪在上面。
+ * 手機橫向版面（digits）空閒時改為顯示數字 1–0，按了工具鍵（toolsOpen）才顯示工具列，排在選單之後、組字之前。
  */
 @Composable
 internal fun CandidateBar(
@@ -98,6 +98,10 @@ internal fun CandidateBar(
     menu: BarMenu?,
     prompt: BarPrompt?,
     gridOpen: Boolean,
+    /** 手機橫向版面按了工具鍵：暫時顯示工具列，組字不變。 */
+    toolsOpen: Boolean,
+    /** 手機橫向版面：空閒時顯示數字，取代工具列；語音輸入在側欄。 */
+    digits: Boolean,
     voiceInput: VoiceInputKey,
     /** 工具列的「設定」加一個小點：有未看過的新版本或公告。 */
     settingsBadge: Boolean,
@@ -117,6 +121,7 @@ internal fun CandidateBar(
     val hidePx = with(LocalDensity.current) { HideSwipeDistance.toPx() }
     val currentOnKey by rememberUpdatedState(onKey)
     val view = LocalView.current
+    val feedback by rememberUpdatedState(LocalKeyFeedback.current)
     // 改字：長按整句候選後揀中的是第幾個字（手指未放）；開了 TalkBack 的話，改為逐個字列出讓使用者按。
     var choosing by remember(state.composition) { mutableStateOf<Int?>(null) }
     var choosingByTap by remember(state) { mutableStateOf(false) }
@@ -192,6 +197,7 @@ internal fun CandidateBar(
                     }
                     CloseButton(colors, onCloseMenu)
                 }
+                toolsOpen -> Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool)
                 state.composition.isNotEmpty() && gridOpen -> {
                     val radicalText = if (radicals) "  " + state.composition.map(::cangjieRadical).joinToString("") else ""
                     Text(
@@ -248,6 +254,7 @@ internal fun CandidateBar(
                                             down = down,
                                             count = parts.size,
                                             view = view,
+                                            feedback = feedback,
                                             onMove = { choosing = it },
                                             onRelease = {
                                                 choosing = null
@@ -299,6 +306,7 @@ internal fun CandidateBar(
                     }
                     CloseButton(colors) { onKey(KeyAction.DismissFollowUps) }
                 }
+                digits -> BarDigits(colors, onKey)
                 else -> {
                     Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool)
                     // 語音輸入在最右邊，和 ✕ ▼ 一樣只有圖示，不擠走其他按鈕的文字。
@@ -343,6 +351,7 @@ private suspend fun AwaitPointerEventScope.followFixSlide(
     down: PointerInputChange,
     count: Int,
     view: View,
+    feedback: KeyFeedback,
     onMove: (Int) -> Unit,
     onRelease: (Int) -> Unit,
     onCancel: () -> Unit,
@@ -353,7 +362,7 @@ private suspend fun AwaitPointerEventScope.followFixSlide(
     var index = ((down.position.x - padding) / width).toInt().coerceIn(0, count - 1)
     val stepPx = FixStep.toPx()
     onMove(index)
-    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+    feedback.longPress(view)
     var pending = 0f
     while (true) {
         val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id }
@@ -375,7 +384,7 @@ private suspend fun AwaitPointerEventScope.followFixSlide(
             if (next != index) {
                 index = next
                 onMove(index)
-                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                feedback.step(view)
             }
         }
     }
@@ -545,6 +554,34 @@ private fun RowScope.Toolbar(
     }
 }
 
+/** 手機橫向版面候選列空閒時的數字 1–0，取代工具列；樣子和字母鍵一樣。 */
+@Composable
+private fun RowScope.BarDigits(colors: KeyboardColors, onKey: (KeyAction) -> Unit) {
+    val dimensions = LocalKeyboardDimensions.current
+    Box(Modifier.weight(1f)) {
+        KeyRow(height = dimensions.barHeight) {
+            for (digit in "1234567890") {
+                val text = digit.toString()
+                Key(colors, weight = 1f, description = text, preview = text, onTap = { onKey(KeyAction.Text(text)) }) {
+                    KeyLabel(text, colors, fontSize = dimensions.letterSize)
+                }
+            }
+        }
+    }
+}
+
+/** 圖示右上角的小點：有未看過的新版本或公告。工具列的「設定」和手機橫向版面的工具鍵用。 */
+@Composable
+internal fun BoxScope.IconBadge(colors: KeyboardColors) {
+    Box(
+        Modifier
+            .align(Alignment.TopEnd)
+            .offset(x = 2.dp, y = (-2).dp)
+            .size(BadgeSize)
+            .background(colors.accent, CircleShape),
+    )
+}
+
 /** 工具列和剪貼簿面板最頂一行的按鈕：圖示，加上放得下時的文字。 */
 @Composable
 internal fun RowScope.ToolbarButton(item: ToolbarItem, showLabel: Boolean, colors: KeyboardColors, weight: Float) {
@@ -564,15 +601,7 @@ internal fun RowScope.ToolbarButton(item: ToolbarItem, showLabel: Boolean, color
         ) {
             Box {
                 KeyIcon(item.icon, colors.secondaryLabel, size = ToolbarIconSize)
-                if (item.badge) {
-                    Box(
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 2.dp, y = (-2).dp)
-                            .size(BadgeSize)
-                            .background(colors.accent, CircleShape),
-                    )
-                }
+                if (item.badge) IconBadge(colors)
             }
             if (showLabel) {
                 Text(

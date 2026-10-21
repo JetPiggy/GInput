@@ -26,6 +26,19 @@ enum class KeyLabels {
     LettersOnly,
 }
 
+/** 按鍵震動：跟隨系統的鍵盤觸感，或由 GInput 自己震（見 keyboard/KeyHaptics.kt）。 */
+enum class KeyVibration {
+    /** 跟隨系統的「鍵盤震動」設定（預設）。 */
+    System,
+
+    /** 全部不震。 */
+    Off,
+
+    Light,
+    Standard,
+    Strong,
+}
+
 /** 主題：鍵盤的一套顏色。每套有淺色和深色兩組，跟隨系統的深色模式；顏色見 keyboard/KeyboardColors.kt。 */
 enum class KeyboardTheme {
     /** 預設：冷灰。 */
@@ -55,6 +68,7 @@ data class KeyboardSettings(
     val numberRow: Boolean = true,
     /** 按鍵放大預覽 */
     val keyPreview: Boolean = true,
+    val vibration: KeyVibration = KeyVibration.System,
     val keySound: Boolean = false,
     /**
      * 按鍵和候選字格顯示倉頡字根。由啟用的輸入方案決定（只啟用粵拼時不顯示），不另外儲存；

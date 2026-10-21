@@ -12,7 +12,7 @@ object WhatsNew {
      * 簡介介紹的是哪個版本（寫簡介時的 versionCode）。新版本有使用者看得到的改動，就改寫簡介，
      * 並把這個數字改成新版本的 versionCode；沒有的話不用改，看過的人不會再看到舊的簡介。
      */
-    const val VERSION = 12
+    const val VERSION = 13
 
     /** GInput 是更新上來的：全新安裝時，第一次安裝和最後更新的時間相同。 */
     fun updated(context: Context): Boolean = runCatching {

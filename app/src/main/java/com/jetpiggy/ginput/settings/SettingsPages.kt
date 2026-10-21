@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,8 @@ import com.jetpiggy.ginput.dictionary.PairMemoryFile
 import com.jetpiggy.ginput.engine.CangjieGeneration
 import com.jetpiggy.ginput.engine.Scheme
 import com.jetpiggy.ginput.engine.SharedCodeOrder
+import com.jetpiggy.ginput.keyboard.KeyHaptic
+import com.jetpiggy.ginput.keyboard.KeyHaptics
 import com.jetpiggy.ginput.typing.SpaceMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -254,9 +257,11 @@ private fun ClearMemoryRow(snackbar: SnackbarHostState) {
     )
 }
 
-/** 打字：口語優先、空白鍵模式、智能刪空格、自動大寫、Emoji 關鍵字；下面是手感（按鍵放大預覽、按鍵音）。 */
+/** 打字：口語優先、空白鍵模式、智能刪空格、自動大寫、Emoji 關鍵字；下面是手感（按鍵放大預覽、按鍵震動、按鍵音）。 */
 @Composable
 internal fun TypingPage(settings: UserSettings, onChange: ((UserSettings) -> UserSettings) -> Unit, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val view = LocalView.current
     SubPage(stringResource(R.string.section_typing), onBack, tryField = true) {
         SwitchRow(
             title = stringResource(R.string.colloquial_priority),
@@ -297,6 +302,16 @@ internal fun TypingPage(settings: UserSettings, onChange: ((UserSettings) -> Use
             summary = stringResource(R.string.key_preview_summary),
             checked = settings.keyboard.keyPreview,
             onCheckedChange = { value -> onChange { it.copy(keyboard = it.keyboard.copy(keyPreview = value)) } },
+        )
+        ChoiceRow(
+            title = stringResource(R.string.key_vibration),
+            options = KeyVibration.entries.map { it to stringResource(it.label) },
+            selected = settings.keyboard.vibration,
+            onSelect = { value ->
+                onChange { it.copy(keyboard = it.keyboard.copy(vibration = value)) }
+                // 即時震一下，讓使用者感受揀了的強弱。
+                KeyHaptics.create(context, value).perform(view, KeyHaptic.Press)
+            },
         )
         SwitchRow(
             title = stringResource(R.string.key_sound),
@@ -366,6 +381,17 @@ internal val KeyboardHeight.label: Int
         KeyboardHeight.Compact -> R.string.height_compact
         KeyboardHeight.Standard -> R.string.height_standard
         KeyboardHeight.Tall -> R.string.height_tall
+    }
+
+/** 按鍵震動的名稱，例如「跟隨系統」。 */
+@get:StringRes
+internal val KeyVibration.label: Int
+    get() = when (this) {
+        KeyVibration.System -> R.string.vibration_system
+        KeyVibration.Off -> R.string.vibration_off
+        KeyVibration.Light -> R.string.vibration_light
+        KeyVibration.Standard -> R.string.vibration_standard
+        KeyVibration.Strong -> R.string.vibration_strong
     }
 
 /** 剪貼簿和常用短語：剪貼簿歷史開關，以及打開常用短語頁。 */

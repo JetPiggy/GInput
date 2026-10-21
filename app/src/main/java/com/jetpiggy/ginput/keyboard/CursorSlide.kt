@@ -1,6 +1,5 @@
 package com.jetpiggy.ginput.keyboard
 
-import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -66,6 +65,7 @@ internal suspend fun AwaitPointerEventScope.followCursorSlide(
     pointer: PointerId,
     slide: CursorSlide,
     view: View,
+    feedback: KeyFeedback,
     select: Boolean = false,
     firstStep: Int = 0,
 ) {
@@ -74,7 +74,7 @@ internal suspend fun AwaitPointerEventScope.followCursorSlide(
     fun move(steps: Int) {
         selecting = selecting || slide.shiftHeld
         slide.move(steps, selecting)
-        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        feedback.step(view)
     }
 
     slide.start()

@@ -28,6 +28,7 @@ class UserSettingsTest {
         assertEquals(KeyboardTheme.Default, settings.keyboard.theme)
         assertTrue(settings.keyboard.numberRow)
         assertTrue(settings.keyboard.keyPreview)
+        assertEquals(KeyVibration.System, settings.keyboard.vibration)
         assertFalse(settings.keyboard.keySound)
         assertFalse(settings.setupDone)
         assertEquals(0, settings.whatsNewSeen)
@@ -55,6 +56,7 @@ class UserSettingsTest {
                 labels = KeyLabels.RadicalsLarge,
                 numberRow = false,
                 keyPreview = false,
+                vibration = KeyVibration.Strong,
                 keySound = true,
             ),
             crashReports = false,
@@ -79,6 +81,7 @@ class UserSettingsTest {
             "cangjie_generations" to "fourth",
             "schemes_enabled" to "stroke",
             "keyboard_theme" to "rainbow",
+            "key_vibration" to "buzz",
         )
         assertEquals(UserSettings(), SettingsPreferences.read(stored))
     }

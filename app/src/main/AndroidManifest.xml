@@ -4,6 +4,8 @@
 
     <!-- 當機回報、使用統計、更新提示，以及雲端翻譯和改寫（ADR 0005）。除了使用者按翻譯或改寫時的原文，輸入內容不會送出。 -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 按鍵震動選了輕、標準或強時，由 GInput 自己用震動器震（keyboard/KeyHaptics.kt）。 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- 找出手機已啟用的語音輸入法（工具列的語音輸入）。Android 11 起要宣告，才看得到其他輸入法。 -->
     <queries>

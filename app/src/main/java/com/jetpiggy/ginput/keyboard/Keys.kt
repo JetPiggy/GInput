@@ -1,7 +1,6 @@
 package com.jetpiggy.ginput.keyboard
 
 import android.media.AudioManager
-import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
@@ -117,11 +116,11 @@ internal val PortraitDimensions = KeyboardDimensions(
     previewSize = 30.sp,
 )
 
-/** 橫向時螢幕矮，按鍵也矮一點，鍵盤大約佔螢幕一半。 */
+/** 手機打橫時螢幕矮：候選列和四行按鍵都是 38dp。這個版面沒有獨立的數字行，numberRowHeight 用不到。 */
 internal val LandscapeDimensions = KeyboardDimensions(
     rowHeight = 38.dp,
     numberRowHeight = 32.dp,
-    barHeight = 34.dp,
+    barHeight = 38.dp,
     letterSize = 17.sp,
     radicalSize = 16.sp,
     lettersOnlySize = 18.sp,
@@ -192,16 +191,22 @@ internal enum class KeySound(val effect: Int) {
     Enter(AudioManager.FX_KEYPRESS_RETURN),
 }
 
-/** 按鍵和候選字共用的觸感和聲音：震動跟隨系統的設定；audio 是 null 就不出按鍵音。 */
-internal class KeyFeedback(private val audio: AudioManager?) {
+/** 按鍵和候選字共用的觸感和聲音：震動照按鍵震動的設定（haptics）；audio 是 null 就不出按鍵音。 */
+internal class KeyFeedback(private val haptics: KeyHaptics, private val audio: AudioManager?) {
     fun press(view: View, sound: KeySound = KeySound.Standard) {
-        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        haptics.perform(view, KeyHaptic.Press)
         // 音量 -1 表示用系統預設的按鍵音量；系統靜音時不會發聲。
         audio?.playSoundEffect(sound.effect, -1f)
     }
+
+    /** 游標滑動、Delete 鍵向左掃和改字揀字每移一格：輕震一下，不發聲。 */
+    fun step(view: View) = haptics.perform(view, KeyHaptic.Step)
+
+    /** 長按整句候選、開始揀字。 */
+    fun longPress(view: View) = haptics.perform(view, KeyHaptic.LongPress)
 }
 
-internal val LocalKeyFeedback = staticCompositionLocalOf { KeyFeedback(audio = null) }
+internal val LocalKeyFeedback = staticCompositionLocalOf { KeyFeedback(KeyHaptics.System, audio = null) }
 
 /** 按鍵放大預覽：按住字母或符號鍵時，在按鍵上方放大顯示那個字。owner 是按着的那個鍵。 */
 @Immutable
@@ -462,7 +467,7 @@ internal fun PressableBox(
                             is PressEnd.Slide -> if (key != null) {
                                 pressed = false
                                 previews?.hide(owner)
-                                followCursorSlide(down.id, key.slide, view, select = key.shift, firstStep = end.direction)
+                                followCursorSlide(down.id, key.slide, view, feedback, select = key.shift, firstStep = end.direction)
                             }
                         }
                     } finally {

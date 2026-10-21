@@ -1,6 +1,5 @@
 package com.jetpiggy.ginput.keyboard
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -87,7 +86,7 @@ internal fun RowScope.SpaceKey(
                                 break
                             }
                             if (slide != null && abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) {
-                                followCursorSlide(down.id, slide, view)
+                                followCursorSlide(down.id, slide, view, feedback)
                                 break
                             }
                         }
@@ -170,7 +169,7 @@ internal fun RowScope.DeleteKey(colors: KeyboardColors, weight: Float, onKey: (K
                                 if (next != selection) {
                                     selection = next
                                     currentOnKey(KeyAction.SelectBackward(words, wholeLine))
-                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                    feedback.step(view)
                                 }
                             }
                         }
