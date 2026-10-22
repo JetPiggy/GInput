@@ -6,7 +6,7 @@ import com.jetpiggy.ginput.engine.EmojiKeywords
 import com.jetpiggy.ginput.engine.SentencePart
 
 /**
- * 一個文字框裏的打字過程：組字、寫入、候選字、改字、聯想、Emoji 關鍵字、空白鍵模式、智能全形標點、相關符號和智能刪空格。
+ * 一個文字框裏的打字過程：組字、寫入、候選字、改字、聯想、英漢詞典、Emoji 關鍵字、空白鍵模式、智能全形標點、相關符號和智能刪空格。
  * 對方的文字框每次取得焦點就開一個新的；所有方法都要在同一個執行緒呼叫。規則見 docs/spec/v1.md。
  */
 class TypingSession(
@@ -22,7 +22,7 @@ class TypingSession(
     private val clock: () -> Long = System::currentTimeMillis,
     /** 記錄使用者選的字（記憶字和搭配記憶）；要求不學習的欄位（無痕模式）是 false。設定關了記憶字也不記錄。 */
     private val learning: Boolean = true,
-    /** 提供英文建議的補全；欄位要求不出建議時是 false，只出照打的字母。 */
+    /** 提供英文建議的補全和英漢詞典的譯詞；欄位要求不出建議時是 false，只出照打的字母。 */
     private val offerCompletions: Boolean = true,
     private val onStateChanged: (KeyboardState) -> Unit = {},
     /** 每次寫入後通知寫入的類別（不含內容）。 */
@@ -31,6 +31,7 @@ class TypingSession(
     private val composing = composingSupported && field.allowsChinese
     private val composition = StringBuilder()
     private var candidates: List<Candidate> = emptyList()
+    private var translations: List<String> = emptyList()
     private var completions: List<String> = emptyList()
     private var associations: List<String> = emptyList()
     private var keywordEmoji: List<String> = emptyList()
@@ -93,7 +94,7 @@ class TypingSession(
             }
             settings().spaceMode == SpaceMode.SelectChinese && candidates.isNotEmpty() ->
                 candidates.first().let {
-                    writeChinese(it.text, picked = true, codeLength = it.codeLength, sentence = it.sentence)
+                    writeChinese(it.text, WriteKind.Chinese, codeLength = it.codeLength, sentence = it.sentence, symbol = it.symbol)
                 }
             else -> writeEnglish(typedEnglish(), withSpace = true)
         }
@@ -182,12 +183,24 @@ class TypingSession(
     fun candidate(text: String) {
         val candidate = candidates.firstOrNull { it.text == text }
         val codeLength = candidate?.codeLength ?: composition.length
-        writeChinese(text, picked = true, codeLength = codeLength, sentence = candidate?.sentence == true)
+        writeChinese(
+            text,
+            WriteKind.Chinese,
+            codeLength = codeLength,
+            sentence = candidate?.sentence == true,
+            symbol = candidate?.symbol == true,
+        )
         finishAction()
     }
 
     fun association(text: String) {
-        writeChinese(text, picked = false)
+        writeChinese(text, WriteKind.Association)
+        finishAction()
+    }
+
+    /** 英漢詞典的譯詞：整串組字換成 text，之後和選了候選字一樣，只是不記錄成記憶字。 */
+    fun translation(text: String) {
+        writeChinese(text, WriteKind.Translation)
         finishAction()
     }
 
@@ -349,11 +362,18 @@ class TypingSession(
     }
 
     /**
-     * picked：使用者從候選字選的（要記錄成記憶字），不是聯想。
+     * kind：候選字（Chinese，要記錄成記憶字）、聯想或者譯詞。
      * codeLength：候選字用了組字前面多少個字母；其餘字母留在組字，繼續選字（分段寫入），這時不出聯想。
      * sentence：整句候選，不記錄成記憶字。開了連打的話，寫入的字和上文的搭配都記下（搭配記憶）。
+     * symbol：符號碼的符號，不記錄成記憶字；和全形標點一樣刪掉空白鍵自動加上的空格。
      */
-    private fun writeChinese(text: String, picked: Boolean, codeLength: Int = composition.length, sentence: Boolean = false) {
+    private fun writeChinese(
+        text: String,
+        kind: WriteKind,
+        codeLength: Int = composition.length,
+        sentence: Boolean = false,
+        symbol: Boolean = false,
+    ) {
         clearFollowUps()
         val engineSettings = settings().engine
         val recordPairs = learning && engineSettings.rememberCandidates && engineSettings.continuousTyping
@@ -364,7 +384,7 @@ class TypingSession(
             else -> contextBefore
         }
         val rest = composition.substring(codeLength.coerceIn(0, composition.length))
-        val removeSpace = shouldRemoveAutoSpace(text)
+        val removeSpace = shouldRemoveAutoSpace(text, symbol)
         editor.beginBatchEdit()
         when {
             composition.isEmpty() -> Unit
@@ -386,7 +406,8 @@ class TypingSession(
         clearComposition()
         autoSpace = null
         val engine = engine()
-        if (picked && !sentence && learning && engineSettings.rememberCandidates) engine?.recordPick(text)
+        val picked = kind == WriteKind.Chinese && !sentence && !symbol
+        if (picked && learning && engineSettings.rememberCandidates) engine?.recordPick(text)
         if (recordPairs) engine?.rememberPairs(before, text)
         contextBefore = text
         if (rest.isEmpty()) {
@@ -398,7 +419,7 @@ class TypingSession(
             awaitingComposingEcho = true
             refreshCandidates()
         }
-        onWrite(if (picked) WriteKind.Chinese else WriteKind.Association)
+        onWrite(kind)
     }
 
     /** 把組字換成英文 word 寫入，可以在後面加一個空格。 */
@@ -420,10 +441,10 @@ class TypingSession(
         onWrite(kind)
     }
 
-    private fun shouldRemoveAutoSpace(text: String): Boolean {
+    private fun shouldRemoveAutoSpace(text: String, symbol: Boolean = false): Boolean {
         val expected = autoSpace ?: return false
         return settings().smartSpaceRemoval &&
-            Punctuation.removesAutoSpace(text) &&
+            (symbol || Punctuation.removesAutoSpace(text)) &&
             textBeforeComposition().endsWith(expected)
     }
 
@@ -449,7 +470,9 @@ class TypingSession(
             found.map { if (it.sentence) it.copy(text = held.joinToString("") { part -> part.text }, parts = held) else it }
                 .distinctBy { it.text }
         }
-        completions = if (typed.isEmpty() || !offerCompletions) emptyList() else engine?.englishSuggestions(typed).orEmpty()
+        val suggest = typed.isNotEmpty() && offerCompletions
+        completions = if (suggest) engine?.englishSuggestions(typed).orEmpty() else emptyList()
+        translations = if (suggest && settings().englishChinese) engine?.translations(typed).orEmpty() else emptyList()
     }
 
     /**
@@ -478,6 +501,7 @@ class TypingSession(
     private fun clearComposition() {
         composition.clear()
         candidates = emptyList()
+        translations = emptyList()
         completions = emptyList()
         fixes = emptyList()
         heldSentence = null
@@ -501,6 +525,7 @@ class TypingSession(
         state = KeyboardState(
             composition = typed,
             candidates = candidates,
+            translations = translations,
             englishSuggestions = if (typed.isEmpty()) emptyList() else (listOf(typedEnglish()) + completions).distinct(),
             associations = associations,
             keywordEmoji = keywordEmoji,

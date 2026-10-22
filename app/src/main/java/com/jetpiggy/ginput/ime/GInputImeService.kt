@@ -4,6 +4,7 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Paint
 import android.os.Build
 import android.provider.Settings
 import android.text.InputType
@@ -204,7 +205,9 @@ class GInputImeService : LifecycleInputMethodService() {
                 withContext(Dispatchers.IO) {
                     val memory = CandidateMemory(CandidateMemoryFile.load(applicationContext), onChanged = memoryWriter::save)
                     val pairs = PairMemory(PairMemoryFile.load(applicationContext), onChanged = pairsWriter::save)
-                    CandidateEngine(BundledDictionary.open(applicationContext), memory, pairs).also {
+                    // 手機字型顯示不到的符號不列出（符號碼）。
+                    val paint = Paint()
+                    CandidateEngine(BundledDictionary.open(applicationContext), memory, pairs, canDisplay = paint::hasGlyph).also {
                         // 粵拼的拼法和連打的碼表在背景先載入，第一次打字時才不會卡一下。
                         val settings = settingsStore.settings.value
                         if (Scheme.Jyutping in settings.enabledSchemes) it.loadJyutping()
@@ -420,6 +423,7 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.PickCandidate -> session.candidate(action.text)
             is KeyAction.PickEnglish -> session.englishSuggestion(action.word)
             is KeyAction.PickAssociation -> session.association(action.text)
+            is KeyAction.PickTranslation -> session.translation(action.text)
             is KeyAction.PickRelatedSymbol -> session.relatedSymbol(action.text)
             KeyAction.DismissFollowUps -> session.dismissFollowUps()
             is KeyAction.ForgetCandidate -> session.forget(action.text)
@@ -479,6 +483,7 @@ class GInputImeService : LifecycleInputMethodService() {
             WriteKind.Association -> UsageEvent.Association
             WriteKind.English -> UsageEvent.English
             WriteKind.EnglishSuggestion -> UsageEvent.EnglishSuggestion
+            WriteKind.Translation -> UsageEvent.Translation
         }
 
     /** 由按鍵動作得出的使用統計項目；寫入文字的由 TypingSession 的 onWrite 數，這裏不重複。 */

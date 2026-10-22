@@ -2,7 +2,7 @@
 
 用法（在專案根目錄，先跑 fetch_sources.py 和 build_dict.py）：
     python -I -X utf8 tools/dictgen/build_emoji.py --sources build/dict-sources \
-        --dict app/src/main/assets/dict/ginput-4.db --out app/src/main/assets/emoji/emoji.tsv \
+        --dict app/src/main/assets/dict/ginput-6.db --out app/src/main/assets/emoji/emoji.tsv \
         --keywords app/src/main/assets/emoji/keywords.tsv --licenses app/src/main/assets/licenses
 
 emoji.tsv 每行一個 Emoji：分類<Tab>Emoji<Tab>膚色變體（以空格分隔，可以沒有）。

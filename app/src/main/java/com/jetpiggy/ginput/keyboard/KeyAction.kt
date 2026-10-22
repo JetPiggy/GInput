@@ -22,6 +22,9 @@ sealed interface KeyAction {
     data class PickEnglish(val word: String) : KeyAction
     data class PickAssociation(val text: String) : KeyAction
 
+    /** 英漢詞典的譯詞。 */
+    data class PickTranslation(val text: String) : KeyAction
+
     /** 候選列的相關符號：取代剛打的符號。 */
     data class PickRelatedSymbol(val text: String) : KeyAction
 

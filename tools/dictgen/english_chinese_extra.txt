@@ -1,0 +1,1229 @@
+# GInput 自行整理的英漢詞典譯詞（docs/spec/v1.md 的「英漢詞典」），不涉及第三方授權。
+# 每行：英文字<Tab>譯詞（最多 3 個，用空格分隔，排前的先出），取代從 words.hk 英文索引算出的譯詞；
+# 譯詞寫「-」就不出譯詞。# 之後是註解。
+# 用途：改掉常用字古怪的譯詞（例如 was 在 words.hk 是「華盛頓」）、補上香港常用的說法。
+# 字尾變化的字（例如 cherries）沒有自己一行時，用原形（cherry）那一行，條件是兩者的 Porter 詞幹相同
+# （cares 不會用 car 那一行）。
+able	可以 能夠 得
+about	關於 大概 大約
+above	上面 以上 之上
+absolutely	絕對 完全 一定
+accept	接受 收 接納
+access	存取 進入 通道
+according	根據 按照 據
+account	戶口 帳戶 賬目
+across	橫過 對面 穿過
+act	行為 扮 行動
+action	行動 動作 動作片
+active	活躍 積極 主動
+activity	活動
+actual	實際 真正 其實
+actually	其實 事實上 實際上
+add	加 加入 加上
+added	加咗 加入 增加
+addition	加 另外 加法
+additional	額外 另外 附加
+address	地址 住址 稱呼
+administration	行政 管理 政府
+adult	成人 大人 成年人
+advantage	優勢 好處 優點
+advice	建議 意見 忠告
+african	非洲 非洲人
+again	再 又 再次
+against	反對 對抗 對
+age	年紀 年齡 時代
+agency	代理 機構 中介
+agent	代理 經紀 特工
+ago	之前 前 以前
+agreed	同意 答應 認同
+agreement	協議 合約 協定
+ahead	前面 提前 預先
+aid	援助 幫助 輔助
+air	空氣 氣 冷氣
+album	專輯 相簿 碟
+alive	生存 活 在生
+all	所有 全部 一切
+allow	容許 允許 俾
+almost	差唔多 幾乎 就快
+along	沿住 一路 連同
+amazing	犀利 好正 驚人
+america	美國 美洲
+american	美國 美國人 美式
+among	當中 之中 之間
+analysis	分析
+animal	動物
+announced	宣佈 公佈
+annual	每年 年度 一年一度
+another	另一個 第二個 另外
+anti	反 反對
+any	任何 隨便
+anymore	再 唔再
+anyone	任何人 邊個 有人
+anything	任何嘢 乜嘢
+apart	分開 除咗 之外
+apartment	單位 住宅 公寓
+app	程式 應用程式 手機程式
+apparently	睇落 似乎 聽講
+appear	出現 好似 睇落
+apple	蘋果
+application	申請 應用程式 應用
+apply	申請 應用 搽
+appointment	預約 約會 委任
+appreciate	欣賞 感激 多謝
+approach	方法 接近 做法
+april	四月 愚人節
+area	地區 地方 範圍
+arent	唔係 不是
+army	軍隊 陸軍 部隊
+around	周圍 大約 四圍
+art	藝術 美術 藝術品
+artist	藝術家 畫家 歌手
+ask	問 要求 請求
+assignment	作業 功課 任務
+associated	相關 有關 聯繫
+association	協會 聯會 聯想
+attempt	嘗試 試圖 企圖
+attention	注意 注意力 留意
+australian	澳洲 澳洲人
+author	作者 作家
+authority	當局 權力 權威
+available	有得 可用 得閒
+average	平均 一般 普通
+award	獎 獎項 頒獎
+aware	知道 意識到 察覺
+away	走開 離開 遠
+awesome	正 犀利 勁
+back	返去 後面 背脊
+bad	差 唔好 壞
+bag	袋 包 手袋
+ball	波 球 舞會
+band	樂隊 樂團 帶
+bank	銀行 岸
+bar	酒吧 吧 條
+base	基地 基礎 底
+basic	基本 基礎 基本上
+basis	基礎 根據
+beat	打敗 節拍 打
+beautiful	靚 美麗 漂亮
+beauty	美麗 美 靚女
+became	變成 成為
+become	變成 成為 做
+becoming	變成 成為
+bed	牀 瞓覺 牀舖
+been	-
+beer	啤酒 黑啤
+began	開始
+begin	開始 開頭 起手
+below	下面 以下 之下
+bet	賭 打賭 博
+better	好啲 更好 好過
+between	之間 中間
+beyond	超出 之外 超越
+bill	單 賬單 法案
+billion	十億
+birth	出生 出世 生
+black	黑色 黑 烏
+block	阻擋 封鎖 塊
+blood	血 血液
+board	板 董事會 登上
+book	書 訂 預約
+booking	預約 訂位 預訂
+born	出世 出生 天生
+boss	老細 老闆 上司
+both	兩個都 雙方 兩者
+bottom	底 底部 下面
+bought	買咗 買
+box	盒 箱 盒仔
+brain	腦 頭腦 腦袋
+bread	麵包 方包 餐包
+break	休息 打破 打爛
+bridge	橋 橋樑
+bring	帶 帶嚟 攜帶
+british	英國 英國人
+broke	爛咗 打爛 破產
+broken	爛咗 爛 破碎
+brother	兄弟 哥哥 細佬
+brought	帶咗 帶嚟
+btw	順帶一提
+budget	預算 財政預算
+build	起 建 建立
+building	大廈 建築物 樓
+built	建 建造 起
+burger	漢堡包 漢堡
+busy	忙 好忙 忙碌
+buy	買 購買 買嘢
+bye	拜拜 再見
+call	打電話 叫 電話
+called	叫做 叫 打電話
+came	嚟咗 嚟
+camera	相機 鏡頭 攝影機
+camp	營 營地 陣營
+campaign	活動 運動 競選
+canada	加拿大
+cant	唔可以 唔得 唔會
+captain	隊長 機長 船長
+car	車 私家車 汽車
+card	卡 咭 卡片
+care	關心 照顧 理
+carry	帶 攜帶 孭
+case	個案 情況 案件
+cash	現金 錢 銀紙
+cast	演員 石膏 投
+cat	貓 貓咪
+catch	捉 接 趕
+caught	捉到 捉住 染上
+cause	原因 引起 導致
+cell	細胞 手機 牢房
+cent	仙 分
+central	中環 中央 中部
+centre	中心 中央
+century	世紀
+certain	肯定 某 某些
+chairman	主席 董事長
+challenge	挑戰 難題 挑機
+chance	機會 可能
+change	改變 變 換
+channel	頻道 渠道 台
+character	角色 性格 字
+charge	收費 叉電 控告
+charger	充電器 叉電器 尿袋
+check	檢查 查 睇吓
+cheers	乾杯 飲杯 多謝
+cherry	車厘子 櫻桃 櫻
+chief	主要 首席 阿頭
+chill	放鬆 凍 冷靜
+china	中國 瓷器
+chinese	中文 中國人 中國
+chocolate	朱古力 巧克力
+choice	選擇 揀 抉擇
+christian	基督徒 基督教
+church	教會 教堂 禮拜堂
+civil	民事 民間 公民
+claim	聲稱 索償 認領
+class	班 堂 等級
+clear	清楚 清除 明顯
+clearly	清楚 明顯 顯然
+click	撳 點擊 按
+client	客戶 客人
+close	閂 關 近
+closed	閂咗 關閉 停業
+club	會所 俱樂部 球會
+coast	海岸 沿岸 岸邊
+code	代碼 碼 編碼
+coffee	咖啡 啡 咖啡豆
+cold	凍 冷 傷風
+collection	收藏 系列 收集
+college	大專 學院 書院
+come	嚟 過嚟 來
+coming	嚟緊 就嚟 來
+comment	留言 評論 意見
+commercial	商業 廣告 商用
+commission	佣金 委員會 佣
+common	常見 普通 共同
+community	社區 社群 社會
+company	公司 陪伴
+complete	完成 完整 完全
+completed	完成 完成咗
+completely	完全 全部 徹底
+complex	複雜 綜合 錯綜複雜
+computer	電腦 計算機
+concept	概念 構思
+concerned	關注 擔心 有關
+concert	音樂會 演唱會
+conference	會議 研討會 記者會
+confirm	確認 確定 作實
+congrats	恭喜
+congress	國會 議會 大會
+consider	考慮 認為 當
+considered	考慮 認為 當作
+contact	聯絡 接觸 聯繫
+content	內容 滿足
+continue	繼續 持續 一直
+contract	合約 合同 契約
+control	控制 操控 掌握
+cool	型 涼 凍
+copy	複製 抄 副本
+corner	角 角落頭 轉角
+correct	正確 啱 改正
+cost	費用 成本 價錢
+could	可以 能夠 可能
+couldnt	唔可以 冇辦法
+count	數 計 點算
+county	郡 縣
+couple	情侶 一對 兩公婆
+coupon	優惠券 現金券 券
+course	課程 當然 科目
+court	法庭 法院 球場
+cover	封面 遮 覆蓋
+covered	遮住 覆蓋 包括
+crazy	癲 瘋狂 黐線
+create	創造 創作 建立
+credit	信用 學分 功勞
+crime	罪行 罪案 犯罪
+critical	關鍵 嚴重 批評
+cross	過 交叉 十字
+current	目前 現時 電流
+currently	而家 目前 現時
+cut	剪 切 減
+daily	每日 日常 日報
+damage	損壞 損害 傷害
+damn	弊 撞鬼 死
+dance	跳舞 舞蹈 舞
+dark	黑 暗 黑暗
+data	數據 資料
+date	日期 約會 拍拖
+daughter	女兒 女 阿女
+day	日 天 日子
+dead	死咗 死 死人
+deal	交易 處理 優惠
+dear	親愛 親愛嘅
+death	死亡 死 死因
+decide	決定 揀
+decision	決定 判決
+deep	深 深入 深層
+defense	防守 國防 辯護
+definitely	一定 肯定 梗係
+degree	學位 程度 度
+delivery	送貨 外賣 速遞
+demand	要求 需求 需要
+department	部門 系 署
+design	設計 款式 圖案
+despite	儘管 雖然
+develop	發展 開發
+development	發展 開發 發達
+did	-
+didnt	冇 未
+difference	分別 差異 唔同
+difficult	困難 難 難搞
+digital	數碼 數字 電子
+direct	直接 導演 指示
+direction	方向 指示 指導
+directly	直接 直程
+director	導演 總監 董事
+distance	距離 路程
+district	區 地區 區域
+division	部門 分部 除法
+doctor	醫生 博士 睇醫生
+doesnt	唔 冇
+doing	做緊 做
+done	搞掂 做完 完成
+door	門 大門
+double	雙 雙倍 兩倍
+doubt	懷疑 質疑 疑問
+down	落 落去 下
+download	下載
+draw	畫 抽 打和
+dream	夢 夢想 發夢
+dress	裙 連身裙 打扮
+drive	揸車 駕駛 駛
+driver	司機 驅動程式 車手
+drop	跌 滴 放低
+drug	藥 毒品 藥物
+duck	鴨 鴨仔 燒鴨
+dude	兄弟 條友 師兄
+due	由於 到期 因為
+during	期間 之中 之際
+each	每 每個 各
+earth	地球 世界 泥土
+easily	輕易 容易 輕鬆
+eastern	東部 東方 東
+easy	容易 易 簡單
+eat	食 食嘢 食飯
+economic	經濟 經濟上
+economy	經濟 經濟體 慳
+edition	版 版本 期
+education	教育 教學 學歷
+effect	效果 影響 作用
+effective	有效 生效 見效
+effort	努力 心機 精力
+egg	蛋 雞蛋
+eight	八 八個
+either	都 任何一個
+else	其他 否則 另外
+end	結束 完 尾
+energy	能量 精力 能源
+engine	引擎 機 搜尋器
+engineering	工程 工科
+enjoy	享受 鍾意 欣賞
+enough	夠 足夠
+enter	入 輸入 進入
+entire	成個 整個 全部
+environment	環境
+episode	集 一集
+equipment	設備 器材 裝備
+established	成立 建立 確立
+estate	屋苑 屋邨 地產
+europe	歐洲
+european	歐洲 歐洲人
+even	甚至 連 平
+evening	夜晚 晚上 傍晚
+event	活動 事件 項目
+eventually	最後 終於 遲早
+ever	試過 曾經
+every	每 每個 個個
+everybody	大家 人人 各位
+everyone	大家 人人 各位
+evidence	證據 證明
+exactly	正正 完全 就係
+exam	考試 測驗 考
+example	例子 例如 舉例
+except	除咗 除了 除外
+exchange	交換 交流 兌換
+executive	行政 高層 主管
+existing	現有 存在
+expect	預期 期望 估
+experience	經驗 經歷 體驗
+extremely	非常 極之 十分
+face	面 塊面 面對
+facebook	面書 臉書
+fact	事實 實情
+failed	失敗 肥佬 唔合格
+faith	信心 信仰 信念
+fall	跌 秋天 落
+family	家庭 屋企人 家人
+famous	出名 有名 著名
+fan	粉絲 迷 風扇
+fashion	時裝 潮流 時尚
+fast	快 快速
+fat	肥 脂肪 肥胖
+favorite	最愛 最鍾意 至愛
+fear	驚 恐懼 害怕
+feature	功能 特色 特點
+federal	聯邦
+feeling	感覺 感受 心情
+feet	腳 呎 雙腳
+fell	跌咗 跌 跌低
+felt	覺得 感到 毛氈
+few	幾個 少數 少少
+field	領域 場 田
+fifth	第五 五分一
+fight	打交 打架 鬥爭
+fighting	打交 戰鬥 加油
+figure	身材 數字 人物
+file	檔案 文件 檔
+filipino	菲律賓人 菲律賓 菲律賓話
+final	最後 決賽 最終
+finally	終於 最後 最終
+financial	財務 金融 經濟
+find	搵 發現 尋找
+finding	發現 搵 結果
+fine	好 冇問題 罰款
+finish	完成 搞掂 完
+finished	完成 搞掂 完咗
+fire	火 火警 炒魷魚
+firm	公司 堅定 硬
+first	第一 首先 先
+fish	魚 釣魚 捉魚
+fit	啱 適合 健康
+five	五 五個
+fix	整 修理 固定
+flight	航班 班機 飛行
+floor	地板 樓層 層
+fly	飛 烏蠅 搭飛機
+focus	焦點 專注 集中
+folder	文件夾 資料夾 快勞
+follow	跟 跟住 追蹤
+following	以下 跟住 追蹤
+foot	腳 呎 步行
+force	力 武力 強迫
+forced	被迫 強迫 逼
+foreign	外國 外國人 外地
+forget	唔記得 忘記 算啦
+form	表格 形式 形成
+former	前 前任 前者
+forward	轉寄 向前 前鋒
+found	搵到 發現 成立
+foundation	基礎 基金會 地基
+four	四 四個
+fourth	第四 四分一
+france	法國 法蘭西
+frank	坦白 直率
+free	免費 自由 得閒
+freedom	自由
+french	法國 法文 法國人
+friend	朋友 老友 友
+front	前面 面前 前
+full	滿 飽 全
+fully	完全 充分 十足
+fun	好玩 樂趣 開心
+function	功能 作用 函數
+fund	基金 資金 撥款
+further	進一步 更遠 更加
+future	未來 將來 前途
+gain	得到 增加 獲得
+game	遊戲 比賽 賽事
+garden	花園 公園
+gas	氣 煤氣 汽油
+gave	俾咗 畀咗 給
+gay	同志 同性戀 基
+general	一般 普遍 將軍
+generally	一般 通常
+generation	一代 世代 產生
+german	德國 德文 德國人
+gift	禮物 天賦
+give	俾 畀 送
+given	俾咗 給予 鑑於
+glad	開心 高興 好彩
+glass	玻璃 杯 眼鏡
+global	全球 環球 全球化
+goal	目標 入球 龍門
+god	神 上帝 天主
+going	去 會 將會
+gone	走咗 冇咗 去咗
+gonna	會 將會
+good	好 好嘢 良好
+got	有 得到 收到
+gotta	要 一定要
+grade	年級 成績 等級
+grand	宏偉 隆重 大
+great	好 偉大 勁
+green	綠色 綠 環保
+ground	地面 地 地下
+group	組 群組 一班
+grow	生長 種 大
+growing	增長 成長 種
+growth	增長 成長 發展
+guess	估 猜 估計
+guy	條友 佬 男人
+gym	健身室 健身 體育館
+had	有
+hair	頭髮 頭毛 毛
+hall	大堂 禮堂 廳
+handle	處理 應付 手柄
+happen	發生 出事
+happening	發生緊 發生
+hard	難 硬 辛苦
+has	有
+hate	憎 討厭 恨
+havent	未 未曾 冇
+head	頭 頭部 阿頭
+health	健康 身體
+hear	聽 聽到 聽見
+heard	聽到 聽過 聽講
+hearing	聽力 聆訊 聽到
+heart	心 心臟 中心
+heat	熱 熱力 加熱
+held	舉行 揸住 持有
+hell	地獄
+help	幫手 幫 幫助
+helped	幫咗 幫 幫助
+helping	幫手 幫 幫助
+her	佢 佢嘅 她
+here	呢度 呢邊 這裏
+heres	呢度係 呢度
+herself	佢自己 自己
+hes	佢係 佢
+hey	喂
+hi	你好 嗨
+high	高 高度 高級
+highly	高度 非常 極
+him	佢 他
+himself	佢自己 自己
+his	佢嘅 他的
+history	歷史 紀錄 過去
+hit	打 撞 擊中
+hold	揸 拎 舉行
+holding	揸住 拎住 舉行
+hospital	醫院 入院
+host	主持 主人 主辦
+hot	熱 辣 熱門
+hotel	酒店 飯店
+hour	小時 個鐘 鐘頭
+house	屋 房屋 屋企
+housing	房屋 住屋
+human	人類 人 人性
+hurt	傷害 整親 受傷
+ice	冰 冰塊 冰凍
+idea	諗法 主意 概念
+ill	病 生病 唔舒服
+image	圖像 形象 影像
+imagine	想像 幻想 諗
+immediately	即刻 立即 馬上
+impact	影響 衝擊 撞擊
+important	重要 緊要 重點
+impossible	冇可能 不可能
+improve	改善 改進 進步
+independent	獨立 自主
+india	印度
+indian	印度 印度人 印第安人
+individual	個人 個別 個體
+industry	行業 工業 產業
+information	資料 資訊 信息
+instead	反而 代替
+institute	學院 研究所
+interest	興趣 利息 利益
+interested	有興趣 感興趣
+interesting	有趣 好玩 得意
+international	國際
+internet	互聯網 網絡 上網
+interview	面試 訪問 採訪
+into	入去 入面 變成
+investigation	調查
+investment	投資 投入
+involved	參與 涉及 牽涉
+isnt	唔係 不是
+issue	問題 事項 發出
+its	佢嘅 其
+ive	-
+jack	千斤頂 插頭 積
+japan	日本
+japanese	日本 日文 日本人
+jerk	扯 衰人
+join	加入 參加 一齊
+journal	期刊 日誌 學報
+judge	法官 評判 判斷
+juice	果汁 汁 橙汁
+june	六月
+just	啱啱 只係 剛剛
+keep	保持 繼續 留住
+kept	保持 留住 一直
+kill	殺 殺死 整死
+killed	殺死 殺咗 被殺
+killing	殺 殺戮 殺死
+kind	種 好心 類
+knew	知道 知
+know	知道 知 識
+knowledge	知識 學識 認識
+known	知名 出名 已知
+labor	勞工 勞動 人工
+lack	缺乏 缺少 唔夠
+lady	女士 小姐 太太
+land	土地 地 降落
+large	大 大型 巨大
+last	最後 上次 最尾
+late	遲 遲到 夜
+law	法律 法 法例
+leader	領袖 領導 阿頭
+leadership	領導 領導能力 領導層
+league	聯賽 聯盟
+learn	學 學習 得知
+learned	學咗 學到 學習
+learning	學習 學 學緊
+leave	走 離開 假期
+led	帶領 領導
+left	左 左邊 剩低
+legal	法律 合法 法定
+length	長度 長
+less	少啲 少 較少
+lesson	堂 課 教訓
+lets	一齊 我哋 讓
+letter	信 字母 信件
+level	水平 程度 等級
+library	圖書館 庫
+lie	大話 講大話 瞓
+light	燈 光 輕
+like	鍾意 好似 喜歡
+likely	可能 好可能 應該
+limited	有限 限量 有限公司
+line	線 行 排隊
+link	連結 連接 聯繫
+list	清單 列表 名單
+listen	聽 聽住 傾聽
+literally	真係 字面上 簡直
+little	少少 細 小
+live	住 生活 直播
+living	生活 活 謀生
+local	本地 當地 地方
+location	位置 地點 定位
+lol	哈哈
+long	長 好耐 漫長
+look	睇 望 樣
+lord	主 上帝 勳爵
+lose	輸 唔見 失去
+loss	損失 虧損 輸
+lost	唔見咗 迷路 輸咗
+lot	好多 大量
+lots	好多 大量
+love	愛 愛情 鍾意
+low	低 低落 低級
+lower	降低 較低 下
+luck	運氣 好彩 幸運
+machine	機器 機械 機
+made	整 製造 做
+main	主要 主
+major	主要 主修 重大
+majority	大多數 大部分 多數
+make	整 做 製造
+male	男 男性 雄性
+managed	管理 處理 搞掂
+management	管理 管理層 經營
+manager	經理 主管 老細
+map	地圖
+march	三月 遊行 行軍
+mark	記號 分數 標記
+marketing	市場推廣 營銷 推銷
+mass	大量 質量 彌撒
+master	師傅 大師 碩士
+match	比賽 配 火柴
+material	材料 物料 資料
+may	可能 可以 五月
+mean	意思 即係 刻薄
+meaning	意思 意義 含意
+means	方法 意思 手段
+meant	意思係 本來想
+medical	醫療 醫學 醫生
+medicine	藥 藥物 醫學
+meet	見面 認識 遇到
+meeting	會議 開會 見面
+men	男人 男性 男士
+message	訊息 短訊 留言
+met	見過 遇到 認識
+method	方法 辦法
+mid	中 中間
+might	可能 或者 或許
+military	軍事 軍隊 軍人
+million	百萬 一百萬
+mind	介意 心 腦
+mine	我嘅 礦 地雷
+minibus	小巴
+minister	部長 局長 牧師
+minute	分鐘 分 一陣
+miss	掛住 錯過 小姐
+missed	掛住 錯過 走漏
+missing	唔見咗 缺少 失蹤
+mission	任務 使命
+mobile	手機 流動 移動
+model	模特兒 模型 型號
+mom	媽咪 阿媽 媽媽
+monday	星期一 禮拜一
+money	錢 金錢 銀紙
+month	月 月份 個月
+morning	朝早 早上 早晨
+most	最 大部分 大多數
+mostly	大多 多數 主要
+mother	阿媽 媽媽 母親
+mouse	滑鼠 老鼠
+mouth	口 嘴 把口
+move	郁 搬 移動
+movie	電影 戲 睇戲
+moving	搬 感人 移動
+mtr	港鐵 地鐵 地鐵站
+much	多 好多 許多
+multiple	多個 多重 倍數
+murder	謀殺 殺人 兇殺
+must	一定要 必須 實
+myself	我自己 自己
+name	名字 名 名稱
+named	叫做 名為 命名
+natural	自然 天然 天生
+nature	大自然 自然 本質
+near	近 附近 就快
+necessary	必要 需要 必須
+negative	負面 消極 陰性
+neither	都唔 兩個都唔
+net	網 淨 網絡
+never	從來唔 從未 永不
+new	新 全新 新鮮
+news	新聞 消息 資訊
+next	下一個 下次 嚟緊
+nice	好 好好 正
+nine	九 九個
+nobody	冇人 無人
+none	冇 無 一個都冇
+noodle	麵 粉麵 麵條
+nor	也不 都唔
+northern	北部 北方 北
+note	筆記 便條 注意
+nothing	冇嘢 乜都冇 沒有
+notice	注意 通知 留意
+now	而家 依家 現在
+obviously	明顯 梗係 當然
+october	十月
+off	熄 關 走開
+offer	提供 優惠 錄取
+offered	提供 提出
+office	辦公室 寫字樓 公司
+officer	警員 官員 主任
+official	官方 正式 官員
+offline	離線
+oil	油 石油 油畫
+okay	好 冇問題
+old	舊 老 舊時
+once	一次 曾經 一旦
+one	一 一個
+online	網上 線上 在線
+only	只係 淨係 只有
+onto	上 落
+open	開 打開 公開
+opened	開咗 打開 開
+opening	開幕 開張 空缺
+operating	運作 營運 操作
+operation	運作 手術 行動
+opinion	意見 睇法 想法
+opportunity	機會 時機 機遇
+option	選項 選擇 期權
+orange	橙 橙色 橙汁
+order	落單 次序 訂單
+organization	組織 機構 團體
+original	原本 原創 原版
+other	其他 其餘 另外
+otherwise	否則 不然 唔係嘅話
+our	我哋嘅 我哋 我們的
+out	出去 出面 外面
+outside	出面 外面 戶外
+over	完 上面 超過
+overall	整體 總體 總括
+own	自己 擁有 自己嘅
+owned	擁有 持有
+owner	業主 老闆 主人
+paid	俾咗錢 付咗 已付
+pain	痛 痛苦 疼痛
+paper	紙 論文 文件
+park	公園 泊車 停車
+part	部分 一部分 零件
+particular	特別 特定 某
+partner	拍檔 伙伴 伴侶
+party	派對 黨 聚會
+password	密碼
+patient	病人 耐心
+pay	俾錢 付款 支付
+peace	和平 平安 安寧
+penis	陰莖 陽具
+people	人 啲人 人們
+perfect	完美 完全 理想
+performance	表現 表演 性能
+period	時期 期間 月經
+person	人 個人 一個人
+personal	個人 私人
+peter	-
+phone	電話 手機 打電話
+photo	相 照片 相片
+physical	身體 體能 物理
+pick	揀 接 執
+picture	相 圖 圖片
+piece	件 塊 嚿
+pizza	薄餅 披薩
+place	地方 地點 位
+plan	計劃 打算 方案
+planning	計劃 規劃 打算
+plant	植物 種 廠
+player	玩家 球員 選手
+please	唔該 請 麻煩
+plus	加 加上 加號
+point	點 重點 分
+police	警察 差人 警方
+policy	政策 保單 制度
+political	政治 政治性
+politics	政治 政局 政壇
+poor	窮 差 可憐
+pop	流行 爆 彈出
+popular	受歡迎 熱門 流行
+population	人口
+positive	正面 積極 陽性
+possibly	可能 或者
+post	帖文 貼文 郵寄
+potato	薯仔 薯 馬鈴薯
+power	力量 權力 電力
+powerful	強大 有力 犀利
+practice	練習 實踐 操練
+present	禮物 現在 介紹
+presentation	簡報 演示 介紹
+presented	呈現 介紹 提交
+president	總統 主席 總裁
+press	按 撳 新聞界
+pressure	壓力 氣壓 壓
+pretty	靚 漂亮 幾
+previous	上次 之前 對上
+price	價錢 價格 售價
+primary	主要 小學 初級
+prime	首要 總理 黃金
+prior	事先 之前 優先
+prison	監獄 監 坐監
+pro	專業 職業 優點
+probably	可能 應該 或者
+process	過程 程序 處理
+produce	生產 製作 出產
+product	產品 出品 商品
+production	生產 製作 出品
+profile	個人資料 頭像 簡介
+program	節目 程式 計劃
+progress	進展 進步 進度
+project	項目 計劃 工程
+property	物業 財產 特性
+protect	保護 保障 防護
+protection	保護 保障 防護
+proud	驕傲 自豪 得意
+provide	提供 供應 給予
+public	公眾 公共 公開
+published	出版 發表 發佈
+purpose	目的 用途 特登
+quality	質素 品質 質量
+queen	女王 皇后 王后
+quick	快 快手 快速
+quickly	快啲 快快手 迅速
+quite	幾 相當 好
+race	比賽 種族 賽跑
+radio	收音機 電台 無線電
+raise	提出 提高 加人工
+raised	提出 提高 舉起
+ran	跑咗 跑 經營
+range	範圍 幅度 系列
+rate	比率 率 評分
+rather	寧願 幾 相當
+read	睇 讀 閱讀
+reading	閱讀 睇書 讀數
+ready	準備好 就緒 好咗
+real	真 真正 真實
+reality	現實 事實 真人騷
+realize	發現 意識到 實現
+really	真係 實在 的確
+reason	原因 理由 道理
+receive	收 收到 接收
+received	收到 接收 受到
+recent	最近 近期 近排
+recently	最近 近排 近來
+record	紀錄 記錄 錄音
+region	地區 區域
+regular	定期 正常 普通
+related	有關 相關 關係
+relationship	關係 感情 戀愛
+release	推出 發佈 釋放
+religious	宗教 宗教上 虔誠
+remain	保持 仍然 留低
+remains	遺骸 剩低 仍然
+remember	記得 記住 懷念
+rent	租 租金 租借
+report	報告 報道 舉報
+request	要求 請求 申請
+require	需要 要求
+research	研究 研發 調查
+respect	尊重 尊敬 方面
+response	回應 反應 答覆
+responsibility	責任 負責
+responsible	負責 有責任 負責任
+rest	休息 唞 其餘
+result	結果 成績 效果
+return	返 還 回歸
+returned	返咗 返嚟 交還
+rice	飯 米 白飯
+rich	有錢 豐富 富有
+ride	搭 騎 坐
+right	啱 右 對
+ring	戒指 響 圈
+rise	上升 升 起身
+river	河 河流 江
+road	路 道路 馬路
+rock	石 石頭 搖滾
+room	房 房間 空間
+rose	玫瑰 升咗
+round	圓 回合 轉
+run	跑 走 運作
+russian	俄羅斯 俄文 俄國人
+sad	傷心 難過 唔開心
+safety	安全 安危
+said	講 話 說
+sale	減價 銷售 出售
+sales	銷售 銷量 大減價
+same	一樣 同樣 相同
+saturday	星期六 禮拜六
+save	儲 救 慳
+saw	見到 睇到 鋸
+say	講 話 說
+scale	規模 比例 刻度
+schedule	時間表 行程 安排
+school	學校 返學 學堂
+score	分數 得分 入波
+screen	螢幕 屏幕 畫面
+sea	海 大海 海洋
+search	搜尋 搵 尋找
+season	季節 季 球季
+second	第二 秒 第二個
+secret	秘密 機密 秘訣
+section	部分 章節 部門
+security	保安 安全 保障
+seem	好似 似乎 睇落
+seen	見過 睇過
+self	自己 自我
+sell	賣 出售 賣出
+selling	賣 出售 銷售
+send	寄 發 傳送
+senior	高級 資深 長者
+sense	感覺 意義 常識
+sent	寄咗 發咗 送咗
+separate	分開 分別 獨立
+serious	認真 嚴重 嚴肅
+seriously	認真 嚴重 真係
+serve	服務 招呼 發球
+service	服務 服務費
+set	設定 套 設置
+setting	設定 背景 場景
+seven	七 七個
+several	幾個 好幾 若干
+sex	性 性別
+sexual	性 性方面
+shall	會 應該
+share	分享 分 股份
+she	佢 她
+shes	佢係 佢
+shooting	槍擊 拍攝 射擊
+shop	舖頭 商店 鋪
+shopping	購物 買嘢 行街
+short	短 矮 短暫
+shot	鏡頭 射 打針
+should	應該 要 應當
+shouldnt	唔應該 不應該
+show	騷 表演 顯示
+showing	顯示 展示 放映
+shown	顯示 展示
+shut	閂 關 收聲
+sick	病 生病 唔舒服
+side	邊 一邊 方面
+sign	簽名 標誌 招牌
+signed	簽咗 簽 簽署
+silver	銀 銀色
+similar	類似 相似 差唔多
+simple	簡單 單純 簡約
+simply	簡直 只係 簡單
+since	自從 既然 因為
+sir	先生 爵士
+sister	姊妹 家姐 細妹
+site	網站 地盤 現場
+sitting	坐 坐緊 坐低
+six	六 六個
+size	大細 尺碼 大小
+sleep	瞓覺 瞓 睡眠
+slow	慢 緩慢
+small	細 小 細細
+social	社交 社會
+society	社會 協會 社團
+software	軟件
+sold	賣咗 售出 賣出
+solution	辦法 解決方法 答案
+some	一啲 有啲 某些
+somebody	有人 某人
+someone	有人 某人
+something	啲嘢 某樣嘢
+son	仔 兒子 阿仔
+soon	就快 好快 即將
+sorry	唔好意思 對唔住 對不起
+sort	排序 種類 分類
+sound	聲 聲音 聽落
+soup	湯 例湯 煲湯
+source	來源 源頭 出處
+southern	南部 南方 南
+space	空間 太空 位
+speak	講 講嘢 說
+special	特別 特殊
+species	物種 品種 種
+specific	具體 特定 個別
+speech	演講 講話 言論
+spend	使錢 花 用
+spent	用咗 花咗 使咗
+spirit	精神 靈魂 心靈
+spot	點 地點 斑
+spread	傳播 散播 搽
+spring	春天 彈簧 泉
+square	正方形 廣場 平方
+staff	員工 職員 人員
+stage	階段 舞台 時期
+stand	企 站 攤位
+standard	標準 水平 規格
+standing	企 地位 站立
+star	星 明星 星星
+state	狀態 州 國家
+statement	聲明 月結單 陳述
+status	狀態 地位 身份
+stay	留 住 逗留
+step	步 步驟 一步
+stick	棍 貼 黐
+still	仲 仍然 仲係
+stock	股票 存貨 股
+stop	停 停止 車站
+stopped	停咗 停止 停
+store	舖頭 商店 儲存
+straight	直 直接 筆直
+street	街 街道 街頭
+strength	力量 實力 優點
+strong	強 勁 強大
+structure	結構 架構 構造
+study	讀書 學習 研究
+stupid	蠢 白痴 愚蠢
+style	風格 款式 作風
+subject	科目 主題 題目
+success	成功 順利
+successful	成功 順利
+such	咁 如此
+super	超級 超 好
+supply	供應 提供 補給
+support	支持 支援 撐
+supposed	應該 理應 假設
+sure	肯定 一定 梗係
+sweet	甜 甜蜜 甜品
+system	系統 制度 體系
+table	枱 表 表格
+tablet	平板 平板電腦 藥片
+take	攞 拎 帶
+taken	攞咗 有人
+talk	傾 講 傾偈
+target	目標 對象 指標
+tax	稅 稅項 交稅
+teacher	老師 先生 教師
+team	團隊 隊 隊伍
+technical	技術 技術性 技術上
+technology	科技 技術
+ten	十 十個
+term	術語 學期 條款
+terms	條款 條件 術語
+text	短訊 文字 文本
+than	過 比
+thank	多謝 唔該 感謝
+that	嗰個 嗰 那個
+thats	嗰個係 係
+their	佢哋嘅 他們的
+them	佢哋 他們
+themselves	佢哋自己 自己
+theory	理論 原理 學說
+there	嗰度 嗰邊 那裏
+theres	有
+they	佢哋 他們
+theyre	佢哋係 佢哋
+theyve	佢哋已經
+thing	嘢 事 東西
+think	諗 覺得 認為
+third	第三 第三個 三分一
+this	呢個 呢 這
+those	嗰啲 那些
+thought	以為 諗法 想法
+three	三 三個
+throughout	整個 成個 遍佈
+throw	掟 拋 擲
+ticket	飛 門票 車飛
+till	直到 到 收銀機
+time	時間 時候 次
+tip	貼士 小費 提示
+title	標題 題目 名稱
+toast	多士 烘多士 祝酒
+together	一齊 一起 同埋
+told	講咗 話 告訴
+tomorrow	聽日 明天 明日
+too	都 太 亦都
+took	攞咗 拎咗 用咗
+top	頂 最高 上衣
+total	總共 總數 一共
+totally	完全 全部
+touch	掂 接觸 感動
+tough	艱難 硬淨 堅強
+tour	旅遊 旅行團 巡迴
+towards	向 對 朝
+town	市鎮 城鎮 市中心
+track	追蹤 路軌 歌曲
+trade	貿易 交易 行業
+traditional	傳統 正宗 繁體
+traffic	交通 塞車 車流
+train	火車 訓練 列車
+training	訓練 培訓 操練
+tram	電車 叮叮
+travel	旅行 旅遊 遊歷
+treat	對待 請 治療
+treatment	治療 待遇 處理
+trial	審訊 試用 試驗
+tried	試過 嘗試
+trip	旅程 旅行 一轉
+trouble	麻煩 問題 煩
+true	真 真實 真正
+truly	真係 的確 真正
+trump	王牌 特朗普
+truth	真相 真理 事實
+try	試 試吓 嘗試
+turn	轉 轉彎 輪
+twice	兩次 兩倍
+type	類型 種類 打字
+uber	-
+under	下面 底下 之下
+understand	明白 理解 知道
+understanding	理解 明白 了解
+union	工會 聯盟 聯合
+unit	單位 單元 部
+united	團結 聯合 統一
+university	大學 大學生
+unless	除非
+until	直到 到 為止
+update	更新 最新消息
+upload	上載 上傳
+upon	-
+usa	美國
+used	用過 二手 用
+value	價值 值 價值觀
+version	版本 版
+very	好 非常 十分
+video	影片 片 視頻
+view	睇法 景色 觀點
+village	村 鄉村 村莊
+violence	暴力
+visit	探 參觀 訪問
+voice	聲 聲音 語音
+volume	音量 冊 容量
+wait	等 等陣 等待
+wake	醒 起身 叫醒
+walk	行 行路 散步
+walking	行路 行 散步
+wanna	想
+want	想 要 想要
+was	-
+waste	浪費 嘥 廢物
+watch	睇 手錶 留意
+water	水 淋水
+wear	着 戴 穿
+weather	天氣 天色
+weekend	周末 週末 禮拜尾
+weight	重量 體重 重
+weird	怪 奇怪 騎呢
+well	好好 良好 好
+went	去咗 去
+were	-
+west	西 西方 西邊
+western	西方 西式 西部
+weve	我哋已經
+what	乜嘢 咩 甚麼
+whatever	求其 隨便 任何
+whatsapp	-
+where	邊度 邊 哪裏
+while	當 同時 一陣
+white	白色 白 白人
+whole	成個 整個 全部
+whom	邊個 誰
+whos	邊個 誰
+whose	邊個嘅 誰的
+why	點解 為甚麼 做乜
+wide	闊 寬 廣闊
+wifi	無線網絡 無線上網
+will	會 將會 意志
+wind	風 上鏈 捲
+window	窗 窗口 視窗
+wine	酒 紅酒 葡萄酒
+winner	贏家 得主 冠軍
+wish	希望 祝 願望
+within	之內 以內 入面
+without	冇 沒有 無
+women	女人 女性 婦女
+won	贏咗 贏
+wonder	好奇 奇蹟 唔知
+wonderful	精彩 美妙 好正
+wont	唔會 不會
+wood	木 木頭 樹林
+work	工作 返工 做嘢
+world	世界 全世界 世上
+worry	擔心 煩惱 驚
+worse	更差 差啲 更壞
+worst	最差 最壞 最衰
+worth	值得 值 抵
+would	會 願意
+wouldnt	唔會 不會
+write	寫 書寫 寫作
+writing	寫作 寫緊 書寫
+written	寫咗 書面 寫
+wrong	錯 錯誤 唔啱
+wrote	寫咗 寫
+yeah	係 係呀
+year	年 年份 年度
+yes	係 是 好
+yesterday	尋日 昨日 昨天
+yet	仲未 未 但係
+you	你 你哋 您
+youd	你會
+youll	你會
+your	你嘅 你哋嘅
+youre	你係 你
+yours	你嘅 你哋嘅
+yourself	你自己 自己
+youve	你已經

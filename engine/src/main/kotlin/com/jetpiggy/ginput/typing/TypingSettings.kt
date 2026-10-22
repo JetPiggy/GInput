@@ -20,6 +20,8 @@ data class TypingSettings(
     val autoCapitalize: Boolean = true,
     /** Emoji 關鍵字（預設關閉） */
     val emojiKeywords: Boolean = false,
+    /** 英漢詞典（預設開啟）：打完整個英文字時，候選列也列出譯詞。 */
+    val englishChinese: Boolean = true,
 )
 
 /** 對方文字框的類型，決定鍵盤佈局、能否打中文，以及標點的全形或半形。 */
@@ -92,4 +94,7 @@ enum class WriteKind {
 
     /** 英文建議。 */
     EnglishSuggestion,
+
+    /** 英漢詞典的譯詞。 */
+    Translation,
 }

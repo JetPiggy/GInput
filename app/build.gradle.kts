@@ -33,8 +33,8 @@ android {
         applicationId = "com.jetpiggy.ginput"
         minSdk = 28
         targetSdk = 36
-        versionCode = 13
-        versionName = "0.14.0"
+        versionCode = 14
+        versionName = "0.15.0"
 
         // 當機回報（ADR 0001）：沒有 DSN 就不啟用 Sentry。
         buildConfigField("String", "SENTRY_DSN", localProperty("SENTRY_DSN").asBuildConfigString())

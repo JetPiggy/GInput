@@ -269,7 +269,15 @@ internal fun CandidateBar(
                                 onKey(KeyAction.PickCandidate(candidate.text))
                             }
                         }
-                        if (state.candidates.isNotEmpty() && state.englishSuggestions.isNotEmpty()) {
+                        // 英漢詞典的譯詞排在候選字和英文建議之間，三組之間都有分隔。
+                        if (state.translations.isNotEmpty()) {
+                            if (state.candidates.isNotEmpty()) item { BarDivider(colors) }
+                            items(state.translations) { text ->
+                                BarItem(text, colors) { onKey(KeyAction.PickTranslation(text)) }
+                            }
+                        }
+                        val chinese = state.candidates.isNotEmpty() || state.translations.isNotEmpty()
+                        if (chinese && state.englishSuggestions.isNotEmpty()) {
                             item { BarDivider(colors) }
                         }
                         items(state.englishSuggestions) { word ->

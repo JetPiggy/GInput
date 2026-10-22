@@ -54,6 +54,20 @@ class SqlDictionaryTest {
     }
 
     @Test
+    fun translationsComeFromTheEnglishChineseTable() {
+        assertEquals("鴨", engine.translations("duck").first())
+        assertEquals("鴨", engine.translations("ducks").first())
+        assertEquals("的士", engine.translations("taxi").first())
+        // english_chinese_extra.txt 改了次序；cherries 用 cherry 那一行。
+        assertEquals("車厘子", engine.translations("cherries").first())
+        // was 在 words.hk 是「華盛頓」，清單寫了「-」。
+        assertEquals(emptyList<String>(), engine.translations("was"))
+        // english_chinese_blocked.txt 的粗口不出。
+        assertTrue(engine.translations("stupid").none { "鳩" in it })
+        assertTrue(engine.translations("dog").size <= 3)
+    }
+
+    @Test
     fun fixingACharacterOfTheSentence() {
         // hivdbeof 組成「我好受你」（「好受」是詞）；把 be 的字改成「愛」。
         val quick = EngineSettings(continuousTyping = true)
@@ -68,6 +82,36 @@ class SqlDictionaryTest {
     fun quickInWindowsOrderMatchesWindows() {
         val windows = EngineSettings(sharedCodeOrder = SharedCodeOrder.Windows)
         assertEquals(listOf("伙", "你", "係", "偽", "氮", "焦", "無"), texts("of", windows).take(7))
+    }
+
+    @Test
+    fun symbolCodesFollowWindows() {
+        val quick = EngineSettings()
+        val cangjie = EngineSettings(schemes = listOf(Scheme.Cangjie))
+        assertEquals(listOf("。", "﹏", "「"), texts("zd", quick))
+        assertEquals(listOf("‥", "〔", "﹚"), texts("zm", quick))
+        assertEquals(listOf("。", "﹏", "「"), texts("zd", quick.copy(sharedCodeOrder = SharedCodeOrder.Windows)))
+        assertEquals(listOf("。"), texts("zxad", cangjie))
+        assertEquals(listOf("‧"), texts("zxaf", cangjie))
+        assertEquals(emptyList<String>(), texts("zxaa", cangjie))
+        // 倉頡版本的設定不影響符號碼。
+        for (generation in CangjieGeneration.entries) {
+            assertEquals(listOf("﹏"), texts("zxbd", cangjie.copy(cangjieGenerations = setOf(generation))))
+        }
+        val dictionary = SqlDictionary(JdbcSqlRunner(connection), JdbcSqlRunner(englishConnection))
+        val symbols = dictionary.symbols()
+        assertEquals(74, symbols.size)
+        assertEquals("，" to "′", symbols.first() to symbols.last())
+        assertTrue(dictionary.codeTable(Scheme.Quick).none { it.entry.character in symbols })
+        assertTrue(symbols.none { it in dictionary.characterFrequencies() })
+    }
+
+    @Test
+    fun symbolsComeAfterJyutping() {
+        val both = EngineSettings(schemes = listOf(Scheme.Quick, Scheme.Jyutping))
+        val zi = texts("zi", both)
+        assertEquals("自", zi.first())
+        assertEquals(listOf("？", "｛", "』"), zi.takeLast(3))
     }
 
     @Test

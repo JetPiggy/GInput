@@ -12,6 +12,9 @@ enum class UsageEvent(val code: String) {
     /** 把組字當英文寫入。 */
     English("english"),
     EnglishSuggestion("englishSuggestion"),
+
+    /** 英漢詞典的譯詞（不是雲端翻譯）。 */
+    Translation("translationCandidate"),
     Emoji("emoji"),
 
     /** Emoji 關鍵字的 Emoji。 */

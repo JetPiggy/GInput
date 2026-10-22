@@ -130,6 +130,36 @@ class CandidateEngineTest {
         assertEquals(listOf("don't"), engine.englishSuggestions("dont"))
     }
 
+    private val translating = CandidateEngine(
+        FakeDictionary(
+            english = mapOf("duck" to 3, "hope" to 3, "hop" to 5, "peter" to 9, "pet" to 5, "ox" to 3),
+            translations = mapOf(
+                "duck" to listOf("鴨", "鴨仔"),
+                "hope" to listOf("希望"),
+                "hop" to listOf("跳"),
+                "pet" to listOf("寵物"),
+                "ox" to listOf("牛"),
+            ),
+        ),
+    )
+
+    @Test
+    fun translationsNeedAWholeWordOfAtLeastThreeLetters() {
+        assertEquals(listOf("鴨", "鴨仔"), translating.translations("duck"))
+        assertEquals(listOf("鴨", "鴨仔"), translating.translations("Duck"))
+        assertEquals(emptyList<String>(), translating.translations("duc"))
+        assertEquals(emptyList<String>(), translating.translations("ox"))
+    }
+
+    @Test
+    fun translationsFollowInflectedWords() {
+        assertEquals(listOf("鴨", "鴨仔"), translating.translations("ducks"))
+        assertEquals(listOf("希望"), translating.translations("hoped"))
+        assertEquals(listOf("跳"), translating.translations("hopped"))
+        // peter 本身是英文詞庫的字：沒有譯詞也不去查 pet。
+        assertEquals(emptyList<String>(), translating.translations("peter"))
+    }
+
     private val jyutping = CandidateEngine(
         FakeDictionary(
             characters = mapOf((Scheme.Cangjie to "nei") to listOf(entry("屍"))),
@@ -199,5 +229,46 @@ class CandidateEngineTest {
         val engine = engine(words = mapOf("香" to (1..30).map { WordEntry("詞$it", it, false) }))
         val associations = engine.associations("香", EngineSettings(), limit = 5)
         assertEquals(listOf("詞30", "詞29", "詞28", "詞27", "詞26"), associations)
+    }
+
+    private fun symbol(character: String, windowsRank: Int) =
+        CharacterEntry(character, Third, frequency = 0, windowsRank = windowsRank, colloquial = false, symbol = true)
+
+    private val symbolCodes = mapOf(
+        (Scheme.Quick to "zd") to listOf(symbol("「", 3), symbol("。", 1), symbol("﹏", 2)),
+        (Scheme.Quick to "zi") to listOf(symbol("？", 1)),
+    )
+
+    @Test
+    fun symbolsFollowBig5OrderInBothOrders() {
+        val engine = CandidateEngine(FakeDictionary(symbolCodes))
+        assertEquals(listOf("。", "﹏", "「"), engine.texts("zd"))
+        assertEquals(listOf("。", "﹏", "「"), engine.texts("zd", EngineSettings(sharedCodeOrder = SharedCodeOrder.Windows)))
+        assertEquals(listOf(true, true, true), engine.candidates("zd", EngineSettings()).map { it.symbol })
+    }
+
+    @Test
+    fun symbolsComeAfterEveryChineseCandidate() {
+        val engine = CandidateEngine(FakeDictionary(symbolCodes, jyutping = listOf(JyutpingEntry("自", "zi", 100, false))))
+        val quickFirst = EngineSettings(schemes = listOf(Scheme.Quick, Scheme.Jyutping))
+        assertEquals(listOf("自", "？"), engine.texts("zi", quickFirst))
+        assertEquals(listOf("自", "？"), engine.texts("zi", quickFirst.copy(continuousTyping = true)))
+    }
+
+    @Test
+    fun rememberedSymbolsStayBehind() {
+        val engine = CandidateEngine(
+            FakeDictionary(symbolCodes, jyutping = listOf(JyutpingEntry("自", "zi", 100, false))),
+            CandidateMemory(mapOf("？" to 5)),
+        )
+        val candidates = engine.candidates("zi", EngineSettings(schemes = listOf(Scheme.Quick, Scheme.Jyutping)))
+        assertEquals(listOf("自" to false, "？" to false), candidates.map { it.text to it.remembered })
+    }
+
+    @Test
+    fun symbolsTheFontCannotShowAreLeftOut() {
+        val dictionary = FakeDictionary(symbolCodes)
+        val engine = CandidateEngine(dictionary, canDisplay = { it != "﹏" })
+        assertEquals(listOf("。", "「"), engine.texts("zd"))
     }
 }

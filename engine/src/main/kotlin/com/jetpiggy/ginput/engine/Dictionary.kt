@@ -17,6 +17,9 @@ interface Dictionary {
     /** 英文詞庫有沒有查找鍵剛好是 key 的詞。 */
     fun hasEnglishWord(key: String): Boolean
 
+    /** 英漢詞典（ADR 0012）：查找鍵剛好是 key 的英文字的譯詞，排前的先出。 */
+    fun translations(key: String): List<String>
+
     /** 字庫裏全部粵拼音節（不含聲調），例如 nei、hou。 */
     fun jyutpingSyllables(): Set<String>
 
@@ -29,11 +32,14 @@ interface Dictionary {
      */
     fun jyutpingStartingWith(syllables: String): List<JyutpingEntry>
 
-    /** 某個輸入方案的全部碼和字。連打用，在背景執行緒一次載入記憶體。 */
+    /** 某個輸入方案的全部碼和字，不包括符號碼。連打用，在背景執行緒一次載入記憶體。 */
     fun codeTable(scheme: Scheme): List<CodedCharacter>
 
-    /** 全部字在 words.hk 語料裏出現的次數。 */
+    /** 全部字在 words.hk 語料裏出現的次數，不包括符號。 */
     fun characterFrequencies(): Map<String, Int>
+
+    /** 符號碼的全部符號（ADR 0010），照 Big5 次序。 */
+    fun symbols(): List<String>
 
     /** 全部詞（二至四個字）和詞頻。 */
     fun allWords(): List<WordFrequency>
@@ -55,6 +61,8 @@ data class CharacterEntry(
     /** Windows 次序的名次，由 1 開始；0 表示沒有名次（不在 Big5 裏）。 */
     val windowsRank: Int,
     val colloquial: Boolean,
+    /** 符號碼的符號（ADR 0010），不是中文字。 */
+    val symbol: Boolean = false,
 )
 
 data class WordEntry(

@@ -97,6 +97,8 @@ data class UserSettings(
     val autoCapitalize: Boolean = true,
     /** Emoji 關鍵字；預設關閉。 */
     val emojiKeywords: Boolean = false,
+    /** 英漢詞典（ADR 0012）；預設開啟。 */
+    val englishChinese: Boolean = true,
     /** 剪貼簿歷史；關了就不再記錄，並刪除已記下的。 */
     val clipboardHistory: Boolean = true,
     val keyboard: KeyboardSettings = KeyboardSettings(),
@@ -126,6 +128,7 @@ data class UserSettings(
         smartSpaceRemoval = smartSpaceRemoval,
         autoCapitalize = autoCapitalize,
         emojiKeywords = emojiKeywords,
+        englishChinese = englishChinese,
     )
 
     /** 鍵盤畫面用的外觀設定：沒有啟用速成或倉頡時，字根沒有用處，不顯示。 */

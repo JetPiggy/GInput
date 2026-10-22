@@ -30,10 +30,13 @@ class SqlDictionary(private val sql: SqlRunner, private val english: SqlRunner) 
         frequency = row.int(first + 2),
         windowsRank = row.int(first + 3),
         colloquial = row.int(first + 4) != 0,
+        symbol = row.int(first + 5) != 0,
     )
 
     override fun characterFrequencies(): Map<String, Int> =
         sql.query(FREQUENCIES_SQL, emptyList()) { row -> row.string(0) to row.int(1) }.toMap()
+
+    override fun symbols(): List<String> = sql.query(SYMBOLS_SQL, emptyList()) { row -> row.string(0) }
 
     override fun allWords(): List<WordFrequency> =
         sql.query(ALL_WORDS_SQL, emptyList()) { row -> WordFrequency(row.string(0) + row.string(1), row.int(2)) }
@@ -49,6 +52,10 @@ class SqlDictionary(private val sql: SqlRunner, private val english: SqlRunner) 
 
     override fun hasEnglishWord(key: String): Boolean =
         english.query(ENGLISH_KEY_SQL, listOf(key)) { true }.isNotEmpty()
+
+    // 英漢詞典的表在主字庫裏：words.hk 是公有領域，不用獨立成檔。
+    override fun translations(key: String): List<String> =
+        sql.query(TRANSLATIONS_SQL, listOf(key)) { row -> row.string(0) }
 
     override fun jyutpingSyllables(): Set<String> =
         sql.query(SYLLABLES_SQL, emptyList()) { row -> row.string(0) }.toSet()
@@ -70,14 +77,15 @@ class SqlDictionary(private val sql: SqlRunner, private val english: SqlRunner) 
 
     private companion object {
         const val CHARACTERS_SQL =
-            "SELECT c.ch, k.generation, c.frequency, c.windows_rank, c.colloquial " +
+            "SELECT c.ch, k.generation, c.frequency, c.windows_rank, c.colloquial, c.symbol " +
                 "FROM codes AS k JOIN chars AS c ON c.id = k.char_id " +
                 "WHERE k.scheme = ? AND k.code = ?"
         const val CODE_TABLE_SQL =
-            "SELECT k.code, c.ch, k.generation, c.frequency, c.windows_rank, c.colloquial " +
+            "SELECT k.code, c.ch, k.generation, c.frequency, c.windows_rank, c.colloquial, c.symbol " +
                 "FROM codes AS k JOIN chars AS c ON c.id = k.char_id " +
-                "WHERE k.scheme = ?"
-        const val FREQUENCIES_SQL = "SELECT ch, frequency FROM chars"
+                "WHERE k.scheme = ? AND c.symbol = 0"
+        const val FREQUENCIES_SQL = "SELECT ch, frequency FROM chars WHERE symbol = 0"
+        const val SYMBOLS_SQL = "SELECT ch FROM chars WHERE symbol = 1 ORDER BY windows_rank"
         const val WORDS_SQL = "SELECT rest, frequency, colloquial FROM words WHERE head = ?"
         const val ALL_WORDS_SQL = "SELECT head, rest, frequency FROM words"
         const val SYLLABLES_SQL = "SELECT DISTINCT syllables FROM jyutping WHERE instr(syllables, ' ') = 0"
@@ -88,5 +96,6 @@ class SqlDictionary(private val sql: SqlRunner, private val english: SqlRunner) 
             "SELECT word FROM english WHERE key >= ? AND key < ? " +
                 "ORDER BY frequency, length(word), word LIMIT CAST(? AS INTEGER)"
         const val ENGLISH_KEY_SQL = "SELECT 1 FROM english WHERE key = ? LIMIT 1"
+        const val TRANSLATIONS_SQL = "SELECT text FROM english_chinese WHERE key = ? ORDER BY rank"
     }
 }

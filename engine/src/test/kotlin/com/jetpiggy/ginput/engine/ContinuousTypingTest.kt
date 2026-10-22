@@ -42,6 +42,16 @@ class ContinuousTypingTest {
         candidates(code, settings, before).singleOrNull { it.sentence }?.text
 
     @Test
+    fun symbolCodesAreNotUsedInSentences() {
+        fun symbol(character: String, windowsRank: Int) =
+            CharacterEntry(character, Third, frequency = 0, windowsRank = windowsRank, colloquial = false, symbol = true)
+        val engine = engine(quickCodes + ((Scheme.Quick to "zd") to listOf(symbol("。", 1), symbol("﹏", 2))))
+        assertEquals(null, engine.sentence("hizd"))
+        assertEquals(null, engine.sentence("zdhi"))
+        assertEquals(listOf("。", "﹏"), engine.texts("zd"))
+    }
+
+    @Test
     fun offByDefault() {
         assertEquals(emptyList<String>(), engine().texts("hivd", EngineSettings()))
     }

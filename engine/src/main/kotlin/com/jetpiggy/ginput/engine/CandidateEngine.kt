@@ -11,24 +11,32 @@ data class Candidate(
     val sentence: Boolean = false,
     /** 整句候選的每個字和它用的字母，改字時用；其他候選字是空的。 */
     val parts: List<SentencePart> = emptyList(),
+    /** 符號碼的符號（ADR 0010）：排在中文候選字後面，不記錄成記憶字。 */
+    val symbol: Boolean = false,
 )
 
-/** 按設定把碼變成候選字，並在寫入中文後提供聯想。 */
+/**
+ * 按設定把碼變成候選字，並在寫入中文後提供聯想。
+ * canDisplay：手機字型顯示得到這個符號嗎？顯示不到的符號碼不列出。
+ */
 class CandidateEngine(
     private val dictionary: Dictionary,
     private val memory: CandidateMemory = CandidateMemory(),
     private val pairs: PairMemory = PairMemory(),
+    private val canDisplay: (String) -> Boolean = { true },
 ) {
     private val speller by lazy { JyutpingSpeller(dictionary.jyutpingSyllables()) }
     private val sentenceModel by lazy { SentenceModel(dictionary) }
     private val codeTables = listOf(Scheme.Quick, Scheme.Cangjie).associateWith { scheme ->
         lazy { CodeTable(scheme, dictionary.codeTable(scheme), sentenceModel) }
     }
+    private val hiddenSymbols by lazy { dictionary.symbols().filterNot(canDisplay).toSet() }
 
     /**
      * 各輸入方案的候選字按輸入方案次序合併；同一個字只出現一次，留在較前的位置。
      * 常用度次序下，用盡全部字母的記憶字再移到最前；Windows 次序完全不動。
      * 開了連打的話，再加上整句候選和開頭部分的字詞；before 是組字前面的文字（上文），fixes 是改好的字。
+     * 符號碼的符號排在全部中文候選字後面。
      */
     fun candidates(
         code: String,
@@ -46,10 +54,11 @@ class CandidateEngine(
             }
             candidates.filter { seen.add(it.text) }
         }
+        val (symbols, chinese) = merged.partition { it.symbol }
         val useMemory = settings.rememberCandidates && settings.sharedCodeOrder == SharedCodeOrder.Frequency
-        val ordered = if (useMemory) memory.promote(merged, normalized.length) else merged
-        if (!settings.continuousTyping) return ordered
-        return withContinuousTyping(code, normalized, ordered, settings, before, fixes)
+        val ordered = if (useMemory) memory.promote(chinese, normalized.length) else chinese
+        if (!settings.continuousTyping) return ordered + symbols
+        return withContinuousTyping(code, normalized, ordered, settings, before, fixes) + symbols
     }
 
     /**
@@ -102,7 +111,7 @@ class CandidateEngine(
     fun fixChoices(code: String, part: SentencePart, settings: EngineSettings): List<Candidate> {
         val schemes = settings.schemes.filter { it in codeTables }
         val span = code.lowercase().substring(part.start, part.end)
-        return candidates(span, settings.copy(schemes = schemes, continuousTyping = false))
+        return candidates(span, settings.copy(schemes = schemes, continuousTyping = false)).filterNot { it.symbol }
     }
 
     /**
@@ -116,6 +125,22 @@ class CandidateEngine(
         return englishStems(key).any { it.length >= 2 && dictionary.hasEnglishWord(it) }
     }
 
+    /**
+     * 英漢詞典的譯詞（ADR 0012），最多 3 個：組字最少三個字母，而且是英文詞庫的字，或者去掉詞尾後是
+     * （例如 ducks 出 duck 的「鴨」）。組字本身是英文詞庫的字就只查它，免得 peter 出了 pet 的譯詞。
+     */
+    fun translations(typed: String): List<String> {
+        val key = typed.lowercase()
+        if (key.length < MIN_TRANSLATION_LENGTH || key.any { it !in 'a'..'z' }) return emptyList()
+        if (dictionary.hasEnglishWord(key)) return dictionary.translations(key)
+        return englishStems(key).asSequence()
+            .filter { it.length >= 2 }
+            .map { dictionary.translations(it) }
+            .firstOrNull { it.isNotEmpty() }
+            .orEmpty()
+    }
+
+    /** 去掉詞尾之後可能的原形，可能的先出：補回 e 的排先（hoped 是 hope 不是 hop，hop 的話是 hopped）。 */
     private fun englishStems(key: String): Set<String> = buildSet {
         for ((suffix, endings) in INFLECTIONS) {
             if (!key.endsWith(suffix)) continue
@@ -134,10 +159,10 @@ class CandidateEngine(
 
     private fun codeCandidates(scheme: Scheme, code: String, settings: EngineSettings): List<Candidate> =
         dictionary.characters(scheme, code)
-            .filter { it.generation in settings.cangjieGenerations }
+            .filter { it.generation in settings.cangjieGenerations && !(it.symbol && it.character in hiddenSymbols) }
             .distinctBy { it.character }
             .sortedWith(characterOrder(settings))
-            .map { Candidate(it.character, scheme, codeLength = code.length) }
+            .map { Candidate(it.character, scheme, codeLength = code.length, symbol = it.symbol) }
 
     /** 預先載入粵拼的拼法。要在背景執行緒呼叫，第一次打粵拼時才不會卡一下。 */
     fun loadJyutping() {
@@ -290,13 +315,16 @@ class CandidateEngine(
             "s" to listOf(""),
             "es" to listOf(""),
             "ies" to listOf("y"),
-            "ed" to listOf("", "e"),
+            "ed" to listOf("e", ""),
             "ied" to listOf("y"),
-            "ing" to listOf("", "e"),
-            "er" to listOf("", "e"),
-            "ers" to listOf("", "e"),
-            "est" to listOf("", "e"),
+            "ing" to listOf("e", ""),
+            "er" to listOf("e", ""),
+            "ers" to listOf("e", ""),
+            "est" to listOf("e", ""),
             "ly" to listOf(""),
         )
+
+        /** 組字最少要有多少個字母才出譯詞：兩個字母的組字在速成一定是碼。 */
+        private const val MIN_TRANSLATION_LENGTH = 3
     }
 }

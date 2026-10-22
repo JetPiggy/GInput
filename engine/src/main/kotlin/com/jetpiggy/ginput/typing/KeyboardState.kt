@@ -10,6 +10,8 @@ data class CharacterFixChoices(val part: SentencePart, val choices: List<Candida
 data class KeyboardState(
     val composition: String = "",
     val candidates: List<Candidate> = emptyList(),
+    /** 英漢詞典的譯詞：候選列排在候選字和英文建議之間，候選字格排在全部候選字後面。 */
+    val translations: List<String> = emptyList(),
     val englishSuggestions: List<String> = emptyList(),
     val associations: List<String> = emptyList(),
     /** Emoji 關鍵字找到的 Emoji，固定在候選列最右邊、聯想後面；和聯想一起收起。 */

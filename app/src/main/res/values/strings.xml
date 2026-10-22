@@ -99,6 +99,8 @@
     <string name="auto_capitalize_summary">Capitalises the first English letter of each sentence</string>
     <string name="emoji_keywords">Emoji keywords</string>
     <string name="emoji_keywords_summary">Suggests related emoji at the right of the candidate bar after Chinese words, e.g. 😊 after 開心</string>
+    <string name="english_chinese">English-Chinese dictionary</string>
+    <string name="english_chinese_summary">Also lists the Chinese for a whole English word in the candidate bar, e.g. 鴨 for duck</string>
 
     <string name="section_clipboard">Clipboard and phrases</string>
     <string name="clipboard_history">Clipboard history</string>
@@ -182,7 +184,7 @@
     <string name="license_public_domain">Public domain</string>
     <string name="license_notice">Full notice</string>
     <string name="license_website">Website</string>
-    <string name="license_usage_wordshk">Chinese character frequencies and words for suggestions</string>
+    <string name="license_usage_wordshk">Chinese character frequencies, words for suggestions and the English-Chinese dictionary</string>
     <string name="license_usage_libcangjie">Cangjie and Quick code tables</string>
     <string name="license_usage_rime_cantonese">Jyutping readings of characters and words</string>
     <string name="license_usage_12dicts">English words</string>
@@ -270,8 +272,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput updated to %1$s</string>
     <string-array name="whats_new_items">
-        <item>New layouts for tablets and for phones in landscape.</item>
-        <item>Key vibration can now be adjusted: in Settings under Typing, choose Follow system, Off, Light, Standard or Strong.</item>
+        <item>Quick and Cangjie can now type punctuation, using the same codes as Windows: for example, zxad in Cangjie or zd in Quick gives 。.</item>
+        <item>English-Chinese dictionary: after a whole English word, the candidate bar also lists the Chinese, such as 鴨 for duck. You can turn it off in Settings under Typing.</item>
     </string-array>
     <string name="whats_new_ok">Got it</string>
 

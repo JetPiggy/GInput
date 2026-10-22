@@ -296,6 +296,12 @@ internal fun TypingPage(settings: UserSettings, onChange: ((UserSettings) -> Use
             checked = settings.emojiKeywords,
             onCheckedChange = { value -> onChange { it.copy(emojiKeywords = value) } },
         )
+        SwitchRow(
+            title = stringResource(R.string.english_chinese),
+            summary = stringResource(R.string.english_chinese_summary),
+            checked = settings.englishChinese,
+            onCheckedChange = { value -> onChange { it.copy(englishChinese = value) } },
+        )
         SectionTitle(stringResource(R.string.section_feel))
         SwitchRow(
             title = stringResource(R.string.key_preview),

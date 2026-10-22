@@ -15,6 +15,10 @@
     "url": "https://words.hk/faiman/analysis/existingwordcount.csv",
     "sha256": "33b08d2e4cab4bdf9b481c956da68be09784c2638f999da7f88fb70cf9fc4960"
   },
+  "wordshk/englishindex.csv": {
+    "url": "https://words.hk/faiman/analysis/englishindex.csv",
+    "sha256": "8f8a6c2b8d37476afa629ec41bd7af038b8b572d1fccaf256c8971506e3c2f2b"
+  },
   "12dicts/12dicts-6.0.2.zip": {
     "url": "http://downloads.sourceforge.net/wordlist/12dicts-6.0.2.zip",
     "sha256": "64ac1d35acb66b550c7ebc56e080b62e0bad8f5984d72059dc2e05ac48780e52"

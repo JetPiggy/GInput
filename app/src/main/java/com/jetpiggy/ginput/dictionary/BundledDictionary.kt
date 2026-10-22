@@ -13,7 +13,7 @@ import java.io.File
 object BundledDictionary {
 
     /** 要和 tools/dictgen/build_dict.py 的 DICTIONARY_VERSION 一致。 */
-    private const val MAIN_FILE = "ginput-4.db"
+    private const val MAIN_FILE = "ginput-6.db"
 
     /** 要和 tools/dictgen/build_english.py 的 ENGLISH_VERSION 一致。 */
     private const val ENGLISH_FILE = "english-1.db"

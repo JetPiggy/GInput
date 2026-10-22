@@ -98,6 +98,8 @@
     <string name="auto_capitalize_summary">句子開頭的第一個英文字母自動大寫</string>
     <string name="emoji_keywords">Emoji 關鍵字</string>
     <string name="emoji_keywords_summary">寫入中文後，在候選列最右邊提示相關的 Emoji，例如「開心」後出 😊</string>
+    <string name="english_chinese">英漢詞典</string>
+    <string name="english_chinese_summary">打完整個英文字時，候選列也列出相應的中文，例如 duck 出「鴨」</string>
 
     <string name="section_clipboard">剪貼簿和常用短語</string>
     <string name="clipboard_history">剪貼簿歷史</string>
@@ -181,7 +183,7 @@
     <string name="license_public_domain">公有領域</string>
     <string name="license_notice">授權全文</string>
     <string name="license_website">網站</string>
-    <string name="license_usage_wordshk">中文字頻和聯想用的詞</string>
+    <string name="license_usage_wordshk">中文字頻、聯想用的詞和英漢詞典</string>
     <string name="license_usage_libcangjie">倉頡和速成的碼表</string>
     <string name="license_usage_rime_cantonese">粵拼的字音和詞音</string>
     <string name="license_usage_12dicts">英文詞</string>
@@ -269,8 +271,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>平板及手機打橫有新版面。</item>
-        <item>按鍵震動可以調校：在設定的「打字」揀跟隨系統、關、輕、標準或強。</item>
+        <item>速成和倉頡可以打標點符號，碼跟 Windows：例如倉頡打 zxad、速成打 zd 出「。」。</item>
+        <item>英漢詞典：打完整個英文字，候選列也列出中文，例如 duck 出「鴨」。不想要可以在設定的「打字」關掉。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 

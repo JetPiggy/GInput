@@ -36,6 +36,16 @@ test("any order of enabled schemes is accepted, each scheme at most once", () =>
   }
 });
 
+test("the English-Chinese dictionary is a setting and its translations a count apart from cloud translation", () => {
+  const parsed = parseReport(
+    report({ settings: { english_chinese: false }, counts: { translationCandidate: 2, translate: 1 } }),
+    now,
+  );
+  assert.deepEqual(parsed?.settings, { english_chinese: false });
+  assert.deepEqual(parsed?.counts, { translationCandidate: 2, translate: 1 });
+  assert.equal(parseReport(report({ settings: { english_chinese: "on" } }), now), null);
+});
+
 test("unknown settings and counts from newer apps are ignored", () => {
   const parsed = parseReport(
     report({ settings: { theme: "dark", space_mode: "chinese" }, counts: { voice: 2, chinese: 1 } }),

@@ -21,6 +21,7 @@ class UserSettingsTest {
         assertTrue(settings.typing.autoCapitalize)
         assertFalse(settings.typing.engine.continuousTyping)
         assertFalse(settings.typing.emojiKeywords)
+        assertTrue(settings.typing.englishChinese)
         assertTrue(settings.clipboardHistory)
         assertTrue(settings.crashReports)
         assertFalse(settings.usageStats)
@@ -49,6 +50,7 @@ class UserSettingsTest {
             smartSpaceRemoval = false,
             autoCapitalize = false,
             emojiKeywords = true,
+            englishChinese = false,
             clipboardHistory = false,
             keyboard = KeyboardSettings(
                 theme = KeyboardTheme.MilkTea,
@@ -70,6 +72,7 @@ class UserSettingsTest {
         assertFalse(changed.typing.engine.looseSpelling)
         assertTrue(changed.typing.engine.continuousTyping)
         assertTrue(changed.typing.emojiKeywords)
+        assertFalse(changed.typing.englishChinese)
         assertFalse(changed.typing.autoCapitalize)
     }
 

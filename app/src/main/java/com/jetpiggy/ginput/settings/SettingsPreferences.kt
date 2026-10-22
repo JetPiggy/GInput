@@ -23,6 +23,7 @@ internal object SettingsPreferences {
     private const val SMART_SPACE_REMOVAL = "smart_space_removal"
     private const val AUTO_CAPITALIZE = "auto_capitalize"
     private const val EMOJI_KEYWORDS = "emoji_keywords"
+    private const val ENGLISH_CHINESE = "english_chinese"
     private const val CLIPBOARD_HISTORY = "clipboard_history"
     private const val KEYBOARD_THEME = "keyboard_theme"
     private const val KEYBOARD_HEIGHT = "keyboard_height"
@@ -101,6 +102,7 @@ internal object SettingsPreferences {
             smartSpaceRemoval = flag(SMART_SPACE_REMOVAL, defaults.smartSpaceRemoval),
             autoCapitalize = flag(AUTO_CAPITALIZE, defaults.autoCapitalize),
             emojiKeywords = flag(EMOJI_KEYWORDS, defaults.emojiKeywords),
+            englishChinese = flag(ENGLISH_CHINESE, defaults.englishChinese),
             clipboardHistory = flag(CLIPBOARD_HISTORY, defaults.clipboardHistory),
             keyboard = KeyboardSettings(
                 theme = choice(KEYBOARD_THEME, ThemeCodes, keyboard.theme),
@@ -138,6 +140,7 @@ internal object SettingsPreferences {
         SMART_SPACE_REMOVAL,
         AUTO_CAPITALIZE,
         EMOJI_KEYWORDS,
+        ENGLISH_CHINESE,
         CLIPBOARD_HISTORY,
         KEYBOARD_HEIGHT,
         KEY_LABELS,
@@ -162,6 +165,7 @@ internal object SettingsPreferences {
         SMART_SPACE_REMOVAL to settings.smartSpaceRemoval,
         AUTO_CAPITALIZE to settings.autoCapitalize,
         EMOJI_KEYWORDS to settings.emojiKeywords,
+        ENGLISH_CHINESE to settings.englishChinese,
         CLIPBOARD_HISTORY to settings.clipboardHistory,
         KEYBOARD_THEME to ThemeCodes.getValue(settings.keyboard.theme),
         KEYBOARD_HEIGHT to HeightCodes.getValue(settings.keyboard.height),

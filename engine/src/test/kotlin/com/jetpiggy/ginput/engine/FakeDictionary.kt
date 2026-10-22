@@ -6,6 +6,8 @@ class FakeDictionary(
     /** 英文詞和它的詞頻，數值越小越常用（和英文詞庫的 frequency 欄一樣）。 */
     private val english: Map<String, Int> = emptyMap(),
     private val jyutping: List<JyutpingEntry> = emptyList(),
+    /** 英漢詞典：查找鍵和它的譯詞。 */
+    private val translations: Map<String, List<String>> = emptyMap(),
 ) : Dictionary {
     override fun characters(scheme: Scheme, code: String): List<CharacterEntry> =
         characters[scheme to code].orEmpty()
@@ -21,6 +23,8 @@ class FakeDictionary(
 
     override fun hasEnglishWord(key: String): Boolean = english.keys.any { it.lowercase().replace("'", "") == key }
 
+    override fun translations(key: String): List<String> = translations[key].orEmpty()
+
     override fun jyutpingSyllables(): Set<String> =
         jyutping.flatMapTo(LinkedHashSet()) { it.syllables.split(' ') }
 
@@ -30,10 +34,15 @@ class FakeDictionary(
         jyutping.filter { it.syllables == syllables || it.syllables.startsWith("$syllables ") }
 
     override fun codeTable(scheme: Scheme): List<CodedCharacter> =
-        characters.filterKeys { it.first == scheme }.flatMap { (key, entries) -> entries.map { CodedCharacter(key.second, it) } }
+        characters.filterKeys { it.first == scheme }.flatMap { (key, entries) ->
+            entries.filterNot { it.symbol }.map { CodedCharacter(key.second, it) }
+        }
 
     override fun characterFrequencies(): Map<String, Int> =
-        characters.values.flatten().associate { it.character to it.frequency }
+        characters.values.flatten().filterNot { it.symbol }.associate { it.character to it.frequency }
+
+    override fun symbols(): List<String> =
+        characters.values.flatten().filter { it.symbol }.sortedBy { it.windowsRank }.map { it.character }.distinct()
 
     override fun allWords(): List<WordFrequency> =
         words.flatMap { (head, entries) -> entries.map { WordFrequency(head + it.rest, it.frequency) } }

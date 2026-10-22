@@ -23,6 +23,9 @@ class TypingSessionTest {
     private fun entry(character: String, frequency: Int) =
         CharacterEntry(character, CangjieGeneration.Third, frequency, windowsRank = 0, colloquial = false)
 
+    private fun symbol(character: String) =
+        CharacterEntry(character, CangjieGeneration.Third, frequency = 0, windowsRank = 0, colloquial = false, symbol = true)
+
     private val engine = CandidateEngine(
         FakeDictionary(
             characters = mapOf(
@@ -377,6 +380,18 @@ class TypingSessionTest {
     }
 
     @Test
+    fun autoSpaceIsRemovedBeforeASymbol() {
+        val engine = CandidateEngine(FakeDictionary(characters = mapOf((Scheme.Quick to "zd") to listOf(symbol("﹏")))))
+        val editor = FakeEditor()
+        val session = session(editor, engine = engine)
+        session.type("ok")
+        session.space()
+        session.type("zd")
+        session.candidate("﹏")
+        assertEquals("ok﹏", editor.text)
+    }
+
+    @Test
     fun autoSpaceStaysWhenSmartSpaceRemovalIsOff() {
         settings = TypingSettings(smartSpaceRemoval = false)
         val editor = FakeEditor()
@@ -615,6 +630,24 @@ class TypingSessionTest {
     }
 
     @Test
+    fun symbolsAreNotRemembered() {
+        val saved = mutableListOf<Map<String, Int>>()
+        val engine = CandidateEngine(
+            FakeDictionary(characters = mapOf((Scheme.Quick to "zd") to listOf(symbol("。"), symbol("﹏")))),
+            CandidateMemory(onChanged = { saved += it }),
+        )
+        settings = TypingSettings(spaceMode = SpaceMode.SelectChinese)
+        val session = session(FakeEditor(), engine = engine)
+        repeat(2) {
+            session.type("zd")
+            session.candidate("﹏")
+            session.type("zd")
+            session.space()
+        }
+        assertTrue(saved.isEmpty())
+    }
+
+    @Test
     fun onlyPickedCandidatesAreRecordedNotAssociations() {
         val saved = mutableListOf<Map<String, Int>>()
         val engine = CandidateEngine(
@@ -643,6 +676,81 @@ class TypingSessionTest {
         session.forget("晴")
         assertEquals(listOf("明", "晴"), session.candidateTexts)
         assertFalse(session.state.candidates.any { it.remembered })
+    }
+
+    private fun translationEngine(memory: CandidateMemory = CandidateMemory()) = CandidateEngine(
+        FakeDictionary(
+            characters = mapOf((Scheme.Cangjie to "duck") to listOf(entry("匆", 1))),
+            words = mapOf("鴨" to listOf(WordEntry("仔", 1, false))),
+            english = mapOf("duck" to 3, "ducky" to 9),
+            translations = mapOf("duck" to listOf("鴨", "鴨仔")),
+        ),
+        memory,
+    )
+
+    @Test
+    fun translationsComeWithWholeEnglishWordsAndWriteLikeCandidates() {
+        val kinds = mutableListOf<WriteKind>()
+        val editor = FakeEditor()
+        val session = TypingSession(
+            editor, FieldKind.Text, true, { settings }, { translationEngine() }, clock = { now },
+            onWrite = { kinds += it },
+        ).also { it.start() }
+        session.type("ok")
+        session.space()
+        session.type("duck")
+        assertEquals(listOf("鴨", "鴨仔"), session.state.translations)
+        assertEquals(listOf("duck", "ducky"), session.state.englishSuggestions)
+        session.translation("鴨")
+        assertEquals("ok鴨", editor.text)
+        assertEquals("", editor.composing)
+        assertTrue(session.state.translations.isEmpty())
+        assertEquals(listOf("仔"), session.state.associations)
+        assertEquals(listOf(WriteKind.English, WriteKind.Translation), kinds)
+        session.type("ducks")
+        assertEquals(listOf("鴨", "鴨仔"), session.state.translations)
+    }
+
+    @Test
+    fun spaceNeverWritesATranslation() {
+        settings = TypingSettings(spaceMode = SpaceMode.SelectChinese)
+        val editor = FakeEditor()
+        val session = session(editor, engine = translationEngine())
+        session.type("ducks")
+        assertTrue(session.state.candidates.isEmpty())
+        assertFalse(session.state.markTopCandidate)
+        session.space()
+        assertEquals("ducks ", editor.text)
+        settings = TypingSettings(
+            engine = EngineSettings(schemes = listOf(Scheme.Cangjie)),
+            spaceMode = SpaceMode.SelectChinese,
+        )
+        session.type("duck")
+        assertEquals(listOf("匆"), session.candidateTexts)
+        session.space()
+        assertEquals("ducks匆", editor.text)
+    }
+
+    @Test
+    fun translationsAreNotRemembered() {
+        val saved = mutableListOf<Map<String, Int>>()
+        val session = session(FakeEditor(), engine = translationEngine(CandidateMemory(onChanged = { saved += it })))
+        repeat(2) {
+            session.type("duck")
+            session.translation("鴨")
+        }
+        assertTrue(saved.isEmpty())
+    }
+
+    @Test
+    fun noTranslationsWhenTurnedOffOrTheFieldRefusesSuggestions() {
+        val refusing = session(FakeEditor(), engine = translationEngine(), offerCompletions = false)
+        refusing.type("duck")
+        assertTrue(refusing.state.translations.isEmpty())
+        settings = TypingSettings(englishChinese = false)
+        val off = session(FakeEditor(), engine = translationEngine())
+        off.type("duck")
+        assertTrue(off.state.translations.isEmpty())
     }
 
     @Test

@@ -24,6 +24,7 @@ SOURCES = {
     "libcangjie/README.table.md": f"{LIBCANGJIE}/README.table.md",
     "wordshk/charcount.csv": f"{WORDSHK}/charcount.csv",
     "wordshk/existingwordcount.csv": f"{WORDSHK}/existingwordcount.csv",
+    "wordshk/englishindex.csv": f"{WORDSHK}/englishindex.csv",
     "12dicts/12dicts-6.0.2.zip": "http://downloads.sourceforge.net/wordlist/12dicts-6.0.2.zip",
     "unicode/emoji-test.txt": "https://www.unicode.org/Public/emoji/latest/emoji-test.txt",
     "unicode/license.txt": "https://www.unicode.org/license.txt",

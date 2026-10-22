@@ -2,7 +2,7 @@
 
 建置 App 內置的資料：
 
-- 字庫 `app/src/main/assets/dict/ginput-<版本>.db`（SQLite）：碼表、粵拼、字頻和聯想用的詞
+- 字庫 `app/src/main/assets/dict/ginput-<版本>.db`（SQLite）：碼表（包括符號碼）、粵拼、字頻、聯想用的詞和英漢詞典的譯詞
 - 英文詞庫 `app/src/main/assets/dict/english-<版本>.db`（SQLite）：英文建議用的詞和詞頻。因為用了 wordfreq 的詞頻，這個檔案以 CC BY-SA 4.0 授權，所以和字庫分開（ADR 0004）
 - Emoji 面板的資料 `app/src/main/assets/emoji/emoji.tsv`
 - Emoji 關鍵字 `app/src/main/assets/emoji/keywords.tsv`：關鍵字和相關的 Emoji
@@ -16,9 +16,9 @@
 
 ```bash
 python -I -X utf8 tools/dictgen/fetch_sources.py --dest build/dict-sources
-python -I -X utf8 tools/dictgen/build_dict.py --sources build/dict-sources --out app/src/main/assets/dict/ginput-4.db --licenses app/src/main/assets/licenses
 python -I -X utf8 tools/dictgen/build_english.py --sources build/dict-sources --out app/src/main/assets/dict/english-1.db --licenses app/src/main/assets/licenses
-python -I -X utf8 tools/dictgen/build_emoji.py --sources build/dict-sources --dict app/src/main/assets/dict/ginput-4.db --out app/src/main/assets/emoji/emoji.tsv --keywords app/src/main/assets/emoji/keywords.tsv --licenses app/src/main/assets/licenses
+python -I -X utf8 tools/dictgen/build_dict.py --sources build/dict-sources --english app/src/main/assets/dict/english-1.db --out app/src/main/assets/dict/ginput-6.db --licenses app/src/main/assets/licenses
+python -I -X utf8 tools/dictgen/build_emoji.py --sources build/dict-sources --dict app/src/main/assets/dict/ginput-6.db --out app/src/main/assets/emoji/emoji.tsv --keywords app/src/main/assets/emoji/keywords.tsv --licenses app/src/main/assets/licenses
 ```
 
 - `fetch_sources.py` 下載資料，並用 `sources.lock.json` 核對 SHA-256。新加入的來源會自動記下雜湊；上游一更新，雜湊就會不符而停下，確認內容無誤後，加 `--update-lock` 重跑。
@@ -26,6 +26,7 @@ python -I -X utf8 tools/dictgen/build_emoji.py --sources build/dict-sources --di
   - App 的 `BundledDictionary.MAIN_FILE`（英文詞庫是 `ENGLISH_FILE`）
   - `engine/build.gradle.kts` 測試用的字庫路徑
   - 上面指令裏的檔名，並刪掉舊版本的檔案
+- `build_dict.py` 用英文詞庫的查找鍵建英漢詞典，所以要在 `build_english.py` 之後跑；英文詞庫的詞改變後要重跑。
 - `build_emoji.py` 用字庫確認關鍵字打得出，所以要在 `build_dict.py` 之後跑；字庫的字改變後要重跑。
 - 建置後跑 `:engine:test`。`SqlDictionaryTest` 直接讀這兩個檔案。
 
@@ -36,6 +37,7 @@ python -I -X utf8 tools/dictgen/build_emoji.py --sources build/dict-sources --di
 | `libcangjie/table.txt` | Debian 的 libcangjie 1.4.0 | 公有領域 | 倉頡三代和五代的碼、Big5 和香港增補字符集標記、Windows 次序 |
 | `wordshk/charcount.csv` | words.hk 分析檔 | 公有領域，歡迎註明出處 | 字頻 |
 | `wordshk/existingwordcount.csv` | words.hk 分析檔 | 公有領域，歡迎註明出處 | 聯想和粵拼用的詞和詞頻 |
+| `wordshk/englishindex.csv` | words.hk 分析檔 | 公有領域，歡迎註明出處 | 英漢詞典：英文字對應的粵語字詞和相關度 |
 | `rime-cantonese/jyut6ping3.chars.dict.yaml` | rime-cantonese（CanCLID），固定在某個 commit | CC BY 4.0（要註明出處和改動） | 字的粵拼和讀音權重 |
 | `rime-cantonese/jyut6ping3.words.dict.yaml` | 同上 | 同上 | 詞的粵拼 |
 | `rime-cantonese/LICENSE-CC-BY` | 同上 | 同上 | 授權聲明 |
@@ -45,8 +47,11 @@ python -I -X utf8 tools/dictgen/build_emoji.py --sources build/dict-sources --di
 | `unicode/emoji-test.txt` | Unicode | Unicode 授權（要附聲明） | Emoji 面板 |
 | `cldr/zh_Hant_HK.xml`、`cldr/zh_Hant.xml` | Unicode CLDR 48.2 的 annotations | Unicode 授權（要附聲明） | Emoji 關鍵字 |
 | `colloquial_chars.txt` | GInput 自行整理 | — | 粵語口語字 |
+| `symbol_codes.txt` | GInput 按 Big5 的次序自行整理 | — | 速成和倉頡的符號碼（ADR 0010） |
 | `english_extra.txt` | GInput 自行整理 | — | 12dicts 沒有的常用英文詞（縮寫、新詞、網上用語、品牌和地方） |
 | `english_blocked.txt` | GInput 自行整理 | — | 不作英文建議的粗口、色情字眼和侮辱字眼 |
+| `english_chinese_extra.txt` | GInput 自行整理 | — | 英漢詞典：常用英文字的譯詞和次序，取代 words.hk 的；「-」表示不出譯詞 |
+| `english_chinese_blocked.txt` | GInput 自行整理 | — | 英漢詞典不出的譯詞：粗口、性意味重的俗語、歧視性的稱呼和侮辱字眼 |
 | `emoji_keywords_extra.txt` | GInput 自行整理 | — | 單字的 Emoji 關鍵字、CLDR 沒有的粵語和香港用語，以及取代 CLDR 古怪的配搭和次序 |
 | `emoji_keywords_blocked.txt` | GInput 自行整理 | — | 不作 Emoji 關鍵字的 CLDR 關鍵字（太常用、配上 Emoji 沒有意思） |
 
@@ -58,7 +63,8 @@ wordfreq 的作者不希望資料被轉換成沒有出處和授權的格式，�
 
 ## 規則
 
-- **字的範圍**：Big5 或香港增補字符集裏、有倉頡碼的中文字。
+- **字的範圍**：Big5 或香港增補字符集裏、有倉頡碼的中文字，加上 `symbol_codes.txt` 的 74 個符號。
+- **符號碼**（ADR 0010）：倉頡是 zx 加兩個字母，各取 a 至 y，按 Big5 的次序由 A140 排下去，只收 A140 至 A1AC，不收 A140 的全形空格；字照 Windows 的 Big5 對照（Python 的 cp950）。速成碼照一般的規則推導（z 加最後那個字母）。三代和五代都有同一組碼。符號沒有字頻，Windows 名次照 Big5 次序排在全部中文字之後。清單不合乎這個規則、或者 libcangjie 給這三行的符號碼和清單不同時，建置會停下；libcangjie 已知的錯誤（「﹏」的五代碼寫成 zxbb）記在 `build_dict.py` 的 `LIBCANGJIE_SYMBOL_ERRORS`。
 - **速成碼**：倉頡碼的首碼加尾碼，一至兩碼的不變。三代和五代的碼各自推導。
 - **Windows 次序**：libcangjie 次序欄位的數值越大越前，跟 Windows 倉頡和速成的次序相同。建置時轉成由 1 開始的名次；不在 Big5 的字沒有名次。
 - **詞**：words.hk 詞頻表裏兩個字或以上、而且每個字都在字庫裏的詞。含粵語口語字的詞標為口語詞。
@@ -66,6 +72,13 @@ wordfreq 的作者不希望資料被轉換成沒有出處和授權的格式，�
 - **詞的粵拼**：上面的詞，rime-cantonese 詞表有的照詞表（可以有幾個讀音）；沒有的，用每個字的主要讀音（權重不少於該字最高權重的一半）砌出來，每個詞最多 8 個。詞頻照 words.hk。
 - **英文詞**：12dicts 的 2+2+3frq 和 2016 年新詞，加上 `english_extra.txt`；刪去 `english_blocked.txt` 的詞（不分大小寫）。只收以字母開頭、由英文字母和撇號組成的詞。查找鍵是小寫、去掉撇號的詞。
 - **英文詞頻**：wordfreq 的 large_en，以負 centibel 表示（0 最常用，數值越大越罕見，最大 799），按詞的小寫查。12dicts 同時收了小寫寫法的詞（例如 may 和 May），其他寫法加 30。wordfreq 沒有的詞排在最後（900 加 12dicts 的常用程度等級：2+2+3frq 分 21 級，1 最常用；2016 年新詞當作第 12 級，`english_extra.txt` 當作第 3 級）。
+- **英漢詞典**（ADR 0012）：
+  - 英文字是英文詞庫的全部查找鍵。只用查找鍵（來自 12dicts 和 `english_extra.txt`），不用 wordfreq 的詞頻，所以字庫不受 CC BY-SA 影響。
+  - 每個英文字用它本身和它的 Porter 詞幹（englishindex.csv 裏「!」開頭的鍵）找譯詞。每格取第一個每個字都在字庫裏的寫法；同一個寫法取最高的相關度。
+  - 次序：相關度達到 70 的排先；然後按 log(1 + 常用度) + 相關度 ÷ 25，大的先出；再按譯詞本身。詞的常用度是 words.hk 的詞頻；單字的常用度是扣除了它在詞裏出現次數的字頻（最少留一成）再除以 10，讓只是詞的一部分的單字排在常用的詞後面。
+  - 每個英文字最多 3 個譯詞；含有 `english_chinese_blocked.txt` 任何一項的譯詞不收。
+  - `english_chinese_extra.txt` 有的字照清單，取代算出的譯詞。字尾變化的字（去掉詞尾的規則和引擎 `CandidateEngine.englishStems` 一樣）沒有自己一行時，用原形那一行，但兩者的 Porter 詞幹要相同（cherries 用 cherry 的，cares 不用 car 的）。
+  - 清單有錯（英文字不在英文詞庫、重複、超過 3 個或重複的譯詞、譯詞打不出、譯詞含有 `english_chinese_blocked.txt` 的項目）時，建置會停下。
 - **Emoji**：只收 fully-qualified 的 Emoji，不收 Component 分類。膚色變體歸到原形之下；找不到原形的（例如兩種膚色的組合）略去。
 - **Emoji 關鍵字**（docs/spec/v1.md 的「Emoji 關鍵字」）：
   - CLDR 用 zh_Hant_HK 的關鍵字和名稱（`type="tts"`），標示 `↑↑↑` 或沒有的用 zh_Hant 的。比對 Emoji 時不理變體選擇符 FE0F。
@@ -81,10 +94,11 @@ wordfreq 的作者不希望資料被轉換成沒有出處和授權的格式，�
 
 | 表格 | 內容 |
 |---|---|
-| `chars` | 字、字頻、Windows 名次（0 表示沒有）、是否粵語口語字 |
+| `chars` | 字、字頻、Windows 名次（0 表示沒有）、是否粵語口語字、是否符號碼的符號 |
 | `codes` | 輸入方案（1 倉頡、2 速成）、碼、倉頡版本（3 或 5）、字 |
 | `words` | 開頭的字、其餘部分、詞頻、是否口語詞 |
 | `jyutping` | 不含聲調、用空格分隔的音節（例如 `nei hou`）、字或詞、字頻或詞頻、是否口語字詞 |
+| `english_chinese` | 英文詞庫的查找鍵、次序（由 0 開始）、譯詞 |
 | `meta` | 字庫版本、各來源的 SHA-256、粵拼的出處和改動 |
 
 英文詞庫：

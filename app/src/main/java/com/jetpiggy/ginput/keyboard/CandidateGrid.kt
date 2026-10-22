@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +20,8 @@ import com.jetpiggy.ginput.R
 import com.jetpiggy.ginput.typing.KeyboardState
 
 /**
- * 候選字格：按候選列的 ▼ 後鋪滿鍵盤的位置，列出全部候選字；改字時列出全部可以換上的字，原本的字加框。
+ * 候選字格：按候選列的 ▼ 後鋪滿鍵盤的位置，列出全部候選字，英漢詞典的譯詞排在後面；
+ * 改字時列出全部可以換上的字，原本的字加框。
  * 高度和按鍵區（keyArea）相同，鍵盤不會跳動。
  */
 @Composable
@@ -74,6 +76,22 @@ internal fun CandidateGrid(
                     maxLines = if (candidate.sentence) 1 else Int.MAX_VALUE,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+        }
+        if (fix == null) {
+            items(state.translations) { text ->
+                PressableBox(
+                    modifier = Modifier
+                        .height(dimensions.rowHeight)
+                        .padding(2.dp)
+                        .keyShadow(colors.keyShadow),
+                    color = colors.key,
+                    pressedColor = colors.pressedKey,
+                    description = text,
+                    onTap = { onKey(KeyAction.PickTranslation(text)) },
+                ) {
+                    Text(text = text, color = colors.label, fontSize = dimensions.candidateSize)
+                }
             }
         }
     }
