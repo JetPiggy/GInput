@@ -180,6 +180,7 @@ private fun KeyboardContent(
             leftWidth = if (landscape) sideColumnWidth(cutoutLeft) else cutoutLeft,
             rightWidth = if (landscape) sideColumnWidth(cutoutRight) else cutoutRight,
             middleMaxWidth = if (layout == KeyboardLayout.Tablet) TabletMaxWidth else Dp.Infinity,
+            blockSides = layout != KeyboardLayout.Phone,
             left = {
                 if (landscape) {
                     LeftSideColumn(

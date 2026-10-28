@@ -11,14 +11,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.jetpiggy.ginput.R
 
@@ -40,22 +44,25 @@ internal fun sideColumnWidth(cutout: Dp): Dp = maxOf(SideColumnWidth, cutout + S
 /**
  * 鍵盤的三欄：中間是候選列和按鍵，最闊 middleMaxWidth；左右兩欄跟中間一樣高，最少 leftWidth 和 rightWidth。
  * 中間放不滿的話，餘下的位置平分給左右兩欄，中間置中。
- * 左右兩欄按下不算任何鍵：打字的按鍵把觸控範圍伸到整行（KeyRow），所以兩欄要自己接住觸控。
+ * blockSides 是 true 時（手機橫向版面的側欄、平板兩邊的空位），左右兩欄按下不算任何鍵：
+ * 打字的按鍵把觸控範圍伸到整行（KeyRow），所以兩欄要自己接住觸控。
+ * 手機直向時兩欄只是螢幕開孔的位置（通常闊度是 0），算鍵盤左右的邊距，按下算同一行最近的鍵。
  */
 @Composable
 internal fun KeyboardColumns(
     leftWidth: Dp,
     rightWidth: Dp,
     middleMaxWidth: Dp,
+    blockSides: Boolean,
     left: @Composable () -> Unit,
     right: @Composable () -> Unit,
     middle: @Composable () -> Unit,
 ) {
     Layout(
         contents = listOf(
-            { Box(Modifier.blockTouches()) { left() } },
+            { SideBox(blockSides, left) },
             { Box(propagateMinConstraints = true) { middle() } },
-            { Box(Modifier.blockTouches()) { right() } },
+            { SideBox(blockSides, right) },
         ),
     ) { (leftMeasurables, middleMeasurables, rightMeasurables), constraints ->
         val total = constraints.maxWidth
@@ -74,6 +81,26 @@ internal fun KeyboardColumns(
             middle.place(leftActual, 0)
             rightColumn.place(leftActual + middleWidth, 0)
         }
+    }
+}
+
+/**
+ * 左或右一欄；block 是 true 就接住按在欄內的觸控。
+ * 接住觸控的一層不用最小觸控範圍：否則較窄的一欄（例如平板兩邊只有幾 dp）會把範圍伸進按鍵區，
+ * 而且 Compose 讓它勝過按在鍵面以外、交給最近的鍵的觸控，鍵盤兩邊一截按下就沒有反應。欄內的按鈕照用原本的設定。
+ */
+@Composable
+private fun SideBox(block: Boolean, content: @Composable () -> Unit) {
+    if (block) {
+        val base = LocalViewConfiguration.current
+        val exact = remember(base) { TouchTargetConfiguration(base, DpSize.Zero) }
+        CompositionLocalProvider(LocalViewConfiguration provides exact) {
+            Box(Modifier.blockTouches()) {
+                CompositionLocalProvider(LocalViewConfiguration provides base, content = content)
+            }
+        }
+    } else {
+        Box { content() }
     }
 }
 

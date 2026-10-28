@@ -277,7 +277,7 @@ internal val LocalNearestKeyInRow = staticCompositionLocalOf { false }
 private val WholeRow = 10_000.dp
 
 /** 只改最小觸控範圍，其他照用原本的設定。 */
-private class TouchTargetConfiguration(
+internal class TouchTargetConfiguration(
     base: ViewConfiguration,
     override val minimumTouchTargetSize: DpSize,
 ) : ViewConfiguration by base
