@@ -31,6 +31,7 @@ class UserSettingsTest {
         assertTrue(settings.keyboard.keyPreview)
         assertEquals(KeyVibration.System, settings.keyboard.vibration)
         assertFalse(settings.keyboard.keySound)
+        assertEquals(KeyboardHeight(portrait = 100, landscape = 100), settings.keyboard.height)
         assertFalse(settings.setupDone)
         assertEquals(0, settings.whatsNewSeen)
     }
@@ -54,7 +55,7 @@ class UserSettingsTest {
             clipboardHistory = false,
             keyboard = KeyboardSettings(
                 theme = KeyboardTheme.MilkTea,
-                height = KeyboardHeight.Tall,
+                height = KeyboardHeight(portrait = 110, landscape = 85),
                 labels = KeyLabels.RadicalsLarge,
                 numberRow = false,
                 keyPreview = false,
@@ -87,6 +88,57 @@ class UserSettingsTest {
             "key_vibration" to "buzz",
         )
         assertEquals(UserSettings(), SettingsPreferences.read(stored))
+    }
+
+    @Test
+    fun everyThemeSurvivesStorage() {
+        for (theme in KeyboardTheme.entries) {
+            val settings = UserSettings(keyboard = KeyboardSettings(theme = theme))
+            assertEquals(theme, SettingsPreferences.read(SettingsPreferences.write(settings)).keyboard.theme)
+        }
+    }
+
+    @Test
+    fun themesOfASeriesStayTogether() {
+        // 主題頁按 KeyboardTheme 的次序分段，同一系列要排在一起，系列的次序和 ThemeSeries 一樣。
+        assertEquals(ThemeSeries.entries, KeyboardTheme.entries.map { it.series }.distinct())
+        assertEquals(KeyboardTheme.entries.sortedBy { it.series }, KeyboardTheme.entries)
+    }
+
+    @Test
+    fun oldKeyboardHeightBecomesThePercentageForBothOrientations() {
+        val expected = mapOf("compact" to 85, "standard" to 100, "tall" to 115, "huge" to 100)
+        for ((code, percent) in expected) {
+            val height = SettingsPreferences.read(mapOf("keyboard_height" to code)).keyboard.height
+            assertEquals(code, KeyboardHeight(portrait = percent, landscape = percent), height)
+        }
+        // 已經存了百分比的方向不再理會舊的設定。
+        val stored = mapOf("keyboard_height" to "tall", "keyboard_height_portrait" to "90")
+        assertEquals(KeyboardHeight(portrait = 90, landscape = 115), SettingsPreferences.read(stored).keyboard.height)
+    }
+
+    @Test
+    fun keyboardHeightIsSnappedToAStepWithinRange() {
+        val stored = mapOf("keyboard_height_portrait" to "200", "keyboard_height_landscape" to "93")
+        assertEquals(KeyboardHeight(portrait = 125, landscape = 95), SettingsPreferences.read(stored).keyboard.height)
+        assertEquals(80, KeyboardHeight.nearest(40f))
+        assertEquals(105, KeyboardHeight.nearest(103f))
+    }
+
+    @Test
+    fun usageStatsSendBothKeyboardHeightsAsText() {
+        val settings = UserSettings(keyboard = KeyboardSettings(height = KeyboardHeight(portrait = 110, landscape = 90)))
+        val stats = SettingsPreferences.forUsageStats(settings)
+        assertEquals("110", stats["keyboard_height_portrait"])
+        assertEquals("90", stats["keyboard_height_landscape"])
+        assertFalse("keyboard_height" in stats)
+    }
+
+    @Test
+    fun keyboardHeightIsKeptPerOrientation() {
+        val height = KeyboardHeight().withPercent(landscape = true, percent = 85)
+        assertEquals(100, height.percent(landscape = false))
+        assertEquals(85, height.percent(landscape = true))
     }
 
     @Test

@@ -6,12 +6,27 @@ import com.jetpiggy.ginput.engine.Scheme
 import com.jetpiggy.ginput.engine.SharedCodeOrder
 import com.jetpiggy.ginput.typing.SpaceMode
 import com.jetpiggy.ginput.typing.TypingSettings
+import kotlin.math.roundToInt
 
-/** 鍵盤高度：每一行按鍵的高度乘以 scale。 */
-enum class KeyboardHeight(val scale: Float) {
-    Compact(0.85f),
-    Standard(1f),
-    Tall(1.15f),
+/**
+ * 鍵盤高度：每一行按鍵的高度乘以這個百分比，由 MIN 到 MAX，每格 STEP。手機直向和打橫分開記住（平板也按螢幕方向），
+ * 在鍵盤的調整高度模式拖動改變（keyboard/HeightAdjust.kt）。
+ */
+data class KeyboardHeight(val portrait: Int = STANDARD, val landscape: Int = STANDARD) {
+    fun percent(landscape: Boolean): Int = if (landscape) this.landscape else portrait
+
+    fun withPercent(landscape: Boolean, percent: Int): KeyboardHeight =
+        if (landscape) copy(landscape = percent) else copy(portrait = percent)
+
+    companion object {
+        const val MIN = 80
+        const val STANDARD = 100
+        const val MAX = 125
+        const val STEP = 5
+
+        /** 最近的一格，不超出範圍。 */
+        fun nearest(percent: Float): Int = ((percent / STEP).roundToInt() * STEP).coerceIn(MIN, MAX)
+    }
 }
 
 /** 按鍵標示：字母鍵上英文字母和倉頡字根怎樣顯示。 */
@@ -39,30 +54,96 @@ enum class KeyVibration {
     Strong,
 }
 
-/** 主題：鍵盤的一套顏色。每套有淺色和深色兩組，跟隨系統的深色模式；顏色見 keyboard/KeyboardColors.kt。 */
-enum class KeyboardTheme {
+/** 主題系列：設定的主題頁按系列分段排列主題。 */
+enum class ThemeSeries { Classic, Gradient, HongKong, Dessert, Nature, Style }
+
+/**
+ * 主題：鍵盤的一套顏色。每套有淺色和深色兩組，跟隨系統的深色模式；顏色見 keyboard/KeyboardColors.kt。
+ * 次序就是主題頁的次序，同一系列的排在一起。
+ */
+enum class KeyboardTheme(val series: ThemeSeries) {
     /** 預設：冷灰。 */
-    Default,
+    Default(ThemeSeries.Classic),
 
     /** 奶茶：港式奶茶的暖啡和米白。 */
-    MilkTea,
+    MilkTea(ThemeSeries.Classic),
 
     /** 叮叮：電車車身的深綠配米白。 */
-    Tram,
+    Tram(ThemeSeries.Classic),
 
     /** 維港：深藍海面配對岸燈火的琥珀色；淺色是清晨的淡藍。 */
-    Harbour,
+    Harbour(ThemeSeries.Classic),
 
     /** 櫻花：灰調的淡粉，較鮮的玫瑰色只留給 Shift。 */
-    Sakura,
+    Sakura(ThemeSeries.Classic),
 
     /** 霓虹：舊式霓虹招牌的洋紅和青色；深色用純黑底，適合 OLED 螢幕。 */
-    Neon,
+    Neon(ThemeSeries.Classic),
+
+    /** 日落：維港黃昏，由上而下橙、珊瑚粉到紫；深色是入夜的深紫到暗橙紅。 */
+    Sunset(ThemeSeries.Gradient),
+
+    /** 極光：青綠、深藍到藍紫的夜空；淺色是淡薄荷到淡紫。 */
+    Aurora(ThemeSeries.Gradient),
+
+    /** 海鹽：夏天汽水的淺藍到薄荷；深色是深海藍到深青。 */
+    SeaSalt(ThemeSeries.Gradient),
+
+    /** 鐳射：鐳射貼紙的粉紅、淡藍、薄荷，由左上斜到右下。 */
+    Holo(ThemeSeries.Gradient),
+
+    /** 紅白藍：紅白藍膠袋，白色按鍵、藍色功能鍵、紅色大寫鎖定。 */
+    RedWhiteBlue(ThemeSeries.HongKong),
+
+    /** 茶記：舊式茶餐廳的紙皮石牆，薄荷綠底、粉紅功能鍵、米白按鍵。 */
+    ChaChaanTeng(ThemeSeries.HongKong),
+
+    /** 廟街：夜市燈籠，近黑的底配深紅和金色；淺色是米色配朱紅。 */
+    TempleStreet(ThemeSeries.HongKong),
+
+    /** 大澳：海水的灰藍配棚屋鐵皮的鏽橙。 */
+    TaiO(ThemeSeries.HongKong),
+
+    /** 芋泥：奶白底配芋頭紫。 */
+    Taro(ThemeSeries.Dessert),
+
+    /** 抹茶：抹茶粉的黃綠配奶白按鍵。 */
+    Matcha(ThemeSeries.Dessert),
+
+    /** 楊枝甘露：芒果橙黃、椰奶白，柚子粉紅只用在 Shift。 */
+    MangoSago(ThemeSeries.Dessert),
+
+    /** 黑芝麻：炭灰帶少少暖色，近乎單色。 */
+    BlackSesame(ThemeSeries.Dessert),
+
+    /** 深海：偏綠的深青藍，強調色是冷的青藍。 */
+    DeepSea(ThemeSeries.Nature),
+
+    /** 楓葉：枯葉的啡橙配楓紅。 */
+    Maple(ThemeSeries.Nature),
+
+    /** 初雪：雪白和冰藍；深色是雪夜的藍灰。 */
+    FirstSnow(ThemeSeries.Nature),
+
+    /** 沙灘：細沙的淺金米色配海水的土耳其藍。 */
+    Beach(ThemeSeries.Nature),
+
+    /** 高對比：給視力較弱的人，純黑、純白加鮮黃，文字至少 7:1。 */
+    HighContrast(ThemeSeries.Style),
+
+    /** 水墨：宣紙米白、墨黑和印章的朱紅；深色是墨底白字。 */
+    Ink(ThemeSeries.Style),
+
+    /** 復古：深色是舊終端機的黑底磷光綠字；淺色是米黃色的舊電腦外殼。 */
+    Retro(ThemeSeries.Style),
+
+    /** 莫蘭迪：低飽和的暖灰、鼠尾草綠、霧藍和乾燥玫瑰。 */
+    Morandi(ThemeSeries.Style),
 }
 
 data class KeyboardSettings(
     val theme: KeyboardTheme = KeyboardTheme.Default,
-    val height: KeyboardHeight = KeyboardHeight.Standard,
+    val height: KeyboardHeight = KeyboardHeight(),
     val labels: KeyLabels = KeyLabels.LettersLarge,
     /** 字母上面常駐的數字行；預設開啟。 */
     val numberRow: Boolean = true,

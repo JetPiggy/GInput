@@ -109,6 +109,8 @@ class UsageStatsTest {
             .findAll(block("SETTINGS", '{', '}'))
             .map { it.groupValues[1] }
             .toSet()
-        assertEquals(SettingsPreferences.forUsageStats(UserSettings()).keys, settings)
+        // 舊版 App 送的設定，Worker 仍然接受。
+        val olderApps = setOf("keyboard_height")
+        assertEquals(SettingsPreferences.forUsageStats(UserSettings()).keys, settings - olderApps)
     }
 }

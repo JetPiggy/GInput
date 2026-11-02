@@ -125,17 +125,48 @@
     <string name="keyboard_preview">鍵盤預覽</string>
     <string name="keyboard_preview_hint">預覽跟着下面的設定即時改變；按鍵只供預覽。</string>
     <string name="keyboard_theme">主題</string>
-    <string name="keyboard_theme_summary">淺色或深色跟隨系統的設定</string>
     <string name="theme_default">預設</string>
     <string name="theme_milk_tea">奶茶</string>
     <string name="theme_tram">叮叮</string>
     <string name="theme_harbour">維港</string>
     <string name="theme_sakura">櫻花</string>
     <string name="theme_neon">霓虹</string>
+    <string name="theme_sunset">日落</string>
+    <string name="theme_aurora">極光</string>
+    <string name="theme_sea_salt">海鹽</string>
+    <string name="theme_holo">鐳射</string>
+    <string name="theme_red_white_blue">紅白藍</string>
+    <string name="theme_cha_chaan_teng">茶記</string>
+    <string name="theme_temple_street">廟街</string>
+    <string name="theme_tai_o">大澳</string>
+    <string name="theme_taro">芋泥</string>
+    <string name="theme_matcha">抹茶</string>
+    <string name="theme_mango_sago">楊枝甘露</string>
+    <string name="theme_black_sesame">黑芝麻</string>
+    <string name="theme_deep_sea">深海</string>
+    <string name="theme_maple">楓葉</string>
+    <string name="theme_first_snow">初雪</string>
+    <string name="theme_beach">沙灘</string>
+    <string name="theme_high_contrast">高對比</string>
+    <string name="theme_ink">水墨</string>
+    <string name="theme_retro">復古</string>
+    <string name="theme_morandi">莫蘭迪</string>
+    <string name="theme_series_classic">經典</string>
+    <string name="theme_series_gradient">漸變</string>
+    <string name="theme_series_hong_kong">香港</string>
+    <string name="theme_series_dessert">甜品</string>
+    <string name="theme_series_nature">自然</string>
+    <string name="theme_series_style">風格</string>
+    <string name="theme_series_label">%1$s系列</string>
+    <string name="theme_current">目前主題</string>
+    <string name="theme_preview_light">淺色</string>
+    <string name="theme_preview_dark">深色</string>
+    <string name="theme_preview_mode_hint">只換預覽，不改設定</string>
+    <string name="theme_row_summary">%1$s · 淺色或深色跟隨系統</string>
     <string name="keyboard_height">鍵盤高度</string>
-    <string name="height_compact">矮</string>
-    <string name="height_standard">標準</string>
-    <string name="height_tall">高</string>
+    <string name="height_percent">%1$d%%</string>
+    <string name="height_portrait_landscape">直向 %1$d%%，打橫 %2$d%%</string>
+    <string name="keyboard_height_how">在鍵盤上長按工具列的「設定」，就可以拖動調整；直向和打橫分開記住。</string>
     <string name="key_labels">按鍵標示</string>
     <string name="labels_letters">英文字母大、倉頡字根小</string>
     <string name="labels_radicals">倉頡字根大、英文字母小</string>
@@ -207,6 +238,13 @@
     <string name="toolbar_settings">設定</string>
     <string name="toolbar_settings_badge">設定，有新版本或公告</string>
     <string name="toolbar_voice_input">語音輸入</string>
+    <string name="toolbar_adjust_height">調整鍵盤高度</string>
+
+    <!-- 調整高度模式：長按工具列的「設定」 -->
+    <string name="adjust_height_value">鍵盤高度：%1$d%%</string>
+    <string name="adjust_height_reset">還原</string>
+    <string name="adjust_height_done">完成</string>
+    <string name="adjust_height_hint">上下拖動橫條，調整鍵盤高度</string>
 
     <!-- 手機橫向版面的側欄 -->
     <string name="side_tools">工具</string>
@@ -271,8 +309,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>速成和倉頡可以打標點符號，碼跟 Windows：例如倉頡打 zxad、速成打 zd 出「。」。</item>
-        <item>英漢詞典：打完整個英文字，候選列也列出中文，例如 duck 出「鴨」。不想要可以在設定的「打字」關掉。</item>
+        <item>主題加到 26 套，包括漸變色，全部免費：在設定的「鍵盤外觀」按「主題」揀。</item>
+        <item>鍵盤高度可以自己調：長按工具列的「設定」，在鍵盤上拖動，直向和打橫分開記住。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 

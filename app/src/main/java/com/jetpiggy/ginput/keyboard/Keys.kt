@@ -33,12 +33,17 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.toRect
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerId
@@ -170,14 +175,19 @@ internal val KeyShape = RoundedCornerShape(KeyCorner)
 
 private val PreviewShape = RoundedCornerShape(8.dp)
 
-/** 按鍵底部 1dp 的實色陰影，不模糊。要放在 clip 之前，否則會被切掉。 */
-internal fun Modifier.keyShadow(color: Color): Modifier = drawBehind {
-    drawRoundRect(
-        color = color,
-        topLeft = Offset(0f, 1.dp.toPx()),
-        size = size,
-        cornerRadius = CornerRadius(KeyCorner.toPx()),
-    )
+/**
+ * 按鍵底部 1dp 的實色陰影，不模糊。要放在 clip 之前，否則會被切掉。
+ * 只畫鍵面外面露出的一截：漸變主題的按鍵半透明，鍵面下面不可以透出陰影。
+ */
+internal fun Modifier.keyShadow(color: Color, corner: Dp = KeyCorner): Modifier = drawWithCache {
+    val radius = CornerRadius(corner.toPx())
+    val face = Path().apply { addRoundRect(RoundRect(size.toRect(), radius)) }
+    val offset = Offset(0f, 1.dp.toPx())
+    onDrawBehind {
+        clipPath(face, ClipOp.Difference) {
+            drawRoundRect(color = color, topLeft = offset, size = size, cornerRadius = radius)
+        }
+    }
 }
 
 /** 按鍵的底色：字元鍵、功能鍵，以及 Shift 開了時的兩種藍色（Accent 是大寫鎖定，AccentSoft 是單次大寫）。 */

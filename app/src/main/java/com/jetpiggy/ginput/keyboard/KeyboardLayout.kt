@@ -2,6 +2,7 @@ package com.jetpiggy.ginput.keyboard
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.jetpiggy.ginput.settings.KeyboardHeight
 
 /** 鍵盤的版面，按螢幕大小和方向決定。 */
 internal enum class KeyboardLayout {
@@ -31,18 +32,30 @@ internal val TabletMaxWidth = 800.dp
 private val TabletMinRowHeight = 38.dp
 
 /**
- * 各個版面的尺寸；scale 是鍵盤高度的設定，numberRow 是有沒有開數字行，screenHeight 是螢幕的高度。
+ * 各個版面的尺寸；scale 是鍵盤高度（百分比除以 100），numberRow 是有沒有開數字行，screenHeight 是螢幕的高度。
  * 平板用手機直向的尺寸，螢幕較矮時（例如 7 吋平板打橫）縮小行高，令鍵盤（不計導航列）不超過螢幕高度的一半。
  */
 internal fun keyboardDimensions(layout: KeyboardLayout, scale: Float, numberRow: Boolean, screenHeight: Dp): KeyboardDimensions =
     when (layout) {
         KeyboardLayout.Phone -> PortraitDimensions.withHeight(scale)
         KeyboardLayout.PhoneLandscape -> LandscapeDimensions.withHeight(scale)
-        KeyboardLayout.Tablet -> {
-            val base = PortraitDimensions
-            // 候選列和邊距不變，只縮按鍵的行高。
-            val rows = base.rowHeight * 4 + if (numberRow) base.numberRowHeight else 0.dp
-            val fits = (screenHeight / 2 - base.barHeight - KeyboardPaddingY * 2) / rows
-            base.withHeight(minOf(scale, fits).coerceAtLeast(TabletMinRowHeight / base.rowHeight))
-        }
+        KeyboardLayout.Tablet -> PortraitDimensions.withHeight(
+            minOf(scale, tabletFit(numberRow, screenHeight)).coerceAtLeast(TabletMinRowHeight / PortraitDimensions.rowHeight),
+        )
+    }
+
+/** 平板的鍵盤（不計導航列）剛好佔螢幕高度一半時的 scale；候選列和邊距不變，只縮按鍵的行高。 */
+private fun tabletFit(numberRow: Boolean, screenHeight: Dp): Float {
+    val base = PortraitDimensions
+    val rows = base.rowHeight * 4 + if (numberRow) base.numberRowHeight else 0.dp
+    return (screenHeight / 2 - base.barHeight - KeyboardPaddingY * 2) / rows
+}
+
+/** 調整高度模式最高可以拉到的百分比：平板到了螢幕高度的一半就不會再高（見 keyboardDimensions）。 */
+internal fun maxHeightPercent(layout: KeyboardLayout, numberRow: Boolean, screenHeight: Dp): Int =
+    if (layout == KeyboardLayout.Tablet) {
+        val fit = (tabletFit(numberRow, screenHeight) * 100).toInt()
+        (fit - fit % KeyboardHeight.STEP).coerceIn(KeyboardHeight.MIN, KeyboardHeight.MAX)
+    } else {
+        KeyboardHeight.MAX
     }

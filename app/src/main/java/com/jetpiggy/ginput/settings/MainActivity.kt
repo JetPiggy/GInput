@@ -45,11 +45,12 @@ class MainActivity : ComponentActivity() {
 }
 
 private enum class Screen {
-    Settings, Schemes, Typing, Appearance, Clipboard, Phrases, Privacy, About, Licenses, Notice;
+    Settings, Schemes, Typing, Appearance, Themes, Clipboard, Phrases, Privacy, About, Licenses, Notice;
 
     /** 按返回回到的一頁。 */
     val parent: Screen
         get() = when (this) {
+            Themes -> Appearance
             Phrases -> Clipboard
             Licenses -> About
             Notice -> Licenses
@@ -76,9 +77,13 @@ private fun SettingsApp(store: SettingsStore, phrases: PhraseStore, start: Scree
     }
     var screen by rememberSaveable { mutableStateOf(start) }
     var notice by rememberSaveable { mutableIntStateOf(0) }
-    // 每頁的捲動位置等狀態分開保存，由子頁返回主頁時仍在原來的位置。
+    // 每頁的捲動位置等狀態分開保存，由子頁返回主頁時仍在原來的位置。按返回離開的那一頁不保存，
+    // 下次打開重新開始（例如主題頁再捲到目前主題的系列）。
     val pageStates = rememberSaveableStateHolder()
-    val back = { screen = screen.parent }
+    val back = {
+        pageStates.removeState(screen.name)
+        screen = screen.parent
+    }
     BackHandler(enabled = screen != Screen.Settings, onBack = back)
     pageStates.SaveableStateProvider(screen.name) {
         when (screen) {
@@ -88,6 +93,12 @@ private fun SettingsApp(store: SettingsStore, phrases: PhraseStore, start: Scree
             Screen.Appearance -> AppearancePage(
                 settings.keyboardOnScreen,
                 onChange = { transform -> store.update { it.copy(keyboard = transform(it.keyboard)) } },
+                onOpenThemes = { screen = Screen.Themes },
+                onBack = back,
+            )
+            Screen.Themes -> ThemesPage(
+                settings.keyboardOnScreen,
+                onSelect = { theme -> store.update { it.copy(keyboard = it.keyboard.copy(theme = theme)) } },
                 onBack = back,
             )
             Screen.Clipboard -> ClipboardPage(settings, store::update, onOpenPhrases = { screen = Screen.Phrases }, onBack = back)

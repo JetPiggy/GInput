@@ -46,6 +46,18 @@ test("the English-Chinese dictionary is a setting and its translations a count a
   assert.equal(parseReport(report({ settings: { english_chinese: "on" } }), now), null);
 });
 
+test("keyboard height is a percentage for portrait and landscape; older apps send one of three sizes", () => {
+  const parsed = parseReport(
+    report({ settings: { keyboard_height_portrait: "110", keyboard_height_landscape: "80" } }),
+    now,
+  );
+  assert.deepEqual(parsed?.settings, { keyboard_height_portrait: "110", keyboard_height_landscape: "80" });
+  assert.deepEqual(parseReport(report({ settings: { keyboard_height: "tall" } }), now)?.settings, { keyboard_height: "tall" });
+  for (const percent of ["75", "112", "130", 110]) {
+    assert.equal(parseReport(report({ settings: { keyboard_height_portrait: percent } }), now), null, String(percent));
+  }
+});
+
 test("unknown settings and counts from newer apps are ignored", () => {
   const parsed = parseReport(
     report({ settings: { theme: "dark", space_mode: "chinese" }, counts: { voice: 2, chinese: 1 } }),

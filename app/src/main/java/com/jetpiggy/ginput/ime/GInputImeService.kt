@@ -407,6 +407,9 @@ class GInputImeService : LifecycleInputMethodService() {
                 whatsNew = false
                 settingsStore.update { it.copy(whatsNewSeen = WhatsNew.VERSION) }
             }
+            is KeyAction.SetKeyboardHeight -> settingsStore.update {
+                it.copy(keyboard = it.keyboard.copy(height = it.keyboard.height.withPercent(action.landscape, action.percent)))
+            }
             else -> session?.let { type(it, action) }
         }
     }
@@ -460,7 +463,8 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.RunTextTask,
             KeyAction.ApplyTextResult,
             KeyAction.CloseCloudTool,
-            KeyAction.DismissWhatsNew -> Unit
+            KeyAction.DismissWhatsNew,
+            is KeyAction.SetKeyboardHeight -> Unit
         }
     }
 

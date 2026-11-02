@@ -117,6 +117,8 @@ internal fun CandidateBar(
     onToggleGrid: () -> Unit,
     onOpenClipboard: () -> Unit,
     onOpenCloudTool: (CloudTool) -> Unit,
+    /** 長按工具列的「設定」：打開調整高度模式。 */
+    onAdjustHeight: () -> Unit,
 ) {
     val hidePx = with(LocalDensity.current) { HideSwipeDistance.toPx() }
     val currentOnKey by rememberUpdatedState(onKey)
@@ -197,7 +199,7 @@ internal fun CandidateBar(
                     }
                     CloseButton(colors, onCloseMenu)
                 }
-                toolsOpen -> Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool)
+                toolsOpen -> Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool, onAdjustHeight)
                 state.composition.isNotEmpty() && gridOpen -> {
                     val radicalText = if (radicals) "  " + state.composition.map(::cangjieRadical).joinToString("") else ""
                     Text(
@@ -316,7 +318,7 @@ internal fun CandidateBar(
                 }
                 digits -> BarDigits(colors, onKey)
                 else -> {
-                    Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool)
+                    Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool, onAdjustHeight)
                     // 語音輸入在最右邊，和 ✕ ▼ 一樣只有圖示，不擠走其他按鈕的文字。
                     if (voiceInput != VoiceInputKey.Hidden) {
                         BarButton(R.drawable.ic_mic, stringResource(R.string.toolbar_voice_input), colors, iconSize = 22.dp) {
@@ -415,7 +417,7 @@ private fun SentenceParts(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.background),
+            .keyboardBackground(colors),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -492,12 +494,14 @@ private val PartLettersRoom = 12.dp
 
 private val Whitespace = Regex("""\s+""")
 
-/** badge：圖示右上角加一個小點；description 是 TalkBack 讀出的文字。 */
+/** badge：圖示右上角加一個小點；description 是 TalkBack 讀出的文字，longPressLabel 是長按動作的名稱。 */
 internal class ToolbarItem(
     @DrawableRes val icon: Int,
     val label: String,
     val badge: Boolean = false,
     val description: String = label,
+    val onLongPress: (() -> Unit)? = null,
+    val longPressLabel: String? = null,
     val onTap: () -> Unit,
 )
 
@@ -510,7 +514,7 @@ private val BadgeSize = 7.dp
 /**
  * 候選列空閒時的工具列：剪貼簿、翻譯、改寫和設定（密碼欄位沒有翻譯和改寫）。圖示和文字並排，
  * 按各自需要的闊度分配，「剪貼簿」這類較長的文字分得較闊。全部文字放不下（例如英文較長），
- * 就全部只顯示圖示、平分闊度；TalkBack 仍然讀出文字。
+ * 就全部只顯示圖示、平分闊度；TalkBack 仍然讀出文字。長按「設定」打開調整高度模式。
  */
 @Composable
 private fun RowScope.Toolbar(
@@ -520,6 +524,7 @@ private fun RowScope.Toolbar(
     onKey: (KeyAction) -> Unit,
     onOpenClipboard: () -> Unit,
     onOpenCloudTool: (CloudTool) -> Unit,
+    onAdjustHeight: () -> Unit,
 ) {
     val settingsLabel = stringResource(R.string.toolbar_settings)
     val items = listOfNotNull(
@@ -539,6 +544,8 @@ private fun RowScope.Toolbar(
             label = settingsLabel,
             badge = settingsBadge,
             description = if (settingsBadge) stringResource(R.string.toolbar_settings_badge) else settingsLabel,
+            onLongPress = onAdjustHeight,
+            longPressLabel = stringResource(R.string.toolbar_adjust_height),
         ) { onKey(KeyAction.OpenSettings) },
     )
     val measurer = rememberTextMeasurer()
@@ -602,6 +609,8 @@ internal fun RowScope.ToolbarButton(item: ToolbarItem, showLabel: Boolean, color
         pressedColor = colors.pressedKey,
         description = item.description,
         onTap = item.onTap,
+        onLongPress = item.onLongPress,
+        longPressLabel = item.longPressLabel,
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(ToolbarGap),
@@ -676,7 +685,7 @@ private val CandidatePadding = 12.dp
  * TalkBack 讀出字的本身，記憶字另外讀出「記憶字」，原本的字讀出「原本的字」。
  */
 @Composable
-private fun BarItem(
+internal fun BarItem(
     text: String,
     colors: KeyboardColors,
     marked: Boolean = false,

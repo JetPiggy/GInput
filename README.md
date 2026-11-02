@@ -21,6 +21,8 @@ GInput 是為香港人而設的 Android 輸入法：同一個鍵盤打中文和�
 - 英漢詞典：打完整個英文字，候選列也列出中文（duck →「鴨」）；預設開啟
 - Emoji 面板、剪貼簿和常用短語、語音輸入
 - 翻譯和改寫：譯成英文、書面語或粵語口語，或者改寫語氣、改錯字
+- 26 套主題，分經典、漸變、香港、甜品、自然、風格六個系列，每套有淺色和深色
+- 鍵盤高度：長按工具列的「設定」，在鍵盤上拖動調整（80% 至 125%）
 
 ## 下載
 
@@ -118,6 +120,8 @@ GInput is an Android keyboard made for Hong Kong. Type English as usual, or type
 - English-Chinese dictionary: after a whole English word, the candidate bar also lists the Chinese (duck → 鴨). On by default
 - Emoji panel, clipboard and saved phrases, voice input
 - Translate and Rewrite: translate into English, written Chinese or colloquial Cantonese, change the tone, or fix typos
+- 26 themes in six series (Classic, Gradient, Hong Kong, Dessert, Nature and Style), each in light and dark
+- Keyboard height: long-press Settings on the toolbar and drag on the keyboard (80% to 125%)
 
 ### Download
 

@@ -242,7 +242,7 @@ private fun CategoryList(settings: UserSettings, phraseCount: Int, onOpen: (Sett
                 stringResource(
                     R.string.summary_setting,
                     stringResource(R.string.keyboard_height),
-                    stringResource(settings.keyboard.height.label),
+                    heightSummary(settings.keyboard.height),
                 ),
             ),
             trailing = { ThemeSwatch(settings.keyboard.theme) },

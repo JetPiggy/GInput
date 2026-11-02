@@ -23,6 +23,9 @@ function schemeLists(): string[] {
   return lists;
 }
 
+/** 鍵盤高度的百分比，"80" 至 "125"，每格 5。 */
+const HEIGHT_PERCENTS = Array.from({ length: 10 }, (_, index) => String(80 + index * 5));
+
 /** 接受的設定和值，和 App 的 SettingsPreferences.forUsageStats 一致。 */
 export const SETTINGS: Readonly<Record<string, readonly (string | boolean)[]>> = {
   schemes_enabled: schemeLists(),
@@ -38,7 +41,10 @@ export const SETTINGS: Readonly<Record<string, readonly (string | boolean)[]>> =
   emoji_keywords: [true, false],
   english_chinese: [true, false],
   clipboard_history: [true, false],
+  // 舊版 App 的鍵盤高度，直向和打橫共用。
   keyboard_height: ["compact", "standard", "tall"],
+  keyboard_height_portrait: HEIGHT_PERCENTS,
+  keyboard_height_landscape: HEIGHT_PERCENTS,
   key_labels: ["letters", "radicals", "letters_only"],
   number_row: [true, false],
   key_preview: [true, false],

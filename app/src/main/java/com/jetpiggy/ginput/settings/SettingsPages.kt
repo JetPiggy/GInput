@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.StringRes
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
@@ -70,7 +72,7 @@ private const val PIN_PREVIEW_MIN_HEIGHT_DP = 700
 
 /**
  * 分類的子頁：標題列有返回鍵，內容可以捲動。pinned 固定在標題列下面，不跟着捲動；overlay 蓋在整頁上面。
- * tryField 的子頁底部有試打欄，改設定時可以即時試打。
+ * tryField 的子頁底部有試打欄，改設定時可以即時試打。scrollContent 是 false 的話，內容自己捲動（例如格子）。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +83,7 @@ private fun SubPage(
     snackbar: SnackbarHostState? = null,
     pinned: @Composable () -> Unit = {},
     overlay: @Composable BoxScope.() -> Unit = {},
+    scrollContent: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
@@ -103,8 +106,7 @@ private fun SubPage(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(bottom = 24.dp),
+                        .then(if (scrollContent) Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp) else Modifier),
                     content = content,
                 )
             }
@@ -329,13 +331,14 @@ internal fun TypingPage(settings: UserSettings, onChange: ((UserSettings) -> Use
 }
 
 /**
- * 鍵盤外觀：鍵盤預覽、主題，下面是版面（鍵盤高度、按鍵標示、數字行）。螢幕夠高的話，預覽固定在頁頂，
+ * 鍵盤外觀：鍵盤預覽、主題（按一下打開主題頁），下面是版面（鍵盤高度、按鍵標示、數字行）。螢幕夠高的話，預覽固定在頁頂，
  * 捲到下面改版面時仍然看得到。這頁沒有試打欄，預覽已經即時顯示改動。
  */
 @Composable
 internal fun AppearancePage(
     keyboard: KeyboardSettings,
     onChange: ((KeyboardSettings) -> KeyboardSettings) -> Unit,
+    onOpenThemes: () -> Unit,
     onBack: () -> Unit,
 ) {
     val pinPreview = LocalConfiguration.current.screenHeightDp >= PIN_PREVIEW_MIN_HEIGHT_DP
@@ -350,13 +353,12 @@ internal fun AppearancePage(
         },
     ) {
         if (!pinPreview) KeyboardPreview(keyboard, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-        ThemePicker(keyboard.theme) { value -> onChange { it.copy(theme = value) } }
+        ThemeRow(keyboard.theme, onOpenThemes)
         SectionTitle(stringResource(R.string.section_layout))
-        ChoiceRow(
+        // 鍵盤高度只在鍵盤的調整高度模式改，這裏寫出現況和做法。
+        ActionRow(
             title = stringResource(R.string.keyboard_height),
-            options = KeyboardHeight.entries.map { it to stringResource(it.label) },
-            selected = keyboard.height,
-            onSelect = { value -> onChange { it.copy(height = value) } },
+            summary = heightSummary(keyboard.height) + "\n" + stringResource(R.string.keyboard_height_how),
         )
         // 只啟用粵拼時，按鍵不顯示字根，這項沒有作用。
         if (keyboard.radicals) {
@@ -380,13 +382,13 @@ internal fun AppearancePage(
     }
 }
 
-/** 鍵盤高度的名稱，例如「標準」。 */
-@get:StringRes
-internal val KeyboardHeight.label: Int
-    get() = when (this) {
-        KeyboardHeight.Compact -> R.string.height_compact
-        KeyboardHeight.Standard -> R.string.height_standard
-        KeyboardHeight.Tall -> R.string.height_tall
+/** 鍵盤高度，例如「100%」；直向和打橫不同就兩個都寫，例如「直向 110%，打橫 100%」。 */
+@Composable
+internal fun heightSummary(height: KeyboardHeight): String =
+    if (height.portrait == height.landscape) {
+        stringResource(R.string.height_percent, height.portrait)
+    } else {
+        stringResource(R.string.height_portrait_landscape, height.portrait, height.landscape)
     }
 
 /** 按鍵震動的名稱，例如「跟隨系統」。 */
@@ -399,6 +401,40 @@ internal val KeyVibration.label: Int
         KeyVibration.Standard -> R.string.vibration_standard
         KeyVibration.Strong -> R.string.vibration_strong
     }
+
+/**
+ * 主題：頂部是縮小的鍵盤預覽、目前的主題和預覽用的淺色、深色切換，下面是系列標籤和全部主題，按一下即時套用。
+ * 螢幕夠高的話預覽固定在頁頂；矮的螢幕只固定系列標籤，預覽跟着主題一起捲動。打開時捲到目前主題的系列。
+ */
+@Composable
+internal fun ThemesPage(keyboard: KeyboardSettings, onSelect: (KeyboardTheme) -> Unit, onBack: () -> Unit) {
+    val pinHeader = LocalConfiguration.current.screenHeightDp >= PIN_PREVIEW_MIN_HEIGHT_DP
+    // 預覽和樣本用淺色還是深色；未揀過就跟隨系統。
+    var previewDark by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val dark = previewDark ?: isSystemInDarkTheme()
+    val series = keyboard.theme.series
+    val grid = rememberLazyGridState(
+        initialFirstVisibleItemIndex = if (series == ThemeSeries.entries.first()) 0 else seriesIndex(series, header = !pinHeader),
+    )
+    val header = @Composable { modifier: Modifier -> ThemeHeader(keyboard, dark, onDarkChange = { previewDark = it }, modifier) }
+    SubPage(
+        title = stringResource(R.string.keyboard_theme),
+        onBack = onBack,
+        scrollContent = false,
+        pinned = {
+            if (pinHeader) header(Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp))
+            SeriesTabs(grid, header = !pinHeader)
+        },
+    ) {
+        ThemeGrid(
+            state = grid,
+            selected = keyboard.theme,
+            dark = dark,
+            onSelect = onSelect,
+            header = if (pinHeader) null else { { header(Modifier.padding(start = 6.dp, end = 6.dp, top = 12.dp)) } },
+        )
+    }
+}
 
 /** 剪貼簿和常用短語：剪貼簿歷史開關，以及打開常用短語頁。 */
 @Composable

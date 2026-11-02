@@ -105,4 +105,7 @@ sealed interface KeyAction {
 
     /** 新版簡介的「知道了」：之後不再顯示這個版本的簡介。 */
     data object DismissWhatsNew : KeyAction
+
+    /** 調整高度模式改了鍵盤高度：存入直向或打橫（landscape）的百分比。 */
+    data class SetKeyboardHeight(val landscape: Boolean, val percent: Int) : KeyAction
 }

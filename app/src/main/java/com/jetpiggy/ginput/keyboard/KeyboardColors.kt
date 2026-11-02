@@ -1,10 +1,14 @@
 package com.jetpiggy.ginput.keyboard
 
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import com.jetpiggy.ginput.settings.KeyboardTheme
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Immutable
 data class KeyboardColors(
@@ -38,7 +42,25 @@ data class KeyboardColors(
     val onAccentSoft: Color,
     /** 按鍵放大預覽的底色；深色時比按鍵亮一級。 */
     val preview: Color,
+    /** 漸變主題的底色，鋪滿整個鍵盤；這時 background 是漸變最上面的顏色。純色主題是 null。 */
+    val gradient: KeyboardGradient? = null,
 )
+
+/**
+ * 漸變的底色：色位平均分佈，角度跟 CSS 的 linear-gradient（180 是由上到下，135 是由左上到右下）。
+ * 半透明的按鍵疊在上面，讓漸變透出來。
+ */
+@Immutable
+data class KeyboardGradient(val angle: Float, val colors: List<Color>) {
+
+    /** 鋪滿 size 時漸變線的起點和終點：和 CSS 一樣穿過中心，兩端剛好碰到最遠的兩個角。 */
+    fun line(size: Size): Pair<Offset, Offset> {
+        val radians = Math.toRadians(angle.toDouble())
+        val direction = Offset(sin(radians).toFloat(), -cos(radians).toFloat())
+        val half = (abs(size.width * direction.x) + abs(size.height * direction.y)) / 2
+        return size.center - direction * half to size.center + direction * half
+    }
+}
 
 /** 一套主題的淺色和深色兩組顏色。 */
 private class ThemePalette(val light: KeyboardColors, val dark: KeyboardColors)
@@ -47,6 +69,8 @@ private class ThemePalette(val light: KeyboardColors, val dark: KeyboardColors)
 // 「預設」是原來的冷灰；只有淺色的記憶字比設計稿的 #2E7D32 深，首選字有底色時也看得清楚。
 // 記憶字的底色（rememberedChip、rememberedChipMarked）不在設計稿裏：用各主題記憶字的色相計算，
 // 綠字對它至少 4.5:1，和候選列的底色也有明顯分別。
+// 2026-11 加的 20 套按設計稿「GInput 新主題 20 套」的 themes.json；記憶字的底色同樣按色相計算。
+// 漸變主題的 background 是漸變最上面的顏色；半透明的顏色疊在底色上，對比按每個色位計算。
 // 改了顏色要跑 KeyboardColorsTest，確認對比仍然合格。
 
 private val DefaultPalette = ThemePalette(
@@ -283,6 +307,793 @@ private val NeonPalette = ThemePalette(
     ),
 )
 
+private val SunsetPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFFFCB94),
+        key = Color(0xB8FFFFFF),
+        functionKey = Color(0x5CFFFFFF),
+        pressedKey = Color(0xFFE8AEBB),
+        label = Color(0xFF2A1630),
+        secondaryLabel = Color(0xFF5B3150),
+        remembered = Color(0xFF1B5A27),
+        rememberedChip = Color(0xFFCBEBD1),
+        rememberedChipMarked = Color(0xFFB2D7B9),
+        keyShadow = Color(0x476B2C4F),
+        divider = Color(0x386B2C4F),
+        accent = Color(0xFF8A2D6B),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFFBD6DF),
+        onAccentSoft = Color(0xFF7A2352),
+        preview = Color(0xFFFFF7F2),
+        gradient = KeyboardGradient(angle = 180f, colors = listOf(Color(0xFFFFCB94), Color(0xFFF6A7A6), Color(0xFFCDA6DB))),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF1F1336),
+        key = Color(0x21FFFFFF),
+        functionKey = Color(0x38000000),
+        pressedKey = Color(0x42FFFFFF),
+        label = Color(0xFFFCEEE6),
+        secondaryLabel = Color(0xFFD9B9BA),
+        remembered = Color(0xFF8FD69A),
+        rememberedChip = Color(0xFF1C3620),
+        rememberedChipMarked = Color(0xFF28482D),
+        keyShadow = Color(0x73000000),
+        divider = Color(0x24FFFFFF),
+        accent = Color(0xFFFFA06C),
+        onAccent = Color(0xFF2C0F10),
+        accentSoft = Color(0xFF55263F),
+        onAccentSoft = Color(0xFFFFC5A3),
+        preview = Color(0xFF5E3A58),
+        gradient = KeyboardGradient(angle = 180f, colors = listOf(Color(0xFF1F1336), Color(0xFF3B1838), Color(0xFF5C2421))),
+    ),
+)
+
+private val AuroraPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFCBF1E2),
+        key = Color(0xB2FFFFFF),
+        functionKey = Color(0x57FFFFFF),
+        pressedKey = Color(0xFFB9C4E6),
+        label = Color(0xFF141F36),
+        secondaryLabel = Color(0xFF454F6B),
+        remembered = Color(0xFF2F5E12),
+        rememberedChip = Color(0xFFD7EBCB),
+        rememberedChipMarked = Color(0xFFC0D7B2),
+        keyShadow = Color(0x3D2A3566),
+        divider = Color(0x332A3566),
+        accent = Color(0xFF0E6B66),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFC5EDE3),
+        onAccentSoft = Color(0xFF0A4E4A),
+        preview = Color(0xFFF8FBFF),
+        gradient = KeyboardGradient(angle = 180f, colors = listOf(Color(0xFFCBF1E2), Color(0xFFD3DAF6), Color(0xFFE4D0F2))),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF0C3A3B),
+        key = Color(0x1CFFFFFF),
+        functionKey = Color(0x38000000),
+        pressedKey = Color(0x3DFFFFFF),
+        label = Color(0xFFE8F4F6),
+        secondaryLabel = Color(0xFFA9BCD0),
+        remembered = Color(0xFFC3E68B),
+        rememberedChip = Color(0xFF2C361C),
+        rememberedChipMarked = Color(0xFF3C4828),
+        keyShadow = Color(0x73000000),
+        divider = Color(0x21FFFFFF),
+        accent = Color(0xFF6BE3C6),
+        onAccent = Color(0xFF03251F),
+        accentSoft = Color(0xFF183F55),
+        onAccentSoft = Color(0xFF94EEDA),
+        preview = Color(0xFF2B3F63),
+        gradient = KeyboardGradient(angle = 180f, colors = listOf(Color(0xFF0C3A3B), Color(0xFF0F2347), Color(0xFF25164B))),
+    ),
+)
+
+private val SeaSaltPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFCBE6FA),
+        key = Color(0xBDFFFFFF),
+        functionKey = Color(0x61FFFFFF),
+        pressedKey = Color(0xFFABD3E6),
+        label = Color(0xFF0E2433),
+        secondaryLabel = Color(0xFF3F5868),
+        remembered = Color(0xFF1B5E33),
+        rememberedChip = Color(0xFFCBEBD7),
+        rememberedChipMarked = Color(0xFFB2D7BF),
+        keyShadow = Color(0x3D1D4D66),
+        divider = Color(0x331D4D66),
+        accent = Color(0xFF1468A8),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFC6E4FA),
+        onAccentSoft = Color(0xFF0F4E80),
+        preview = Color(0xFFFBFEFF),
+        gradient = KeyboardGradient(angle = 180f, colors = listOf(Color(0xFFCBE6FA), Color(0xFFD2F5E6))),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF0A1E3B),
+        key = Color(0x1FFFFFFF),
+        functionKey = Color(0x38000000),
+        pressedKey = Color(0x40FFFFFF),
+        label = Color(0xFFE6F4F8),
+        secondaryLabel = Color(0xFFA3C4CF),
+        remembered = Color(0xFF93DCA5),
+        rememberedChip = Color(0xFF1C3622),
+        rememberedChipMarked = Color(0xFF284830),
+        keyShadow = Color(0x73000000),
+        divider = Color(0x21FFFFFF),
+        accent = Color(0xFF72BCFF),
+        onAccent = Color(0xFF04203D),
+        accentSoft = Color(0xFF163E5E),
+        onAccentSoft = Color(0xFFA9D6FF),
+        preview = Color(0xFF25485C),
+        gradient = KeyboardGradient(angle = 180f, colors = listOf(Color(0xFF0A1E3B), Color(0xFF0A3A40))),
+    ),
+)
+
+private val HoloPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFF9D1E5),
+        key = Color(0xADFFFFFF),
+        functionKey = Color(0x57FFFFFF),
+        pressedKey = Color(0xFFD2C3EA),
+        label = Color(0xFF221D38),
+        secondaryLabel = Color(0xFF524A6A),
+        remembered = Color(0xFF1C6036),
+        rememberedChip = Color(0xFFCBEBD8),
+        rememberedChipMarked = Color(0xFFB2D7C0),
+        keyShadow = Color(0x3D4A3D7A),
+        divider = Color(0x334A3D7A),
+        accent = Color(0xFF5A47C8),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFE0D8FB),
+        onAccentSoft = Color(0xFF3F2E9E),
+        preview = Color(0xFFFFFCFF),
+        gradient = KeyboardGradient(angle = 135f, colors = listOf(Color(0xFFF9D1E5), Color(0xFFD4DDFB), Color(0xFFCDF3E5))),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF3B2242),
+        key = Color(0x1FFFFFFF),
+        functionKey = Color(0x38000000),
+        pressedKey = Color(0x40FFFFFF),
+        label = Color(0xFFF4EEFA),
+        secondaryLabel = Color(0xFFC9C1D9),
+        remembered = Color(0xFF8EE0A8),
+        rememberedChip = Color(0xFF1C3624),
+        rememberedChipMarked = Color(0xFF284832),
+        keyShadow = Color(0x73000000),
+        divider = Color(0x21FFFFFF),
+        accent = Color(0xFFC8B4FF),
+        onAccent = Color(0xFF231545),
+        accentSoft = Color(0xFF3F2F5E),
+        onAccentSoft = Color(0xFFE2D6FF),
+        preview = Color(0xFF3E3A62),
+        gradient = KeyboardGradient(angle = 135f, colors = listOf(Color(0xFF3B2242), Color(0xFF1F2A4B), Color(0xFF173C38))),
+    ),
+)
+
+private val RedWhiteBluePalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFDCE2EC),
+        key = Color(0xFFFFFFFF),
+        functionKey = Color(0xFF7499D8),
+        pressedKey = Color(0xFF6489CD),
+        label = Color(0xFF0A1022),
+        secondaryLabel = Color(0xFF3F4A60),
+        remembered = Color(0xFF1A5C2A),
+        rememberedChip = Color(0xFFCBEBD3),
+        rememberedChipMarked = Color(0xFFB2D7BB),
+        keyShadow = Color(0xFFA9B6CB),
+        divider = Color(0xFFB9C4D6),
+        accent = Color(0xFFD3242E),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFC8D7F2),
+        onAccentSoft = Color(0xFF1B3E86),
+        preview = Color(0xFFFFFFFF),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF111317),
+        key = Color(0xFF2E323B),
+        functionKey = Color(0xFF1F3F8F),
+        pressedKey = Color(0xFF4A4F5B),
+        label = Color(0xFFF3F5FA),
+        secondaryLabel = Color(0xFFAEB5C4),
+        remembered = Color(0xFF86D08E),
+        rememberedChip = Color(0xFF1C361F),
+        rememberedChipMarked = Color(0xFF28482C),
+        keyShadow = Color(0xFF050608),
+        divider = Color(0xFF2E323A),
+        accent = Color(0xFFFF5A61),
+        onAccent = Color(0xFF2A0004),
+        accentSoft = Color(0xFF4A2328),
+        onAccentSoft = Color(0xFFFFC9CC),
+        preview = Color(0xFF424754),
+    ),
+)
+
+private val ChaChaanTengPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFBFE3D2),
+        key = Color(0xFFFBF6EA),
+        functionKey = Color(0xFFF2C3CB),
+        pressedKey = Color(0xFFDDA5B1),
+        label = Color(0xFF1E2A25),
+        secondaryLabel = Color(0xFF4A5751),
+        remembered = Color(0xFF2F5D0E),
+        rememberedChip = Color(0xFFD9EBCB),
+        rememberedChipMarked = Color(0xFFC1D7B2),
+        keyShadow = Color(0xFF9CC7B4),
+        divider = Color(0xFFA3CDBA),
+        accent = Color(0xFF0F6A61),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFFFD9DE),
+        onAccentSoft = Color(0xFF8C2441),
+        preview = Color(0xFFFBF6EA),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF0E2A26),
+        key = Color(0xFF27413C),
+        functionKey = Color(0xFF4A2A35),
+        pressedKey = Color(0xFF3E5A54),
+        label = Color(0xFFF3EEE4),
+        secondaryLabel = Color(0xFFB2C6BF),
+        remembered = Color(0xFFB4DC7A),
+        rememberedChip = Color(0xFF2B361C),
+        rememberedChipMarked = Color(0xFF3B4828),
+        keyShadow = Color(0xFF061512),
+        divider = Color(0xFF244039),
+        accent = Color(0xFF7FD8BF),
+        onAccent = Color(0xFF06291F),
+        accentSoft = Color(0xFF5C3141),
+        onAccentSoft = Color(0xFFF7B9C6),
+        preview = Color(0xFF36524C),
+    ),
+)
+
+private val TempleStreetPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFF2E6D0),
+        key = Color(0xFFFCF7EC),
+        functionKey = Color(0xFFF0C2B0),
+        pressedKey = Color(0xFFDDA48E),
+        label = Color(0xFF2A1410),
+        secondaryLabel = Color(0xFF664238),
+        remembered = Color(0xFF225A1E),
+        rememberedChip = Color(0xFFCDEBCB),
+        rememberedChipMarked = Color(0xFFB4D7B2),
+        keyShadow = Color(0xFFD1BC9E),
+        divider = Color(0xFFDCC8AA),
+        accent = Color(0xFFC9361C),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFF7DA8E),
+        onAccentSoft = Color(0xFF6A4300),
+        preview = Color(0xFFFCF7EC),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF120C0B),
+        key = Color(0xFF2D1B18),
+        functionKey = Color(0xFF5C1515),
+        pressedKey = Color(0xFF4A302B),
+        label = Color(0xFFF8ECDC),
+        secondaryLabel = Color(0xFFC7AE99),
+        remembered = Color(0xFF8FD18A),
+        rememberedChip = Color(0xFF1E361C),
+        rememberedChipMarked = Color(0xFF2B4828),
+        keyShadow = Color(0xFF000000),
+        divider = Color(0xFF3A2420),
+        accent = Color(0xFFEDBE2F),
+        onAccent = Color(0xFF2A1C00),
+        accentSoft = Color(0xFF4A3410),
+        onAccentSoft = Color(0xFFFFD9A0),
+        preview = Color(0xFF3D2722),
+    ),
+)
+
+private val TaiOPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFBDC9CF),
+        key = Color(0xFFF4F1EC),
+        functionKey = Color(0xFFE3B497),
+        pressedKey = Color(0xFFC99878),
+        label = Color(0xFF1B2328),
+        secondaryLabel = Color(0xFF454F55),
+        remembered = Color(0xFF1E5A2A),
+        rememberedChip = Color(0xFFCBEBD2),
+        rememberedChipMarked = Color(0xFFB2D7B9),
+        keyShadow = Color(0xFF97A6AE),
+        divider = Color(0xFF9FAEB6),
+        accent = Color(0xFFA7451B),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFF4CDB4),
+        onAccentSoft = Color(0xFF7A3110),
+        preview = Color(0xFFF4F1EC),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF131B20),
+        key = Color(0xFF2C3A41),
+        functionKey = Color(0xFF4B2D20),
+        pressedKey = Color(0xFF45545C),
+        label = Color(0xFFECEFF0),
+        secondaryLabel = Color(0xFFA9B6BC),
+        remembered = Color(0xFF8CCF98),
+        rememberedChip = Color(0xFF1C3620),
+        rememberedChipMarked = Color(0xFF28482E),
+        keyShadow = Color(0xFF05090B),
+        divider = Color(0xFF2A363C),
+        accent = Color(0xFFEC8A55),
+        onAccent = Color(0xFF2A1003),
+        accentSoft = Color(0xFF3D5562),
+        onAccentSoft = Color(0xFFF7B791),
+        preview = Color(0xFF3B4A52),
+    ),
+)
+
+private val TaroPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFEFE8EE),
+        key = Color(0xFFFFFDFA),
+        functionKey = Color(0xFFD3BEEA),
+        pressedKey = Color(0xFFBBA0DA),
+        label = Color(0xFF24182F),
+        secondaryLabel = Color(0xFF5C4C6B),
+        remembered = Color(0xFF1D5B30),
+        rememberedChip = Color(0xFFCBEBD5),
+        rememberedChipMarked = Color(0xFFB2D7BD),
+        keyShadow = Color(0xFFD4C8D8),
+        divider = Color(0xFFD6CCDC),
+        accent = Color(0xFF6D47AE),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFE6D7F8),
+        onAccentSoft = Color(0xFF4C2B8A),
+        preview = Color(0xFFFFFDFA),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF211A2C),
+        key = Color(0xFF3F3459),
+        functionKey = Color(0xFF2C2339),
+        pressedKey = Color(0xFF594C75),
+        label = Color(0xFFF3ECFA),
+        secondaryLabel = Color(0xFFBDB0CF),
+        remembered = Color(0xFF8FD3A0),
+        rememberedChip = Color(0xFF1C3622),
+        rememberedChipMarked = Color(0xFF284830),
+        keyShadow = Color(0xFF0D0913),
+        divider = Color(0xFF3A3049),
+        accent = Color(0xFFC8A7F7),
+        onAccent = Color(0xFF25124A),
+        accentSoft = Color(0xFF47366A),
+        onAccentSoft = Color(0xFFDCC8FF),
+        preview = Color(0xFF4E4269),
+    ),
+)
+
+private val MatchaPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFE1E8C3),
+        key = Color(0xFFFFFDF4),
+        functionKey = Color(0xFFC5D398),
+        pressedKey = Color(0xFFADBE7C),
+        label = Color(0xFF1E2410),
+        secondaryLabel = Color(0xFF4F583A),
+        remembered = Color(0xFF13563A),
+        rememberedChip = Color(0xFFCBEBDE),
+        rememberedChipMarked = Color(0xFFB2D7C7),
+        keyShadow = Color(0xFFB7C394),
+        divider = Color(0xFFC1CDA0),
+        accent = Color(0xFF58761A),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFE3EEC0),
+        onAccentSoft = Color(0xFF3E5609),
+        preview = Color(0xFFFFFDF4),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF16190F),
+        key = Color(0xFF343B21),
+        functionKey = Color(0xFF23281A),
+        pressedKey = Color(0xFF4B5432),
+        label = Color(0xFFF1F2E2),
+        secondaryLabel = Color(0xFFB6BC9C),
+        remembered = Color(0xFF80D4A2),
+        rememberedChip = Color(0xFF1C3626),
+        rememberedChipMarked = Color(0xFF284835),
+        keyShadow = Color(0xFF070805),
+        divider = Color(0xFF30362A),
+        accent = Color(0xFFBFD76E),
+        onAccent = Color(0xFF1C2606),
+        accentSoft = Color(0xFF3B4520),
+        onAccentSoft = Color(0xFFD5E89A),
+        preview = Color(0xFF434B2C),
+    ),
+)
+
+private val MangoSagoPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFFCE7BE),
+        key = Color(0xFFFFFDF7),
+        functionKey = Color(0xFFF7CE74),
+        pressedKey = Color(0xFFE8B451),
+        label = Color(0xFF2E1D06),
+        secondaryLabel = Color(0xFF6A4A1E),
+        remembered = Color(0xFF1D5A24),
+        rememberedChip = Color(0xFFCBEBCF),
+        rememberedChipMarked = Color(0xFFB2D7B6),
+        keyShadow = Color(0xFFE6C886),
+        divider = Color(0xFFEDCF8E),
+        accent = Color(0xFFC9405C),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFFBD3D9),
+        onAccentSoft = Color(0xFF8C2038),
+        preview = Color(0xFFFFFDF7),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF1E160A),
+        key = Color(0xFF3E2F17),
+        functionKey = Color(0xFF2B200F),
+        pressedKey = Color(0xFF58442A),
+        label = Color(0xFFFBF0DE),
+        secondaryLabel = Color(0xFFC9B38E),
+        remembered = Color(0xFF8FD392),
+        rememberedChip = Color(0xFF1C361D),
+        rememberedChipMarked = Color(0xFF28482A),
+        keyShadow = Color(0xFF0A0703),
+        divider = Color(0xFF3A2D18),
+        accent = Color(0xFFFFA733),
+        onAccent = Color(0xFF2E1A00),
+        accentSoft = Color(0xFF55283A),
+        onAccentSoft = Color(0xFFF8B6C2),
+        preview = Color(0xFF4E3C20),
+    ),
+)
+
+private val BlackSesamePalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFCFCAC5),
+        key = Color(0xFFEEEAE6),
+        functionKey = Color(0xFFB4ADA7),
+        pressedKey = Color(0xFF9C948E),
+        label = Color(0xFF1C1917),
+        secondaryLabel = Color(0xFF4A4440),
+        remembered = Color(0xFF1A5426),
+        rememberedChip = Color(0xFFCBEBD2),
+        rememberedChipMarked = Color(0xFFB2D7B9),
+        keyShadow = Color(0xFFAEA7A1),
+        divider = Color(0xFFB5AEA8),
+        accent = Color(0xFF37312D),
+        onAccent = Color(0xFFF3EEE9),
+        accentSoft = Color(0xFFE0D9D2),
+        onAccentSoft = Color(0xFF3D3631),
+        preview = Color(0xFFF6F3F0),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF151312),
+        key = Color(0xFF302C2A),
+        functionKey = Color(0xFF221F1E),
+        pressedKey = Color(0xFF4A4542),
+        label = Color(0xFFEDE8E3),
+        secondaryLabel = Color(0xFFABA39C),
+        remembered = Color(0xFF8DC79A),
+        rememberedChip = Color(0xFF1C3622),
+        rememberedChipMarked = Color(0xFF28482F),
+        keyShadow = Color(0xFF050404),
+        divider = Color(0xFF2C2826),
+        accent = Color(0xFFD8CFC6),
+        onAccent = Color(0xFF1E1A17),
+        accentSoft = Color(0xFF3E3834),
+        onAccentSoft = Color(0xFFE3DAD1),
+        preview = Color(0xFF3E3936),
+    ),
+)
+
+private val DeepSeaPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFC4DEDF),
+        key = Color(0xFFEFF8F7),
+        functionKey = Color(0xFF93BEC1),
+        pressedKey = Color(0xFF7FAAAE),
+        label = Color(0xFF0A2226),
+        secondaryLabel = Color(0xFF3B5458),
+        remembered = Color(0xFF2D5C12),
+        rememberedChip = Color(0xFFD7EBCB),
+        rememberedChipMarked = Color(0xFFBFD7B2),
+        keyShadow = Color(0xFF9DBFC1),
+        divider = Color(0xFFA3C4C6),
+        accent = Color(0xFF0D4E5B),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFC2E6EE),
+        onAccentSoft = Color(0xFF0B4250),
+        preview = Color(0xFFEFF8F7),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF031A1F),
+        key = Color(0xFF0F3238),
+        functionKey = Color(0xFF08252A),
+        pressedKey = Color(0xFF1E4A53),
+        label = Color(0xFFE2F2F3),
+        secondaryLabel = Color(0xFF97B9BE),
+        remembered = Color(0xFFB2DE7F),
+        rememberedChip = Color(0xFF2A361C),
+        rememberedChipMarked = Color(0xFF394828),
+        keyShadow = Color(0xFF000608),
+        divider = Color(0xFF123137),
+        accent = Color(0xFF5FC6E9),
+        onAccent = Color(0xFF02202C),
+        accentSoft = Color(0xFF0E3E4D),
+        onAccentSoft = Color(0xFF9EDFF5),
+        preview = Color(0xFF1A434A),
+    ),
+)
+
+private val MaplePalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFEACDAE),
+        key = Color(0xFFFFF7EC),
+        functionKey = Color(0xFFD59D6E),
+        pressedKey = Color(0xFFC0855A),
+        label = Color(0xFF2B160C),
+        secondaryLabel = Color(0xFF64402C),
+        remembered = Color(0xFF245818),
+        rememberedChip = Color(0xFFD1EBCB),
+        rememberedChipMarked = Color(0xFFB9D7B2),
+        keyShadow = Color(0xFFCFAA84),
+        divider = Color(0xFFD7B590),
+        accent = Color(0xFF9C2228),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFF5C8BC),
+        onAccentSoft = Color(0xFF7E1C1C),
+        preview = Color(0xFFFFF7EC),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF1C110C),
+        key = Color(0xFF3C251A),
+        functionKey = Color(0xFF2A1911),
+        pressedKey = Color(0xFF573829),
+        label = Color(0xFFF7E8DC),
+        secondaryLabel = Color(0xFFC4A693),
+        remembered = Color(0xFF9AD08A),
+        rememberedChip = Color(0xFF22361C),
+        rememberedChipMarked = Color(0xFF304828),
+        keyShadow = Color(0xFF080402),
+        divider = Color(0xFF3A251B),
+        accent = Color(0xFFEE5D40),
+        onAccent = Color(0xFF2A0600),
+        accentSoft = Color(0xFF4E2617),
+        onAccentSoft = Color(0xFFF7AC85),
+        preview = Color(0xFF4E3225),
+    ),
+)
+
+private val FirstSnowPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFF1F5F9),
+        key = Color(0xFFFFFFFF),
+        functionKey = Color(0xFFD8E3EE),
+        pressedKey = Color(0xFFC0CFDE),
+        label = Color(0xFF13202D),
+        secondaryLabel = Color(0xFF4E5D6C),
+        remembered = Color(0xFF1B5A30),
+        rememberedChip = Color(0xFFCBEBD6),
+        rememberedChipMarked = Color(0xFFB2D7BE),
+        keyShadow = Color(0xFFC9D6E2),
+        divider = Color(0xFFD3DDE7),
+        accent = Color(0xFF3F7598),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFD9EAF6),
+        onAccentSoft = Color(0xFF24597C),
+        preview = Color(0xFFFFFFFF),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF1E242C),
+        key = Color(0xFF3B4552),
+        functionKey = Color(0xFF2A313B),
+        pressedKey = Color(0xFF56626F),
+        label = Color(0xFFEEF3F8),
+        secondaryLabel = Color(0xFFAEBBC8),
+        remembered = Color(0xFF8DD3A0),
+        rememberedChip = Color(0xFF1C3623),
+        rememberedChipMarked = Color(0xFF284831),
+        keyShadow = Color(0xFF0E1217),
+        divider = Color(0xFF353E49),
+        accent = Color(0xFFCFE4F6),
+        onAccent = Color(0xFF1A2836),
+        accentSoft = Color(0xFF38485A),
+        onAccentSoft = Color(0xFFD5E8F8),
+        preview = Color(0xFF4A5563),
+    ),
+)
+
+private val BeachPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFECDCBA),
+        key = Color(0xFFFFFBF2),
+        functionKey = Color(0xFFD9C597),
+        pressedKey = Color(0xFFC6AE7C),
+        label = Color(0xFF2A2212),
+        secondaryLabel = Color(0xFF5F5134),
+        remembered = Color(0xFF245A1F),
+        rememberedChip = Color(0xFFCEEBCB),
+        rememberedChipMarked = Color(0xFFB5D7B2),
+        keyShadow = Color(0xFFD2BF97),
+        divider = Color(0xFFD8C59D),
+        accent = Color(0xFF08757B),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFF5E1A8),
+        onAccentSoft = Color(0xFF6A4A00),
+        preview = Color(0xFFFFFBF2),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF1A1712),
+        key = Color(0xFF3A3426),
+        functionKey = Color(0xFF272218),
+        pressedKey = Color(0xFF524934),
+        label = Color(0xFFF7F0E1),
+        secondaryLabel = Color(0xFFC1B59B),
+        remembered = Color(0xFF93D59A),
+        rememberedChip = Color(0xFF1C361F),
+        rememberedChipMarked = Color(0xFF28482C),
+        keyShadow = Color(0xFF090805),
+        divider = Color(0xFF373022),
+        accent = Color(0xFFE6C27A),
+        onAccent = Color(0xFF2A1E00),
+        accentSoft = Color(0xFF0E3F42),
+        onAccentSoft = Color(0xFF6FE0DA),
+        preview = Color(0xFF4A4231),
+    ),
+)
+
+private val HighContrastPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFE0E0E0),
+        key = Color(0xFFFFFFFF),
+        functionKey = Color(0xFFBDBDBD),
+        pressedKey = Color(0xFFA3A3A3),
+        label = Color(0xFF000000),
+        secondaryLabel = Color(0xFF1F1F1F),
+        remembered = Color(0xFF063A0C),
+        rememberedChip = Color(0xFFCBEBCF),
+        rememberedChipMarked = Color(0xFFB2D7B6),
+        keyShadow = Color(0xFF000000),
+        divider = Color(0xFF000000),
+        accent = Color(0xFF000000),
+        onAccent = Color(0xFFFFD400),
+        accentSoft = Color(0xFFFFD400),
+        onAccentSoft = Color(0xFF000000),
+        preview = Color(0xFFFFFFFF),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF000000),
+        key = Color(0xFF242424),
+        functionKey = Color(0xFF383838),
+        pressedKey = Color(0xFF525252),
+        label = Color(0xFFFFFFFF),
+        secondaryLabel = Color(0xFFE6E6E6),
+        remembered = Color(0xFF86F592),
+        rememberedChip = Color(0xFF1C361F),
+        rememberedChipMarked = Color(0xFF28482C),
+        keyShadow = Color(0xFF8A8A8A),
+        divider = Color(0xFF8A8A8A),
+        accent = Color(0xFFFFD400),
+        onAccent = Color(0xFF000000),
+        accentSoft = Color(0xFF3A3300),
+        onAccentSoft = Color(0xFFFFD400),
+        preview = Color(0xFF2E2E2E),
+    ),
+)
+
+private val InkPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFECE5D5),
+        key = Color(0xFFFAF6EC),
+        functionKey = Color(0xFFD5CFC2),
+        pressedKey = Color(0xFFBFB7A8),
+        label = Color(0xFF141312),
+        secondaryLabel = Color(0xFF4A4641),
+        remembered = Color(0xFF1F5524),
+        rememberedChip = Color(0xFFCBEBCE),
+        rememberedChipMarked = Color(0xFFB2D7B5),
+        keyShadow = Color(0xFFC4BCAD),
+        divider = Color(0xFFCFC8BA),
+        accent = Color(0xFFAD231B),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFF2D3CC),
+        onAccentSoft = Color(0xFF7E1912),
+        preview = Color(0xFFFAF6EC),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF141414),
+        key = Color(0xFF2A2927),
+        functionKey = Color(0xFF1C1B1A),
+        pressedKey = Color(0xFF45433F),
+        label = Color(0xFFF3EFE7),
+        secondaryLabel = Color(0xFFADA89F),
+        remembered = Color(0xFF91CF95),
+        rememberedChip = Color(0xFF1C361D),
+        rememberedChipMarked = Color(0xFF28482A),
+        keyShadow = Color(0xFF030303),
+        divider = Color(0xFF2D2C2A),
+        accent = Color(0xFFE8604F),
+        onAccent = Color(0xFF1E0402),
+        accentSoft = Color(0xFF432019),
+        onAccentSoft = Color(0xFFF6A799),
+        preview = Color(0xFF383634),
+    ),
+)
+
+private val RetroPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFDAD0B8),
+        key = Color(0xFFEFE8D7),
+        functionKey = Color(0xFFA29C90),
+        pressedKey = Color(0xFF8E8778),
+        label = Color(0xFF1C1B17),
+        secondaryLabel = Color(0xFF4E4A40),
+        remembered = Color(0xFF1E5A22),
+        rememberedChip = Color(0xFFCBEBCD),
+        rememberedChipMarked = Color(0xFFB2D7B4),
+        keyShadow = Color(0xFFB3A88F),
+        divider = Color(0xFFBDB39B),
+        accent = Color(0xFF35332F),
+        onAccent = Color(0xFFF2EAD4),
+        accentSoft = Color(0xFFC9C2AF),
+        onAccentSoft = Color(0xFF2D2B27),
+        preview = Color(0xFFF5F0E2),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF080D08),
+        key = Color(0xFF102014),
+        functionKey = Color(0xFF0A160D),
+        pressedKey = Color(0xFF1E3C24),
+        label = Color(0xFF7CFF8A),
+        secondaryLabel = Color(0xFF45C860),
+        remembered = Color(0xFFD2FFC2),
+        rememberedChip = Color(0xFF23361C),
+        rememberedChipMarked = Color(0xFF314828),
+        keyShadow = Color(0xFF000000),
+        divider = Color(0xFF173320),
+        accent = Color(0xFF7CFF8A),
+        onAccent = Color(0xFF031A08),
+        accentSoft = Color(0xFF10361A),
+        onAccentSoft = Color(0xFF9CFFA7),
+        preview = Color(0xFF173322),
+    ),
+)
+
+private val MorandiPalette = ThemePalette(
+    light = KeyboardColors(
+        background = Color(0xFFDAD5CF),
+        key = Color(0xFFF3F0EB),
+        functionKey = Color(0xFFBAC4BE),
+        pressedKey = Color(0xFFA3AEA7),
+        label = Color(0xFF232523),
+        secondaryLabel = Color(0xFF545854),
+        remembered = Color(0xFF285A30),
+        rememberedChip = Color(0xFFCBEBD0),
+        rememberedChipMarked = Color(0xFFB2D7B8),
+        keyShadow = Color(0xFFBAB4AD),
+        divider = Color(0xFFC3BDB6),
+        accent = Color(0xFF56707F),
+        onAccent = Color(0xFFFFFFFF),
+        accentSoft = Color(0xFFE8CFCF),
+        onAccentSoft = Color(0xFF704649),
+        preview = Color(0xFFF3F0EB),
+    ),
+    dark = KeyboardColors(
+        background = Color(0xFF1E1F1E),
+        key = Color(0xFF3A3D3B),
+        functionKey = Color(0xFF2B2E2C),
+        pressedKey = Color(0xFF525654),
+        label = Color(0xFFECEBE8),
+        secondaryLabel = Color(0xFFAFB2AE),
+        remembered = Color(0xFF9CC8A0),
+        rememberedChip = Color(0xFF1C361E),
+        rememberedChipMarked = Color(0xFF28482B),
+        keyShadow = Color(0xFF0B0C0B),
+        divider = Color(0xFF343634),
+        accent = Color(0xFFA9BCC9),
+        onAccent = Color(0xFF1A2630),
+        accentSoft = Color(0xFF4B3B3D),
+        onAccentSoft = Color(0xFFE8C6C6),
+        preview = Color(0xFF474A48),
+    ),
+)
 /** theme 的淺色或深色那組顏色。 */
 internal fun KeyboardTheme.colors(dark: Boolean): KeyboardColors {
     val palette = when (this) {
@@ -292,10 +1103,26 @@ internal fun KeyboardTheme.colors(dark: Boolean): KeyboardColors {
         KeyboardTheme.Harbour -> HarbourPalette
         KeyboardTheme.Sakura -> SakuraPalette
         KeyboardTheme.Neon -> NeonPalette
+        KeyboardTheme.Sunset -> SunsetPalette
+        KeyboardTheme.Aurora -> AuroraPalette
+        KeyboardTheme.SeaSalt -> SeaSaltPalette
+        KeyboardTheme.Holo -> HoloPalette
+        KeyboardTheme.RedWhiteBlue -> RedWhiteBluePalette
+        KeyboardTheme.ChaChaanTeng -> ChaChaanTengPalette
+        KeyboardTheme.TempleStreet -> TempleStreetPalette
+        KeyboardTheme.TaiO -> TaiOPalette
+        KeyboardTheme.Taro -> TaroPalette
+        KeyboardTheme.Matcha -> MatchaPalette
+        KeyboardTheme.MangoSago -> MangoSagoPalette
+        KeyboardTheme.BlackSesame -> BlackSesamePalette
+        KeyboardTheme.DeepSea -> DeepSeaPalette
+        KeyboardTheme.Maple -> MaplePalette
+        KeyboardTheme.FirstSnow -> FirstSnowPalette
+        KeyboardTheme.Beach -> BeachPalette
+        KeyboardTheme.HighContrast -> HighContrastPalette
+        KeyboardTheme.Ink -> InkPalette
+        KeyboardTheme.Retro -> RetroPalette
+        KeyboardTheme.Morandi -> MorandiPalette
     }
     return if (dark) palette.dark else palette.light
 }
-
-/** 主題的顏色；淺色或深色跟隨系統。 */
-@Composable
-fun keyboardColors(theme: KeyboardTheme): KeyboardColors = theme.colors(isSystemInDarkTheme())

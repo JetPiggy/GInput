@@ -9,6 +9,8 @@ import org.junit.Test
 
 class KeyboardLayoutTest {
 
+    private val scales = (KeyboardHeight.MIN..KeyboardHeight.MAX step KeyboardHeight.STEP).map { it / 100f }
+
     @Test
     fun smallestWidthDecidesPhoneOrTablet() {
         assertEquals(KeyboardLayout.Phone, keyboardLayout(smallestWidthDp = 411, landscape = false))
@@ -22,7 +24,7 @@ class KeyboardLayoutTest {
 
     @Test
     fun phoneLandscapeHasFiveEqualRows() {
-        val dimensions = keyboardDimensions(KeyboardLayout.PhoneLandscape, KeyboardHeight.Standard.scale, numberRow = true, 411.dp)
+        val dimensions = keyboardDimensions(KeyboardLayout.PhoneLandscape, 1f, numberRow = true, 411.dp)
 
         assertEquals(38.dp, dimensions.barHeight)
         assertEquals(38.dp, dimensions.rowHeight)
@@ -30,22 +32,22 @@ class KeyboardLayoutTest {
 
     @Test
     fun tallTabletScreenKeepsThePhonePortraitSizes() {
-        for (height in KeyboardHeight.entries) {
-            val dimensions = keyboardDimensions(KeyboardLayout.Tablet, height.scale, numberRow = true, 1280.dp)
+        for (scale in scales) {
+            val dimensions = keyboardDimensions(KeyboardLayout.Tablet, scale, numberRow = true, 1280.dp)
 
-            assertEquals(PortraitDimensions.withHeight(height.scale), dimensions)
+            assertEquals(PortraitDimensions.withHeight(scale), dimensions)
         }
     }
 
     @Test
     fun shortTabletScreenShrinksRowsToHalfTheScreen() {
         // 7 吋平板打橫大約高 600dp。
-        for (height in KeyboardHeight.entries) {
+        for (scale in scales) {
             for (numberRow in listOf(false, true)) {
-                val dimensions = keyboardDimensions(KeyboardLayout.Tablet, height.scale, numberRow, 600.dp)
+                val dimensions = keyboardDimensions(KeyboardLayout.Tablet, scale, numberRow, 600.dp)
 
                 assertTrue(keyboardHeight(dimensions, numberRow) <= 300.dp + 0.01.dp)
-                assertTrue(dimensions.rowHeight <= PortraitDimensions.rowHeight * height.scale + 0.01.dp)
+                assertTrue(dimensions.rowHeight <= PortraitDimensions.rowHeight * scale + 0.01.dp)
                 assertEquals(PortraitDimensions.barHeight, dimensions.barHeight)
             }
         }
@@ -53,9 +55,33 @@ class KeyboardLayoutTest {
 
     @Test
     fun tabletRowsStopShrinkingAt38dp() {
-        val dimensions = keyboardDimensions(KeyboardLayout.Tablet, KeyboardHeight.Standard.scale, numberRow = true, 400.dp)
+        val dimensions = keyboardDimensions(KeyboardLayout.Tablet, 1f, numberRow = true, 400.dp)
 
         assertEquals(38f, dimensions.rowHeight.value, 0.01f)
+    }
+
+    @Test
+    fun phonesCanUseTheWholeRange() {
+        for (layout in listOf(KeyboardLayout.Phone, KeyboardLayout.PhoneLandscape)) {
+            assertEquals(KeyboardHeight.MAX, maxHeightPercent(layout, numberRow = true, 640.dp))
+        }
+    }
+
+    @Test
+    fun tabletHeightStopsWhereTheKeyboardFillsHalfTheScreen() {
+        assertEquals(KeyboardHeight.MAX, maxHeightPercent(KeyboardLayout.Tablet, numberRow = true, 1280.dp))
+        for (numberRow in listOf(false, true)) {
+            val max = maxHeightPercent(KeyboardLayout.Tablet, numberRow, 600.dp)
+            assertTrue(max in KeyboardHeight.MIN until KeyboardHeight.MAX)
+            assertEquals(0, max % KeyboardHeight.STEP)
+            // 再高一格就會超過螢幕高度的一半，鍵盤不會跟着變高。
+            val atMax = keyboardDimensions(KeyboardLayout.Tablet, max / 100f, numberRow, 600.dp)
+            val above = keyboardDimensions(KeyboardLayout.Tablet, (max + KeyboardHeight.STEP) / 100f, numberRow, 600.dp)
+            assertEquals(PortraitDimensions.withHeight(max / 100f), atMax)
+            assertTrue(keyboardHeight(above, numberRow) <= 300.dp + 0.01.dp)
+        }
+        // 螢幕太矮，連最低的百分比也放不下。
+        assertEquals(KeyboardHeight.MIN, maxHeightPercent(KeyboardLayout.Tablet, numberRow = true, 400.dp))
     }
 
     private fun keyboardHeight(dimensions: KeyboardDimensions, numberRow: Boolean): Dp =

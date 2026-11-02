@@ -26,7 +26,10 @@ internal object SettingsPreferences {
     private const val ENGLISH_CHINESE = "english_chinese"
     private const val CLIPBOARD_HISTORY = "clipboard_history"
     private const val KEYBOARD_THEME = "keyboard_theme"
+    /** 舊版的鍵盤高度（矮、標準、高，直向和打橫共用），只用來讀取。 */
     private const val KEYBOARD_HEIGHT = "keyboard_height"
+    private const val KEYBOARD_HEIGHT_PORTRAIT = "keyboard_height_portrait"
+    private const val KEYBOARD_HEIGHT_LANDSCAPE = "keyboard_height_landscape"
     private const val KEY_LABELS = "key_labels"
     private const val NUMBER_ROW = "number_row"
     private const val KEY_PREVIEW = "key_preview"
@@ -53,12 +56,28 @@ internal object SettingsPreferences {
         KeyboardTheme.Harbour to "harbour",
         KeyboardTheme.Sakura to "sakura",
         KeyboardTheme.Neon to "neon",
+        KeyboardTheme.Sunset to "sunset",
+        KeyboardTheme.Aurora to "aurora",
+        KeyboardTheme.SeaSalt to "sea_salt",
+        KeyboardTheme.Holo to "holo",
+        KeyboardTheme.RedWhiteBlue to "red_white_blue",
+        KeyboardTheme.ChaChaanTeng to "cha_chaan_teng",
+        KeyboardTheme.TempleStreet to "temple_street",
+        KeyboardTheme.TaiO to "tai_o",
+        KeyboardTheme.Taro to "taro",
+        KeyboardTheme.Matcha to "matcha",
+        KeyboardTheme.MangoSago to "mango_sago",
+        KeyboardTheme.BlackSesame to "black_sesame",
+        KeyboardTheme.DeepSea to "deep_sea",
+        KeyboardTheme.Maple to "maple",
+        KeyboardTheme.FirstSnow to "first_snow",
+        KeyboardTheme.Beach to "beach",
+        KeyboardTheme.HighContrast to "high_contrast",
+        KeyboardTheme.Ink to "ink",
+        KeyboardTheme.Retro to "retro",
+        KeyboardTheme.Morandi to "morandi",
     )
-    private val HeightCodes = mapOf(
-        KeyboardHeight.Compact to "compact",
-        KeyboardHeight.Standard to "standard",
-        KeyboardHeight.Tall to "tall",
-    )
+    private val LegacyHeightCodes = mapOf("compact" to 85, "standard" to KeyboardHeight.STANDARD, "tall" to 115)
     private val LabelCodes = mapOf(
         KeyLabels.LettersLarge to "letters",
         KeyLabels.RadicalsLarge to "radicals",
@@ -88,6 +107,12 @@ internal object SettingsPreferences {
                 .mapNotNull { code -> SchemeCodes.entries.firstOrNull { it.value == code }?.key }
                 .distinct()
 
+        // 百分比存成文字，例如 "110"；未有的話用舊版的設定。
+        val legacyHeight = LegacyHeightCodes[values[KEYBOARD_HEIGHT]] ?: KeyboardHeight.STANDARD
+
+        fun height(key: String) =
+            (values[key] as? String)?.toIntOrNull()?.let { KeyboardHeight.nearest(it.toFloat()) } ?: legacyHeight
+
         val order = schemes(SCHEME_ORDER).let { stored -> stored + defaults.schemeOrder.filter { it !in stored } }
         return UserSettings(
             schemeOrder = order,
@@ -106,7 +131,7 @@ internal object SettingsPreferences {
             clipboardHistory = flag(CLIPBOARD_HISTORY, defaults.clipboardHistory),
             keyboard = KeyboardSettings(
                 theme = choice(KEYBOARD_THEME, ThemeCodes, keyboard.theme),
-                height = choice(KEYBOARD_HEIGHT, HeightCodes, keyboard.height),
+                height = KeyboardHeight(portrait = height(KEYBOARD_HEIGHT_PORTRAIT), landscape = height(KEYBOARD_HEIGHT_LANDSCAPE)),
                 labels = choice(KEY_LABELS, LabelCodes, keyboard.labels),
                 numberRow = flag(NUMBER_ROW, keyboard.numberRow),
                 keyPreview = flag(KEY_PREVIEW, keyboard.keyPreview),
@@ -142,7 +167,8 @@ internal object SettingsPreferences {
         EMOJI_KEYWORDS,
         ENGLISH_CHINESE,
         CLIPBOARD_HISTORY,
-        KEYBOARD_HEIGHT,
+        KEYBOARD_HEIGHT_PORTRAIT,
+        KEYBOARD_HEIGHT_LANDSCAPE,
         KEY_LABELS,
         NUMBER_ROW,
         KEY_PREVIEW,
@@ -168,7 +194,8 @@ internal object SettingsPreferences {
         ENGLISH_CHINESE to settings.englishChinese,
         CLIPBOARD_HISTORY to settings.clipboardHistory,
         KEYBOARD_THEME to ThemeCodes.getValue(settings.keyboard.theme),
-        KEYBOARD_HEIGHT to HeightCodes.getValue(settings.keyboard.height),
+        KEYBOARD_HEIGHT_PORTRAIT to settings.keyboard.height.portrait.toString(),
+        KEYBOARD_HEIGHT_LANDSCAPE to settings.keyboard.height.landscape.toString(),
         KEY_LABELS to LabelCodes.getValue(settings.keyboard.labels),
         NUMBER_ROW to settings.keyboard.numberRow,
         KEY_PREVIEW to settings.keyboard.keyPreview,
