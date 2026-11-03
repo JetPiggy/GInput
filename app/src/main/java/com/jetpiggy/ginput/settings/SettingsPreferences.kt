@@ -25,7 +25,9 @@ internal object SettingsPreferences {
     private const val EMOJI_KEYWORDS = "emoji_keywords"
     private const val ENGLISH_CHINESE = "english_chinese"
     private const val CLIPBOARD_HISTORY = "clipboard_history"
+    private const val CLIPBOARD_RETENTION = "clipboard_retention"
     private const val KEYBOARD_THEME = "keyboard_theme"
+    private const val THEME_MODE = "theme_mode"
     /** 舊版的鍵盤高度（矮、標準、高，直向和打橫共用），只用來讀取。 */
     private const val KEYBOARD_HEIGHT = "keyboard_height"
     private const val KEYBOARD_HEIGHT_PORTRAIT = "keyboard_height_portrait"
@@ -49,6 +51,12 @@ internal object SettingsPreferences {
     )
     private val OrderCodes = mapOf(SharedCodeOrder.Frequency to "frequency", SharedCodeOrder.Windows to "windows")
     private val SpaceModeCodes = mapOf(SpaceMode.WriteEnglish to "english", SpaceMode.SelectChinese to "chinese")
+    private val RetentionCodes = mapOf(
+        ClipboardRetention.Hour to "hour",
+        ClipboardRetention.Day to "day",
+        ClipboardRetention.Week to "week",
+        ClipboardRetention.Unlimited to "unlimited",
+    )
     private val ThemeCodes = mapOf(
         KeyboardTheme.Default to "default",
         KeyboardTheme.MilkTea to "milk_tea",
@@ -77,6 +85,7 @@ internal object SettingsPreferences {
         KeyboardTheme.Retro to "retro",
         KeyboardTheme.Morandi to "morandi",
     )
+    private val ThemeModeCodes = mapOf(ThemeMode.System to "system", ThemeMode.Light to "light", ThemeMode.Dark to "dark")
     private val LegacyHeightCodes = mapOf("compact" to 85, "standard" to KeyboardHeight.STANDARD, "tall" to 115)
     private val LabelCodes = mapOf(
         KeyLabels.LettersLarge to "letters",
@@ -129,8 +138,10 @@ internal object SettingsPreferences {
             emojiKeywords = flag(EMOJI_KEYWORDS, defaults.emojiKeywords),
             englishChinese = flag(ENGLISH_CHINESE, defaults.englishChinese),
             clipboardHistory = flag(CLIPBOARD_HISTORY, defaults.clipboardHistory),
+            clipboardRetention = choice(CLIPBOARD_RETENTION, RetentionCodes, defaults.clipboardRetention),
             keyboard = KeyboardSettings(
                 theme = choice(KEYBOARD_THEME, ThemeCodes, keyboard.theme),
+                themeMode = choice(THEME_MODE, ThemeModeCodes, keyboard.themeMode),
                 height = KeyboardHeight(portrait = height(KEYBOARD_HEIGHT_PORTRAIT), landscape = height(KEYBOARD_HEIGHT_LANDSCAPE)),
                 labels = choice(KEY_LABELS, LabelCodes, keyboard.labels),
                 numberRow = flag(NUMBER_ROW, keyboard.numberRow),
@@ -147,7 +158,7 @@ internal object SettingsPreferences {
     }
 
     /**
-     * 使用統計報告裏的設定：和儲存時同樣的鍵和代號，但不包括私隱開關和同意、首次設定精靈、新版簡介、未啟用的輸入方案和主題。
+     * 使用統計報告裏的設定：和儲存時同樣的鍵和代號，但不包括私隱開關和同意、首次設定精靈、新版簡介、未啟用的輸入方案和主題（連淺色、深色）。
      * backend/usage-stats 只接受這些鍵；加減項目要兩邊一起改。
      */
     fun forUsageStats(settings: UserSettings): Map<String, Any> =
@@ -193,7 +204,9 @@ internal object SettingsPreferences {
         EMOJI_KEYWORDS to settings.emojiKeywords,
         ENGLISH_CHINESE to settings.englishChinese,
         CLIPBOARD_HISTORY to settings.clipboardHistory,
+        CLIPBOARD_RETENTION to RetentionCodes.getValue(settings.clipboardRetention),
         KEYBOARD_THEME to ThemeCodes.getValue(settings.keyboard.theme),
+        THEME_MODE to ThemeModeCodes.getValue(settings.keyboard.themeMode),
         KEYBOARD_HEIGHT_PORTRAIT to settings.keyboard.height.portrait.toString(),
         KEYBOARD_HEIGHT_LANDSCAPE to settings.keyboard.height.landscape.toString(),
         KEY_LABELS to LabelCodes.getValue(settings.keyboard.labels),

@@ -245,7 +245,7 @@ private fun CategoryList(settings: UserSettings, phraseCount: Int, onOpen: (Sett
                     heightSummary(settings.keyboard.height),
                 ),
             ),
-            trailing = { ThemeSwatch(settings.keyboard.theme) },
+            trailing = { ThemeSwatch(settings.keyboard.theme, settings.keyboard.themeMode) },
         ),
         CategoryEntry(
             SettingsCategory.Clipboard,

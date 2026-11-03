@@ -54,11 +54,22 @@ enum class KeyVibration {
     Strong,
 }
 
+/** 剪貼簿歷史每一項在複製後保留多久；millis 是 null 的話不限時間，直到被新複製的擠出 MAX_ITEMS 項以外或刪除。 */
+enum class ClipboardRetention(val millis: Long?) {
+    /** 1 小時（預設）。 */
+    Hour(HOUR_MILLIS),
+    Day(24 * HOUR_MILLIS),
+    Week(7 * 24 * HOUR_MILLIS),
+    Unlimited(null),
+}
+
+private const val HOUR_MILLIS = 60 * 60 * 1000L
+
 /** 主題系列：設定的主題頁按系列分段排列主題。 */
 enum class ThemeSeries { Classic, Gradient, HongKong, Dessert, Nature, Style }
 
 /**
- * 主題：鍵盤的一套顏色。每套有淺色和深色兩組，跟隨系統的深色模式；顏色見 keyboard/KeyboardColors.kt。
+ * 主題：鍵盤的一套顏色。每套有淺色和深色兩組，用哪一組見 ThemeMode；顏色見 keyboard/KeyboardColors.kt。
  * 次序就是主題頁的次序，同一系列的排在一起。
  */
 enum class KeyboardTheme(val series: ThemeSeries) {
@@ -141,8 +152,25 @@ enum class KeyboardTheme(val series: ThemeSeries) {
     Morandi(ThemeSeries.Style),
 }
 
+/** 主題用淺色還是深色那組顏色。 */
+enum class ThemeMode {
+    /** 跟隨系統的深色模式（預設）。 */
+    System,
+
+    Light,
+    Dark,
+    ;
+
+    fun dark(systemDark: Boolean): Boolean = when (this) {
+        System -> systemDark
+        Light -> false
+        Dark -> true
+    }
+}
+
 data class KeyboardSettings(
     val theme: KeyboardTheme = KeyboardTheme.Default,
+    val themeMode: ThemeMode = ThemeMode.System,
     val height: KeyboardHeight = KeyboardHeight(),
     val labels: KeyLabels = KeyLabels.LettersLarge,
     /** 字母上面常駐的數字行；預設開啟。 */
@@ -182,6 +210,7 @@ data class UserSettings(
     val englishChinese: Boolean = true,
     /** 剪貼簿歷史；關了就不再記錄，並刪除已記下的。 */
     val clipboardHistory: Boolean = true,
+    val clipboardRetention: ClipboardRetention = ClipboardRetention.Hour,
     val keyboard: KeyboardSettings = KeyboardSettings(),
     /** 當機回報（ADR 0001）。 */
     val crashReports: Boolean = true,

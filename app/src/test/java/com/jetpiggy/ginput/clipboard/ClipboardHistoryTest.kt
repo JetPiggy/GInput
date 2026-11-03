@@ -1,8 +1,9 @@
 package com.jetpiggy.ginput.clipboard
 
-import com.jetpiggy.ginput.clipboard.ClipboardHistory.Companion.KEEP_MILLIS
 import com.jetpiggy.ginput.clipboard.ClipboardHistory.Companion.MAX_ITEMS
+import com.jetpiggy.ginput.settings.ClipboardRetention
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -48,16 +49,29 @@ class ClipboardHistoryTest {
     }
 
     @Test
-    fun itemsExpireAnHourAfterCopying() {
+    fun itemsExpireAfterTheChosenTime() {
+        val hour = ClipboardRetention.Hour.millis!!
         val history = ClipboardHistory().add("舊", 0).add("新", 10_000)
-        assertEquals(KEEP_MILLIS, history.nextExpiry)
-        assertSame(history, history.fresh(KEEP_MILLIS - 1))
-        val fresh = history.fresh(KEEP_MILLIS)
+        assertEquals(hour, history.nextExpiry(hour))
+        assertSame(history, history.fresh(hour - 1, hour))
+        val fresh = history.fresh(hour, hour)
         assertEquals(listOf("新"), fresh.texts)
-        assertEquals(10_000 + KEEP_MILLIS, fresh.nextExpiry)
-        assertNull(fresh.fresh(10_000 + KEEP_MILLIS).nextExpiry)
-        // 時鐘向後調了超過一小時，也當作過期。
-        assertEquals(emptyList<String>(), history.fresh(-KEEP_MILLIS).texts)
+        assertEquals(10_000 + hour, fresh.nextExpiry(hour))
+        assertNull(fresh.fresh(10_000 + hour, hour).nextExpiry(hour))
+        // 時鐘向後調了超過保留時間，也當作過期。
+        assertEquals(emptyList<String>(), history.fresh(-hour, hour).texts)
+        // 保留 7 日的話，一小時後仍在。
+        val week = ClipboardRetention.Week.millis!!
+        assertSame(history, history.fresh(hour, week))
+        assertEquals(week, history.nextExpiry(week))
+    }
+
+    @Test
+    fun unlimitedItemsNeverExpire() {
+        val history = ClipboardHistory().add("舊", 0)
+        assertSame(history, history.fresh(Long.MAX_VALUE, keepMillis = null))
+        assertNull(history.nextExpiry(keepMillis = null))
+        assertFalse(ClipboardHistory.expired(0, Long.MAX_VALUE, keepMillis = null))
     }
 
     @Test

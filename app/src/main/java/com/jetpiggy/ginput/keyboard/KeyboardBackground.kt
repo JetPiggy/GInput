@@ -36,10 +36,10 @@ internal fun Modifier.keyboardArea(area: KeyboardArea): Modifier = onGloballyPos
 
 /**
  * 主題的底色：純色，或者按整個鍵盤的範圍畫的漸變，所以鋪在候選列或按鍵區上面的一層（例如改字揀字時的整句）
- * 和下面的底色接得上。不在鍵盤裏（例如設定頁的小樣本）就按自己的大小畫。alpha 用在蓋住按鍵的一層。
+ * 和下面的底色接得上。不在鍵盤裏（例如設定頁的小樣本）就按自己的大小畫。
  */
-internal fun Modifier.keyboardBackground(colors: KeyboardColors, alpha: Float = 1f): Modifier {
-    val gradient = colors.gradient ?: return background(colors.background.copy(alpha = colors.background.alpha * alpha))
+internal fun Modifier.keyboardBackground(colors: KeyboardColors): Modifier {
+    val gradient = colors.gradient ?: return background(colors.background)
     return composed {
         val area = LocalKeyboardArea.current
         // 這一塊在鍵盤裏的位置，用鍵盤自己的座標，不受設定頁預覽的縮放影響。
@@ -50,7 +50,7 @@ internal fun Modifier.keyboardBackground(colors: KeyboardColors, alpha: Float = 
         }.drawBehind {
             val whole = area?.size?.takeUnless { it.isEmpty() } ?: size
             val (start, end) = gradient.line(whole)
-            drawRect(Brush.linearGradient(gradient.colors, start - offset, end - offset), alpha = alpha)
+            drawRect(Brush.linearGradient(gradient.colors, start - offset, end - offset))
         }
     }
 }

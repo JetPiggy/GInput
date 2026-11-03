@@ -15,12 +15,15 @@ import android.view.WindowManager.LayoutParams
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.jetpiggy.ginput.BuildConfig
 import com.jetpiggy.ginput.R
@@ -56,7 +59,9 @@ import com.jetpiggy.ginput.keyboard.KeyboardLayout
 import com.jetpiggy.ginput.keyboard.KeyboardScreen
 import com.jetpiggy.ginput.keyboard.NavigationBarSpace
 import com.jetpiggy.ginput.keyboard.VoiceInputKey
+import com.jetpiggy.ginput.keyboard.colors
 import com.jetpiggy.ginput.keyboard.keyboardLayout
+import com.jetpiggy.ginput.settings.ClipboardRetention
 import com.jetpiggy.ginput.settings.KeyboardSettings
 import com.jetpiggy.ginput.settings.MainActivity
 import com.jetpiggy.ginput.settings.SettingsStore
@@ -112,6 +117,7 @@ class GInputImeService : LifecycleInputMethodService() {
     private var recentEmoji by mutableStateOf<List<String>>(emptyList())
     private var clipboardHistory by mutableStateOf(ClipboardHistory())
     private var clipboardHistoryEnabled by mutableStateOf(true)
+    private var clipboardRetention by mutableStateOf(ClipboardRetention.Hour)
     private var phrases by mutableStateOf(SavedPhrases())
     private var cloudText by mutableStateOf(CloudTextState())
 
@@ -166,6 +172,8 @@ class GInputImeService : LifecycleInputMethodService() {
             softInput.attributes = softInput.attributes.apply {
                 layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
+            // 三按鈕導航時系統在導航列加半透明的遮罩，淺色鍵盤上差不多全白；圖示已經按底色揀深淺，不用遮罩。
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) softInput.isNavigationBarContrastEnforced = false
         }
         settingsStore = SettingsStore.get(this)
         phraseStore = PhraseStore.get(this)
@@ -184,6 +192,11 @@ class GInputImeService : LifecycleInputMethodService() {
                 stats = it.usageStats
                 // 關了剪貼簿歷史，就刪除已記下的全部項目（連檔案）。
                 if (!it.clipboardHistory) updateHistory(ClipboardHistory())
+                // 改了保留多久：縮短了就即時刪去過期的項目，並按新的時間安排下次刪除。
+                if (it.clipboardRetention != clipboardRetention) {
+                    clipboardRetention = it.clipboardRetention
+                    purgeClipboard()
+                }
                 // 開了連打，就在背景載入碼表，第一次打字才不會卡一下；已經載入的話甚麼都不做。
                 val loaded = engine
                 if (loaded != null && it.continuousTyping) {
@@ -254,6 +267,9 @@ class GInputImeService : LifecycleInputMethodService() {
                 val updateState by updates.state.collectAsState()
                 val settingsBadge = remember(updateState) { updateState.unseen(BuildConfig.VERSION_CODE) }
                 GInputTheme {
+                    val dark = keyboardSettings.themeMode.dark(isSystemInDarkTheme())
+                    val darkIcons = keyboardSettings.theme.colors(dark).darkNavigationIcons
+                    LaunchedEffect(darkIcons) { useDarkNavigationIcons(darkIcons) }
                     KeyboardScreen(
                         state = keyboardState,
                         settings = keyboardSettings,
@@ -263,6 +279,7 @@ class GInputImeService : LifecycleInputMethodService() {
                         clipboard = ClipboardContent(
                             history = clipboardHistory.items.map { it.text },
                             historyEnabled = clipboardHistoryEnabled,
+                            retention = clipboardRetention,
                             phrases = phrases.items,
                         ),
                         onKey = ::handleKey,
@@ -273,11 +290,21 @@ class GInputImeService : LifecycleInputMethodService() {
                         whatsNew = whatsNew,
                         settingsBadge = settingsBadge,
                         canSwitchInputMethod = canSwitchInputMethod,
+                        dark = dark,
                     )
                 }
             }
             navigationBar.follow(this)
         }
+    }
+
+    /**
+     * 鍵盤底部導航列的圖示用深色還是白色：系統按鍵盤視窗的設定畫，預設是白色，在淺色的鍵盤上看不清楚。
+     * 只改鍵盤視窗，不影響其他 App。
+     */
+    private fun useDarkNavigationIcons(dark: Boolean) {
+        val softInput = window.window ?: return
+        WindowCompat.getInsetsController(softInput, softInput.decorView).isAppearanceLightNavigationBars = dark
     }
 
     override fun onWindowShown() {
@@ -671,7 +698,7 @@ class GInputImeService : LifecycleInputMethodService() {
     }
 
     /**
-     * 系統剪貼簿有新複製的內容時記下；startup 是 GInput 啟動時補記 1 小時內複製、未見過的文字。
+     * 系統剪貼簿有新複製的內容時記下；startup 是 GInput 啟動時補記保留時間內複製、未見過的文字。
      * 鍵盤正在密碼欄位或無痕欄位的話，補記也不記，只當作見過：GInput 剛啟動時，那段文字可能是在這個欄位複製的。
      * 規則見 docs/spec/v1.md 的「剪貼簿和常用短語」。
      */
@@ -681,7 +708,7 @@ class GInputImeService : LifecycleInputMethodService() {
         val clip = runCatching { clipboardManager?.primaryClip }.getOrNull() ?: return
         val now = System.currentTimeMillis()
         val copiedAt = clip.description.timestamp.takeIf { it > 0 } ?: now
-        if (startup && (copiedAt <= clipboardHistory.lastSeen || ClipboardHistory.expired(copiedAt, now))) return
+        if (startup && (copiedAt <= clipboardHistory.lastSeen || ClipboardHistory.expired(copiedAt, now, clipboardKeepMillis))) return
         // 只收文字：圖片、檔案等只有 URI 的內容，text 是 null。
         val text = if (clip.itemCount > 0) clip.getItemAt(0).text?.toString() else null
         val record = !clip.description.isSensitive() && clipboardAllowedHere()
@@ -706,7 +733,11 @@ class GInputImeService : LifecycleInputMethodService() {
     }
 
     /** 刪去過期的項目（連檔案）。 */
-    private fun purgeClipboard() = updateHistory(clipboardHistory.fresh(System.currentTimeMillis()))
+    private fun purgeClipboard() = updateHistory(clipboardHistory.fresh(System.currentTimeMillis(), clipboardKeepMillis))
+
+    /** 剪貼簿歷史每一項保留多久（設定）；null 是不限時間。 */
+    private val clipboardKeepMillis: Long?
+        get() = settingsStore.settings.value.clipboardRetention.millis
 
     /**
      * 到最早的一項過期時刪去它。delay 在手機睡眠時不計時間，可能遲了才刪，
@@ -714,7 +745,7 @@ class GInputImeService : LifecycleInputMethodService() {
      */
     private fun schedulePurge() {
         purgeJob?.cancel()
-        val expiry = clipboardHistory.nextExpiry ?: return
+        val expiry = clipboardHistory.nextExpiry(clipboardKeepMillis) ?: return
         purgeJob = lifecycleScope.launch {
             delay((expiry - System.currentTimeMillis()).coerceAtLeast(MIN_PURGE_DELAY_MILLIS))
             purgeClipboard()

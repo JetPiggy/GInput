@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -84,8 +83,8 @@ fun KeyboardScreen(
     settingsBadge: Boolean = false,
     /** 手機有其他可以切換的輸入法：手機橫向版面的側欄才顯示切換輸入法。 */
     canSwitchInputMethod: Boolean = false,
-    /** 用主題的深色還是淺色那組顏色：鍵盤跟隨系統，設定的主題頁預覽可以另揀。 */
-    dark: Boolean = isSystemInDarkTheme(),
+    /** 用主題的深色還是淺色那組顏色；預設按設定的 themeMode。 */
+    dark: Boolean = settings.themeMode.dark(isSystemInDarkTheme()),
 ) {
     val configuration = LocalConfiguration.current
     val landscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -257,153 +256,145 @@ private fun KeyboardContent(
                     if (field.usesNumberPad) {
                         TypingKeys(slide) { NumberPad(field, colors, handle) }
                     } else {
+                        // 調整高度模式：候選列上面多一條調整列，下面的候選列和按鍵照常可以打字。
                         if (adjustment != null) {
-                            HeightAdjustBar(
-                                percent = adjustment.percent,
+                            HeightAdjustStrip(
+                                adjustment = adjustment,
+                                keyArea = keyArea,
                                 colors = colors,
+                                onSave = onSaveHeight,
                                 onReset = {
                                     adjustment.percent = minOf(KeyboardHeight.STANDARD, adjustment.max)
                                     onSaveHeight(KeyboardHeight.STANDARD)
                                 },
                                 onDone = { onAdjustHeight(false) },
                             )
-                        } else {
-                            CandidateBar(
-                                state = state,
-                                menu = menu,
-                                prompt = prompt,
-                                gridOpen = gridOpen,
-                                toolsOpen = toolsOpen,
-                                digits = landscape,
-                                voiceInput = voiceInput,
-                                settingsBadge = settingsBadge,
-                                cloudTools = field != FieldKind.Password,
-                                radicals = settings.radicals,
+                        }
+                        CandidateBar(
+                            state = state,
+                            menu = menu,
+                            prompt = prompt,
+                            gridOpen = gridOpen,
+                            toolsOpen = toolsOpen,
+                            digits = landscape,
+                            voiceInput = voiceInput,
+                            settingsBadge = settingsBadge,
+                            cloudTools = field != FieldKind.Password,
+                            radicals = settings.radicals,
+                            colors = colors,
+                            onKey = handle,
+                            onCloseMenu = { menu = null },
+                            onPrompt = { prompt = it },
+                            onClosePrompt = { prompt = null },
+                            onToggleGrid = {
+                                if (!gridOpen) onUsage(UsageEvent.CandidateGrid)
+                                gridOpen = !gridOpen
+                            },
+                            onOpenClipboard = {
+                                handle(KeyAction.OpenClipboard)
+                                page = Page.Clipboard
+                            },
+                            onOpenCloudTool = { tool ->
+                                handle(KeyAction.OpenCloudTool(tool))
+                                page = if (tool == CloudTool.Translation) Page.Translate else Page.Rewrite
+                            },
+                            onAdjustHeight = {
+                                menu = null
+                                prompt = null
+                                gridOpen = false
+                                toolsOpen = false
+                                onAdjustHeight(true)
+                            },
+                        )
+                        when {
+                            // 密碼欄位不顯示，等下次在一般文字框打開鍵盤。
+                            whatsNew && field != FieldKind.Password ->
+                                WhatsNewPanel(keyArea, colors, onDismiss = { handle(KeyAction.DismissWhatsNew) })
+                            gridOpen && state.candidates.isNotEmpty() ->
+                                CandidateGrid(state, keyArea, colors, handle, onAskForget = { prompt = BarPrompt.Forget(it) })
+                            page == Page.Emoji -> EmojiPanel(
+                                categories = emojiCategories,
+                                recents = recentEmoji,
+                                keyArea = keyArea,
                                 colors = colors,
                                 onKey = handle,
-                                onCloseMenu = { menu = null },
-                                onPrompt = { prompt = it },
-                                onClosePrompt = { prompt = null },
-                                onToggleGrid = {
-                                    if (!gridOpen) onUsage(UsageEvent.CandidateGrid)
-                                    gridOpen = !gridOpen
+                                onShowVariants = { variants -> menu = BarMenu(variants) { KeyAction.CommitEmoji(it) } },
+                                onBackToLetters = { page = Page.Letters },
+                            )
+                            page == Page.Clipboard -> ClipboardPanel(
+                                content = clipboard,
+                                keyArea = keyArea,
+                                colors = colors,
+                                onKey = { action ->
+                                    handle(action)
+                                    // 寫入一項或貼上之後回到字母頁。
+                                    if (action is KeyAction.WriteClipboardItem || action is KeyAction.WritePhrase || action == KeyAction.Paste) {
+                                        page = Page.Letters
+                                    }
                                 },
-                                onOpenClipboard = {
-                                    handle(KeyAction.OpenClipboard)
-                                    page = Page.Clipboard
+                                onLongPress = { tab, text ->
+                                    prompt = if (tab == ClipboardTab.History) BarPrompt.ClipboardItem(text) else BarPrompt.Phrase(text)
                                 },
-                                onOpenCloudTool = { tool ->
-                                    handle(KeyAction.OpenCloudTool(tool))
-                                    page = if (tool == CloudTool.Translation) Page.Translate else Page.Rewrite
-                                },
-                                onAdjustHeight = {
-                                    menu = null
+                                // 長按後的確認只關於面板裏的項目，離開面板就收起。
+                                onBackToLetters = {
                                     prompt = null
-                                    gridOpen = false
-                                    toolsOpen = false
-                                    onAdjustHeight(true)
+                                    page = Page.Letters
                                 },
                             )
-                        }
-                        // 調整高度模式：按鍵區蓋上一層，按鍵按不到，TalkBack 也不讀出。
-                        Box {
-                            Column(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .then(if (adjustment != null) Modifier.clearAndSetSemantics {} else Modifier),
-                            ) {
-                                when {
-                                    // 密碼欄位不顯示，等下次在一般文字框打開鍵盤。
-                                    whatsNew && field != FieldKind.Password ->
-                                        WhatsNewPanel(keyArea, colors, onDismiss = { handle(KeyAction.DismissWhatsNew) })
-                                    gridOpen && state.candidates.isNotEmpty() ->
-                                        CandidateGrid(state, keyArea, colors, handle, onAskForget = { prompt = BarPrompt.Forget(it) })
-                                    page == Page.Emoji -> EmojiPanel(
-                                        categories = emojiCategories,
-                                        recents = recentEmoji,
-                                        keyArea = keyArea,
-                                        colors = colors,
-                                        onKey = handle,
-                                        onShowVariants = { variants -> menu = BarMenu(variants) { KeyAction.CommitEmoji(it) } },
-                                        onBackToLetters = { page = Page.Letters },
-                                    )
-                                    page == Page.Clipboard -> ClipboardPanel(
-                                        content = clipboard,
-                                        keyArea = keyArea,
-                                        colors = colors,
-                                        onKey = { action ->
-                                            handle(action)
-                                            // 寫入一項或貼上之後回到字母頁。
-                                            if (action is KeyAction.WriteClipboardItem || action is KeyAction.WritePhrase || action == KeyAction.Paste) {
-                                                page = Page.Letters
-                                            }
-                                        },
-                                        onLongPress = { tab, text ->
-                                            prompt = if (tab == ClipboardTab.History) BarPrompt.ClipboardItem(text) else BarPrompt.Phrase(text)
-                                        },
-                                        // 長按後的確認只關於面板裏的項目，離開面板就收起。
-                                        onBackToLetters = {
-                                            prompt = null
-                                            page = Page.Letters
-                                        },
-                                    )
-                                    // 兩個面板共用同一個位置，在兩者之間切換時面板不會重新建立。
-                                    page == Page.Translate || page == Page.Rewrite -> CloudTextPanel(
-                                        tool = if (page == Page.Translate) CloudTool.Translation else CloudTool.Rewrite,
-                                        state = cloudText,
-                                        keyArea = keyArea,
-                                        colors = colors,
-                                        onKey = handle,
-                                        onApply = {
-                                            handle(KeyAction.ApplyTextResult)
-                                            page = Page.Letters
-                                        },
-                                        onBackToLetters = { page = Page.Letters },
-                                    )
-                                    else -> TypingKeys(slide) {
-                                        when (page) {
-                                            Page.Symbols -> FillRows(keyArea) {
-                                                SymbolRows(
-                                                    rows = CommonSymbols,
-                                                    state = state,
-                                                    switchLabel = stringResource(R.string.key_more),
-                                                    switchDescription = stringResource(R.string.key_more_symbols),
-                                                    colors = colors,
-                                                    onKey = handle,
-                                                    onSwitch = { page = Page.MoreSymbols },
-                                                )
-                                            }
-                                            Page.MoreSymbols -> FillRows(keyArea) {
-                                                SymbolRows(
-                                                    rows = MoreSymbols,
-                                                    state = state,
-                                                    switchLabel = stringResource(R.string.key_common),
-                                                    switchDescription = stringResource(R.string.key_common_symbols),
-                                                    colors = colors,
-                                                    onKey = handle,
-                                                    onSwitch = { page = Page.Symbols },
-                                                )
-                                            }
-                                            else -> LetterRows(state.shift, settings, numberRow, colors, handle)
-                                        }
-                                        BottomRow(
-                                            field = field,
-                                            lettersShown = page == Page.Letters,
-                                            fullWidth = state.fullWidthPunctuation,
+                            // 兩個面板共用同一個位置，在兩者之間切換時面板不會重新建立。
+                            page == Page.Translate || page == Page.Rewrite -> CloudTextPanel(
+                                tool = if (page == Page.Translate) CloudTool.Translation else CloudTool.Rewrite,
+                                state = cloudText,
+                                keyArea = keyArea,
+                                colors = colors,
+                                onKey = handle,
+                                onApply = {
+                                    handle(KeyAction.ApplyTextResult)
+                                    page = Page.Letters
+                                },
+                                onBackToLetters = { page = Page.Letters },
+                            )
+                            else -> TypingKeys(slide) {
+                                when (page) {
+                                    Page.Symbols -> FillRows(keyArea) {
+                                        SymbolRows(
+                                            rows = CommonSymbols,
+                                            state = state,
+                                            switchLabel = stringResource(R.string.key_more),
+                                            switchDescription = stringResource(R.string.key_more_symbols),
                                             colors = colors,
                                             onKey = handle,
-                                            onOpenEmoji = { page = Page.Emoji },
-                                            onSwitchPage = { page = if (page == Page.Letters) Page.Symbols else Page.Letters },
-                                            onOpenMenu = {
-                                                onUsage(UsageEvent.PunctuationMenu)
-                                                toolsOpen = false
-                                                menu = BarMenu(Punctuation.more(state.fullWidthPunctuation)) { KeyAction.Text(it) }
-                                            },
+                                            onSwitch = { page = Page.MoreSymbols },
                                         )
                                     }
+                                    Page.MoreSymbols -> FillRows(keyArea) {
+                                        SymbolRows(
+                                            rows = MoreSymbols,
+                                            state = state,
+                                            switchLabel = stringResource(R.string.key_common),
+                                            switchDescription = stringResource(R.string.key_common_symbols),
+                                            colors = colors,
+                                            onKey = handle,
+                                            onSwitch = { page = Page.Symbols },
+                                        )
+                                    }
+                                    else -> LetterRows(state.shift, settings, numberRow, colors, handle)
                                 }
+                                BottomRow(
+                                    field = field,
+                                    lettersShown = page == Page.Letters,
+                                    fullWidth = state.fullWidthPunctuation,
+                                    colors = colors,
+                                    onKey = handle,
+                                    onOpenEmoji = { page = Page.Emoji },
+                                    onSwitchPage = { page = if (page == Page.Letters) Page.Symbols else Page.Letters },
+                                    onOpenMenu = {
+                                        onUsage(UsageEvent.PunctuationMenu)
+                                        toolsOpen = false
+                                        menu = BarMenu(Punctuation.more(state.fullWidthPunctuation)) { KeyAction.Text(it) }
+                                    },
+                                )
                             }
-                            if (adjustment != null) HeightAdjustCover(adjustment, colors, onSaveHeight)
                         }
                     }
                 }

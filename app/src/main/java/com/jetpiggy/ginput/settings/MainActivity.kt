@@ -99,6 +99,7 @@ private fun SettingsApp(store: SettingsStore, phrases: PhraseStore, start: Scree
             Screen.Themes -> ThemesPage(
                 settings.keyboardOnScreen,
                 onSelect = { theme -> store.update { it.copy(keyboard = it.keyboard.copy(theme = theme)) } },
+                onModeChange = { mode -> store.update { it.copy(keyboard = it.keyboard.copy(themeMode = mode)) } },
                 onBack = back,
             )
             Screen.Clipboard -> ClipboardPage(settings, store::update, onOpenPhrases = { screen = Screen.Phrases }, onBack = back)

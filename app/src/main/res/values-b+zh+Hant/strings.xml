@@ -103,7 +103,12 @@
 
     <string name="section_clipboard">剪貼簿和常用短語</string>
     <string name="clipboard_history">剪貼簿歷史</string>
-    <string name="clipboard_history_summary">記下複製的文字 1 小時，可以在鍵盤的剪貼簿再用；只存在手機上，關了會刪除已記下的</string>
+    <string name="clipboard_history_summary">記下複製的文字，可以在鍵盤的剪貼簿再用；只存在手機上，關了會刪除已記下的</string>
+    <string name="clipboard_retention">保留多久</string>
+    <string name="clipboard_keep_hour">1 小時</string>
+    <string name="clipboard_keep_day">1 日</string>
+    <string name="clipboard_keep_week">7 日</string>
+    <string name="clipboard_keep_unlimited">不限（最多 20 項）</string>
     <string name="saved_phrases">常用短語</string>
     <string name="saved_phrases_summary">地址、常用回覆等，在鍵盤的剪貼簿一按就寫入</string>
 
@@ -159,10 +164,11 @@
     <string name="theme_series_style">風格</string>
     <string name="theme_series_label">%1$s系列</string>
     <string name="theme_current">目前主題</string>
-    <string name="theme_preview_light">淺色</string>
-    <string name="theme_preview_dark">深色</string>
-    <string name="theme_preview_mode_hint">只換預覽，不改設定</string>
-    <string name="theme_row_summary">%1$s · 淺色或深色跟隨系統</string>
+    <string name="theme_mode_system">跟隨系統</string>
+    <string name="theme_mode_light">淺色</string>
+    <string name="theme_mode_dark">深色</string>
+    <string name="theme_mode_system_summary">淺色或深色跟隨系統</string>
+    <string name="theme_row_summary">%1$s · %2$s</string>
     <string name="keyboard_height">鍵盤高度</string>
     <string name="height_percent">%1$d%%</string>
     <string name="height_portrait_landscape">直向 %1$d%%，打橫 %2$d%%</string>
@@ -241,10 +247,9 @@
     <string name="toolbar_adjust_height">調整鍵盤高度</string>
 
     <!-- 調整高度模式：長按工具列的「設定」 -->
-    <string name="adjust_height_value">鍵盤高度：%1$d%%</string>
     <string name="adjust_height_reset">還原</string>
     <string name="adjust_height_done">完成</string>
-    <string name="adjust_height_hint">上下拖動橫條，調整鍵盤高度</string>
+    <string name="adjust_height_hint">上下拖動，調整鍵盤高度</string>
 
     <!-- 手機橫向版面的側欄 -->
     <string name="side_tools">工具</string>
@@ -273,7 +278,8 @@
     <string name="clipboard_tab_history">剪貼簿</string>
     <string name="clipboard_tab_phrases">常用短語</string>
     <string name="clipboard_manage">管理</string>
-    <string name="clipboard_history_empty">複製的文字會在這裏保留 1 小時</string>
+    <string name="clipboard_history_empty">複製的文字會在這裏保留 %1$s</string>
+    <string name="clipboard_history_empty_unlimited">複製的文字會留在這裏，最多 20 項</string>
     <string name="clipboard_history_off">剪貼簿歷史已關閉，可以在 GInput 設定開啟</string>
     <string name="clipboard_phrases_empty">在剪貼簿長按一項就可以存成常用短語，或按「管理」加入</string>
     <string name="clipboard_save_phrase">存成常用短語</string>
@@ -309,8 +315,9 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>主題加到 26 套，包括漸變色，全部免費：在設定的「鍵盤外觀」按「主題」揀。</item>
-        <item>鍵盤高度可以自己調：長按工具列的「設定」，在鍵盤上拖動，直向和打橫分開記住。</item>
+        <item>主題可以固定用淺色或深色，不一定跟隨系統：在「主題」頁的頂部揀。</item>
+        <item>調整鍵盤高度時可以照常打字，一邊拖一邊試。</item>
+        <item>剪貼簿歷史可以揀保留多久：1 小時、1 日、7 日或不限。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 

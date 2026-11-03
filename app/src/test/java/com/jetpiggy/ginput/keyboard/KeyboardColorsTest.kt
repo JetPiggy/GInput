@@ -78,6 +78,20 @@ class KeyboardColorsTest {
     }
 
     @Test
+    fun navigationIconsAreDarkOnLightKeyboards() {
+        for (theme in KeyboardTheme.entries) {
+            for (dark in listOf(false, true)) {
+                val colors = theme.colors(dark)
+                val bottom = colors.gradient?.colors?.last() ?: colors.background
+                // 揀對比較高的一種；淺色主題的鍵盤全部用深色圖示，深色主題全部用白色。
+                val blackWins = contrast(Color.Black, bottom) > contrast(Color.White, bottom)
+                assertEquals("$theme dark=$dark", blackWins, colors.darkNavigationIcons)
+                assertEquals("$theme dark=$dark", !dark, colors.darkNavigationIcons)
+            }
+        }
+    }
+
+    @Test
     fun gradientRunsLikeCss() {
         // 180° 由上到下；135° 由左上角到右下角；90° 由左到右。
         assertEquals(Offset(50f, 0f) to Offset(50f, 200f), KeyboardGradient(180f, emptyList()).line(Size(100f, 200f)).rounded())

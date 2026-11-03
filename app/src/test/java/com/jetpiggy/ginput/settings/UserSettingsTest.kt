@@ -23,10 +23,12 @@ class UserSettingsTest {
         assertFalse(settings.typing.emojiKeywords)
         assertTrue(settings.typing.englishChinese)
         assertTrue(settings.clipboardHistory)
+        assertEquals(ClipboardRetention.Hour, settings.clipboardRetention)
         assertTrue(settings.crashReports)
         assertFalse(settings.usageStats)
         assertFalse(settings.cloudNoticeAccepted)
         assertEquals(KeyboardTheme.Default, settings.keyboard.theme)
+        assertEquals(ThemeMode.System, settings.keyboard.themeMode)
         assertTrue(settings.keyboard.numberRow)
         assertTrue(settings.keyboard.keyPreview)
         assertEquals(KeyVibration.System, settings.keyboard.vibration)
@@ -53,8 +55,10 @@ class UserSettingsTest {
             emojiKeywords = true,
             englishChinese = false,
             clipboardHistory = false,
+            clipboardRetention = ClipboardRetention.Week,
             keyboard = KeyboardSettings(
                 theme = KeyboardTheme.MilkTea,
+                themeMode = ThemeMode.Dark,
                 height = KeyboardHeight(portrait = 110, landscape = 85),
                 labels = KeyLabels.RadicalsLarge,
                 numberRow = false,
@@ -85,7 +89,9 @@ class UserSettingsTest {
             "cangjie_generations" to "fourth",
             "schemes_enabled" to "stroke",
             "keyboard_theme" to "rainbow",
+            "theme_mode" to "dim",
             "key_vibration" to "buzz",
+            "clipboard_retention" to "forever",
         )
         assertEquals(UserSettings(), SettingsPreferences.read(stored))
     }
@@ -96,6 +102,29 @@ class UserSettingsTest {
             val settings = UserSettings(keyboard = KeyboardSettings(theme = theme))
             assertEquals(theme, SettingsPreferences.read(SettingsPreferences.write(settings)).keyboard.theme)
         }
+    }
+
+    @Test
+    fun themeModeFollowsTheSystemUnlessFixed() {
+        assertTrue(ThemeMode.System.dark(systemDark = true))
+        assertFalse(ThemeMode.System.dark(systemDark = false))
+        assertFalse(ThemeMode.Light.dark(systemDark = true))
+        assertTrue(ThemeMode.Dark.dark(systemDark = false))
+        for (mode in ThemeMode.entries) {
+            val settings = UserSettings(keyboard = KeyboardSettings(themeMode = mode))
+            assertEquals(mode, SettingsPreferences.read(SettingsPreferences.write(settings)).keyboard.themeMode)
+        }
+        // 主題連深淺都不放進使用統計。
+        assertFalse("theme_mode" in SettingsPreferences.forUsageStats(UserSettings()))
+    }
+
+    @Test
+    fun everyClipboardRetentionSurvivesStorage() {
+        for (retention in ClipboardRetention.entries) {
+            val settings = UserSettings(clipboardRetention = retention)
+            assertEquals(retention, SettingsPreferences.read(SettingsPreferences.write(settings)).clipboardRetention)
+        }
+        assertEquals(listOf(1L, 24L, 168L, null), ClipboardRetention.entries.map { it.millis?.div(60 * 60 * 1000L) })
     }
 
     @Test

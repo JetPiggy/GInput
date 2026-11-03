@@ -104,7 +104,12 @@
 
     <string name="section_clipboard">Clipboard and phrases</string>
     <string name="clipboard_history">Clipboard history</string>
-    <string name="clipboard_history_summary">Keeps text you copy for 1 hour so you can use it again from the keyboard’s clipboard. It stays on your phone, and turning this off deletes it.</string>
+    <string name="clipboard_history_summary">Keeps text you copy so you can use it again from the keyboard’s clipboard. It stays on your phone, and turning this off deletes it.</string>
+    <string name="clipboard_retention">Keep items for</string>
+    <string name="clipboard_keep_hour">1 hour</string>
+    <string name="clipboard_keep_day">1 day</string>
+    <string name="clipboard_keep_week">7 days</string>
+    <string name="clipboard_keep_unlimited">No limit (up to 20 items)</string>
     <string name="saved_phrases">Saved phrases</string>
     <string name="saved_phrases_summary">Addresses, replies and other text you can insert from the keyboard’s clipboard</string>
 
@@ -160,10 +165,11 @@
     <string name="theme_series_style">Style</string>
     <string name="theme_series_label">%1$s series</string>
     <string name="theme_current">Current theme</string>
-    <string name="theme_preview_light">Light</string>
-    <string name="theme_preview_dark">Dark</string>
-    <string name="theme_preview_mode_hint">Changes the preview only</string>
-    <string name="theme_row_summary">%1$s · Light or dark follows your system</string>
+    <string name="theme_mode_system">System</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="theme_mode_system_summary">Light or dark follows your system</string>
+    <string name="theme_row_summary">%1$s · %2$s</string>
     <string name="keyboard_height">Keyboard height</string>
     <string name="height_percent">%1$d%%</string>
     <string name="height_portrait_landscape">Portrait %1$d%%, landscape %2$d%%</string>
@@ -242,10 +248,9 @@
     <string name="toolbar_adjust_height">Adjust keyboard height</string>
 
     <!-- 調整高度模式：長按工具列的「設定」 -->
-    <string name="adjust_height_value">Keyboard height: %1$d%%</string>
     <string name="adjust_height_reset">Reset</string>
     <string name="adjust_height_done">Done</string>
-    <string name="adjust_height_hint">Drag the bar up or down to change the height</string>
+    <string name="adjust_height_hint">Drag up or down to resize</string>
 
     <!-- 手機橫向版面的側欄 -->
     <string name="side_tools">Tools</string>
@@ -274,7 +279,8 @@
     <string name="clipboard_tab_history">Clipboard</string>
     <string name="clipboard_tab_phrases">Phrases</string>
     <string name="clipboard_manage">Manage</string>
-    <string name="clipboard_history_empty">Text you copy stays here for 1 hour</string>
+    <string name="clipboard_history_empty">Text you copy stays here for %1$s</string>
+    <string name="clipboard_history_empty_unlimited">Text you copy stays here, up to 20 items</string>
     <string name="clipboard_history_off">Clipboard history is off. You can turn it on in GInput settings.</string>
     <string name="clipboard_phrases_empty">Long-press a clipboard item to save it as a phrase, or tap Manage to add one</string>
     <string name="clipboard_save_phrase">Save as phrase</string>
@@ -310,8 +316,9 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput updated to %1$s</string>
     <string-array name="whats_new_items">
-        <item>26 themes, including gradients, all free: pick one in Settings under Keyboard appearance, then Themes.</item>
-        <item>Set your own keyboard height: long-press Settings on the toolbar and drag on the keyboard. Portrait and landscape are remembered separately.</item>
+        <item>Themes can stay light or dark instead of following your system: choose at the top of the Themes page.</item>
+        <item>While you adjust the keyboard height, you can keep typing to try it out.</item>
+        <item>Choose how long clipboard history keeps items: 1 hour, 1 day, 7 days or no limit.</item>
     </string-array>
     <string name="whats_new_ok">Got it</string>
 

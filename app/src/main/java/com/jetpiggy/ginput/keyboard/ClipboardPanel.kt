@@ -27,12 +27,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jetpiggy.ginput.R
+import com.jetpiggy.ginput.settings.ClipboardRetention
+import com.jetpiggy.ginput.settings.label
 
-/** 剪貼簿面板的內容。historyEnabled 是剪貼簿歷史的設定，關了的話面板說明怎樣開啟。 */
+/**
+ * 剪貼簿面板的內容。historyEnabled 是剪貼簿歷史的設定，關了的話面板說明怎樣開啟；retention 是保留多久，
+ * 剪貼簿歷史是空的時候寫出來。
+ */
 data class ClipboardContent(
     val history: List<String> = emptyList(),
     val historyEnabled: Boolean = true,
     val phrases: List<String> = emptyList(),
+    val retention: ClipboardRetention = ClipboardRetention.Hour,
 )
 
 internal enum class ClipboardTab { History, Phrases }
@@ -52,7 +58,7 @@ internal fun ClipboardPanel(
     onBackToLetters: () -> Unit,
 ) {
     val dimensions = LocalKeyboardDimensions.current
-    val (history, historyEnabled, phrases) = content
+    val (history, historyEnabled, phrases, retention) = content
     // 未選分頁時：剪貼簿歷史是空的，就先看常用短語。
     var selected by remember { mutableStateOf<ClipboardTab?>(null) }
     val tab = selected ?: if (history.isEmpty() && phrases.isNotEmpty()) ClipboardTab.Phrases else ClipboardTab.History
@@ -81,13 +87,12 @@ internal fun ClipboardPanel(
     ) {
         if (items.isEmpty()) {
             Text(
-                text = stringResource(
-                    when {
-                        tab == ClipboardTab.Phrases -> R.string.clipboard_phrases_empty
-                        historyEnabled -> R.string.clipboard_history_empty
-                        else -> R.string.clipboard_history_off
-                    },
-                ),
+                text = when {
+                    tab == ClipboardTab.Phrases -> stringResource(R.string.clipboard_phrases_empty)
+                    !historyEnabled -> stringResource(R.string.clipboard_history_off)
+                    retention.millis == null -> stringResource(R.string.clipboard_history_empty_unlimited)
+                    else -> stringResource(R.string.clipboard_history_empty, stringResource(retention.label))
+                },
                 color = colors.secondaryLabel,
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,

@@ -353,7 +353,7 @@ internal fun AppearancePage(
         },
     ) {
         if (!pinPreview) KeyboardPreview(keyboard, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-        ThemeRow(keyboard.theme, onOpenThemes)
+        ThemeRow(keyboard.theme, keyboard.themeMode, onOpenThemes)
         SectionTitle(stringResource(R.string.section_layout))
         // 鍵盤高度只在鍵盤的調整高度模式改，這裏寫出現況和做法。
         ActionRow(
@@ -391,6 +391,16 @@ internal fun heightSummary(height: KeyboardHeight): String =
         stringResource(R.string.height_portrait_landscape, height.portrait, height.landscape)
     }
 
+/** 剪貼簿歷史保留多久，例如「1 小時」；不限的話寫明最多 20 項（ClipboardHistory.MAX_ITEMS）。 */
+@get:StringRes
+internal val ClipboardRetention.label: Int
+    get() = when (this) {
+        ClipboardRetention.Hour -> R.string.clipboard_keep_hour
+        ClipboardRetention.Day -> R.string.clipboard_keep_day
+        ClipboardRetention.Week -> R.string.clipboard_keep_week
+        ClipboardRetention.Unlimited -> R.string.clipboard_keep_unlimited
+    }
+
 /** 按鍵震動的名稱，例如「跟隨系統」。 */
 @get:StringRes
 internal val KeyVibration.label: Int
@@ -403,20 +413,23 @@ internal val KeyVibration.label: Int
     }
 
 /**
- * 主題：頂部是縮小的鍵盤預覽、目前的主題和預覽用的淺色、深色切換，下面是系列標籤和全部主題，按一下即時套用。
+ * 主題：頂部是縮小的鍵盤預覽、目前的主題和「跟隨系統／淺色／深色」，下面是系列標籤和全部主題，按一下即時套用。
  * 螢幕夠高的話預覽固定在頁頂；矮的螢幕只固定系列標籤，預覽跟着主題一起捲動。打開時捲到目前主題的系列。
  */
 @Composable
-internal fun ThemesPage(keyboard: KeyboardSettings, onSelect: (KeyboardTheme) -> Unit, onBack: () -> Unit) {
+internal fun ThemesPage(
+    keyboard: KeyboardSettings,
+    onSelect: (KeyboardTheme) -> Unit,
+    onModeChange: (ThemeMode) -> Unit,
+    onBack: () -> Unit,
+) {
     val pinHeader = LocalConfiguration.current.screenHeightDp >= PIN_PREVIEW_MIN_HEIGHT_DP
-    // 預覽和樣本用淺色還是深色；未揀過就跟隨系統。
-    var previewDark by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    val dark = previewDark ?: isSystemInDarkTheme()
+    val dark = keyboard.themeMode.dark(isSystemInDarkTheme())
     val series = keyboard.theme.series
     val grid = rememberLazyGridState(
         initialFirstVisibleItemIndex = if (series == ThemeSeries.entries.first()) 0 else seriesIndex(series, header = !pinHeader),
     )
-    val header = @Composable { modifier: Modifier -> ThemeHeader(keyboard, dark, onDarkChange = { previewDark = it }, modifier) }
+    val header = @Composable { modifier: Modifier -> ThemeHeader(keyboard, onModeChange, modifier) }
     SubPage(
         title = stringResource(R.string.keyboard_theme),
         onBack = onBack,
@@ -436,7 +449,7 @@ internal fun ThemesPage(keyboard: KeyboardSettings, onSelect: (KeyboardTheme) ->
     }
 }
 
-/** 剪貼簿和常用短語：剪貼簿歷史開關，以及打開常用短語頁。 */
+/** 剪貼簿和常用短語：剪貼簿歷史開關和保留多久，以及打開常用短語頁。 */
 @Composable
 internal fun ClipboardPage(
     settings: UserSettings,
@@ -457,6 +470,15 @@ internal fun ClipboardPage(
                 if (!value) scope.launch(Dispatchers.IO) { ClipboardHistoryFile.delete(context) }
             },
         )
+        // 縮短了的話，執行中的輸入法即時刪去過期的項目；輸入法沒有執行的話，下次啟動時刪。
+        if (settings.clipboardHistory) {
+            ChoiceRow(
+                title = stringResource(R.string.clipboard_retention),
+                options = ClipboardRetention.entries.map { it to stringResource(it.label) },
+                selected = settings.clipboardRetention,
+                onSelect = { value -> onChange { it.copy(clipboardRetention = value) } },
+            )
+        }
         ActionRow(stringResource(R.string.saved_phrases), stringResource(R.string.saved_phrases_summary), onOpenPhrases)
     }
 }

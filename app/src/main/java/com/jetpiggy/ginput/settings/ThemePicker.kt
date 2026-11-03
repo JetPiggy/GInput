@@ -1,5 +1,6 @@
 package com.jetpiggy.ginput.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -99,10 +101,13 @@ private val SwatchShape = RoundedCornerShape(6.dp)
 private val SwatchKeyCorner = 1.5.dp
 private const val THEME_FADE_MILLIS = 200
 
-/** 主題頁頂部的預覽是真正鍵盤的六成大小；窄的手機再縮小，右邊最少留這麼闊寫主題名稱和淺色、深色切換。 */
+/** 主題頁頂部的預覽是真正鍵盤的六成大小；窄的手機再縮小，右邊最少留這麼闊寫主題名稱。 */
 private const val THEME_PREVIEW_SCALE = 0.6f
 private val ThemeInfoMinWidth = 112.dp
 private val ThemeHeaderGap = 16.dp
+
+/** 主題深淺的切換在平板上不拉得太闊。 */
+private val ThemeModeMaxWidth = 480.dp
 
 /** 主題頁的樣本：每行最少 3 個，螢幕闊就按最窄的闊度加到最多 6 個。 */
 private const val MIN_THEMES_PER_ROW = 3
@@ -132,8 +137,9 @@ private val PreviewState = KeyboardState(
  */
 @Composable
 internal fun KeyboardPreview(keyboard: KeyboardSettings, modifier: Modifier = Modifier) {
+    val dark = keyboard.themeMode.dark(isSystemInDarkTheme())
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        KeyboardPreviewFrame(keyboard, isSystemInDarkTheme(), scale = 1f, PreviewShape, Modifier.fillMaxWidth())
+        KeyboardPreviewFrame(keyboard, dark, scale = 1f, PreviewShape, Modifier.fillMaxWidth())
         Text(
             text = stringResource(R.string.keyboard_preview_hint),
             style = MaterialTheme.typography.bodySmall,
@@ -197,9 +203,9 @@ private fun Modifier.scaled(width: Dp, scale: Float): Modifier = layout { measur
     }
 }
 
-/** 「鍵盤外觀」頁的主題：目前的主題和小樣本，按一下打開主題頁。 */
+/** 「鍵盤外觀」頁的主題：目前的主題、深淺和小樣本，按一下打開主題頁。 */
 @Composable
-internal fun ThemeRow(theme: KeyboardTheme, onClick: () -> Unit) {
+internal fun ThemeRow(theme: KeyboardTheme, mode: ThemeMode, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -210,10 +216,14 @@ internal fun ThemeRow(theme: KeyboardTheme, onClick: () -> Unit) {
     ) {
         RowText(
             title = stringResource(R.string.keyboard_theme),
-            summary = stringResource(R.string.theme_row_summary, themeName(theme)),
+            summary = stringResource(
+                R.string.theme_row_summary,
+                themeName(theme),
+                stringResource(if (mode == ThemeMode.System) R.string.theme_mode_system_summary else mode.label),
+            ),
             modifier = Modifier.weight(1f),
         )
-        ThemeSwatch(theme)
+        ThemeSwatch(theme, mode)
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
@@ -223,7 +233,7 @@ internal fun ThemeRow(theme: KeyboardTheme, onClick: () -> Unit) {
 }
 
 /**
- * 主題頁的內容：主題按系列分段，每段一個標題，下面是小鍵盤樣本，按一下就套用。樣本用 dark 那組顏色，和預覽一樣。
+ * 主題頁的內容：主題按系列分段，每段一個標題，下面是小鍵盤樣本，按一下就套用。樣本用 dark 那組顏色，和鍵盤一樣。
  * header 不是 null 的話（矮的螢幕）放在最頂，跟着一起捲動。
  */
 @Composable
@@ -330,20 +340,18 @@ internal fun SeriesTabs(state: LazyGridState, header: Boolean) {
 }
 
 /**
- * 主題頁頂部：縮小的鍵盤預覽，右邊是目前的主題和預覽用的淺色、深色切換。切換只換預覽和樣本，不改設定。
- * 右邊最少和預覽一樣高，切換放在底部。
+ * 主題頁頂部：縮小的鍵盤預覽，右邊是目前的主題；下面是「跟隨系統／淺色／深色」，這是鍵盤真正的設定，預覽和樣本跟着它。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ThemeHeader(keyboard: KeyboardSettings, dark: Boolean, onDarkChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+internal fun ThemeHeader(keyboard: KeyboardSettings, onModeChange: (ThemeMode) -> Unit, modifier: Modifier = Modifier) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val scale = minOf(THEME_PREVIEW_SCALE, (screenWidth - ThemePageMargin * 2 - ThemeHeaderGap - ThemeInfoMinWidth) / screenWidth)
     val gap = with(LocalDensity.current) { ThemeHeaderGap.roundToPx() }
-    Layout(
-        modifier = modifier.fillMaxWidth(),
-        content = {
-            KeyboardPreviewFrame(keyboard, dark, scale, SampleShape, Modifier)
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val dark = keyboard.themeMode.dark(isSystemInDarkTheme())
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Layout(
+            content = {
+                KeyboardPreviewFrame(keyboard, dark, scale, SampleShape, Modifier)
                 Column {
                     Text(
                         text = stringResource(R.string.theme_current),
@@ -357,36 +365,48 @@ internal fun ThemeHeader(keyboard: KeyboardSettings, dark: Boolean, onDarkChange
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Spacer(Modifier.weight(1f))
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    listOf(false to R.string.theme_preview_light, true to R.string.theme_preview_dark).forEachIndexed { index, (value, label) ->
-                        SegmentedButton(
-                            selected = dark == value,
-                            onClick = { onDarkChange(value) },
-                            shape = SegmentedButtonDefaults.itemShape(index, count = 2),
-                            icon = {},
-                        ) {
-                            Text(stringResource(label), maxLines = 1)
-                        }
-                    }
-                }
-                Text(
-                    text = stringResource(R.string.theme_preview_mode_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            },
+        ) { measurables, constraints ->
+            val preview = measurables[0].measure(Constraints())
+            val infoWidth = (constraints.maxWidth - preview.width - gap).coerceAtLeast(0)
+            val info = measurables[1].measure(Constraints(minWidth = infoWidth, maxWidth = infoWidth))
+            val height = maxOf(preview.height, info.height)
+            // 主題名稱對着預覽的中間。
+            layout(constraints.maxWidth, height) {
+                preview.placeRelative(0, (height - preview.height) / 2)
+                info.placeRelative(preview.width + gap, (height - info.height) / 2)
             }
-        },
-    ) { measurables, constraints ->
-        val preview = measurables[0].measure(Constraints())
-        val infoWidth = (constraints.maxWidth - preview.width - gap).coerceAtLeast(0)
-        val info = measurables[1].measure(Constraints(minWidth = infoWidth, maxWidth = infoWidth, minHeight = preview.height))
-        layout(constraints.maxWidth, maxOf(preview.height, info.height)) {
-            preview.placeRelative(0, 0)
-            info.placeRelative(preview.width + gap, 0)
+        }
+        ThemeModeButtons(keyboard.themeMode, onModeChange, Modifier.widthIn(max = ThemeModeMaxWidth).fillMaxWidth())
+    }
+}
+
+/** 主題用淺色還是深色：跟隨系統、淺色、深色三格。 */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeModeButtons(mode: ThemeMode, onModeChange: (ThemeMode) -> Unit, modifier: Modifier) {
+    SingleChoiceSegmentedButtonRow(modifier) {
+        ThemeMode.entries.forEachIndexed { index, value ->
+            SegmentedButton(
+                selected = mode == value,
+                onClick = { onModeChange(value) },
+                shape = SegmentedButtonDefaults.itemShape(index, count = ThemeMode.entries.size),
+                icon = {},
+            ) {
+                Text(stringResource(value.label), maxLines = 1)
+            }
         }
     }
 }
+
+/** 主題深淺的名稱，例如「跟隨系統」。 */
+@get:StringRes
+internal val ThemeMode.label: Int
+    get() = when (this) {
+        ThemeMode.System -> R.string.theme_mode_system
+        ThemeMode.Light -> R.string.theme_mode_light
+        ThemeMode.Dark -> R.string.theme_mode_dark
+    }
 
 /** 一個主題的樣本：小鍵盤下面寫名稱；選中的有粗邊框和剔號。 */
 @Composable
@@ -479,8 +499,8 @@ private fun MiniKeyboard(colors: KeyboardColors, modifier: Modifier) {
 
 /** 設定主頁「鍵盤外觀」和「鍵盤外觀」頁主題旁邊的小樣本：只有三行按鍵，看得出主題的顏色。只是圖案，TalkBack 不讀。 */
 @Composable
-internal fun ThemeSwatch(theme: KeyboardTheme) {
-    val colors = theme.colors(isSystemInDarkTheme())
+internal fun ThemeSwatch(theme: KeyboardTheme, mode: ThemeMode) {
+    val colors = theme.colors(mode.dark(isSystemInDarkTheme()))
     Column(
         modifier = Modifier
             .width(48.dp)

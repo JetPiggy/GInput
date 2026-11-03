@@ -8,7 +8,8 @@ import org.json.JSONObject
 data class ClipboardItem(val text: String, val copiedAt: Long)
 
 /**
- * 剪貼簿歷史（docs/spec/v1.md 的「剪貼簿和常用短語」）：最新複製的在前，最多 MAX_ITEMS 項，複製後 KEEP_MILLIS 過期。
+ * 剪貼簿歷史（docs/spec/v1.md 的「剪貼簿和常用短語」）：最新複製的在前，最多 MAX_ITEMS 項，複製後過了保留時間就過期。
+ * 保留時間是設定（keepMillis），null 是不限時間。
  * lastSeen 是見過的最新一次複製的時間，不論有沒有記下；GInput 啟動時用來判斷系統剪貼簿裏的文字是否見過。
  * 不可變，每次改動回傳新的一份。
  */
@@ -31,14 +32,13 @@ data class ClipboardHistory(val items: List<ClipboardItem> = emptyList(), val la
     fun remove(text: String): ClipboardHistory = copy(items = items.filter { it.text != text })
 
     /** 刪去 now 時已過期的項目。 */
-    fun fresh(now: Long): ClipboardHistory {
-        val kept = items.filter { !expired(it.copiedAt, now) }
+    fun fresh(now: Long, keepMillis: Long?): ClipboardHistory {
+        val kept = items.filter { !expired(it.copiedAt, now, keepMillis) }
         return if (kept.size == items.size) this else copy(items = kept)
     }
 
-    /** 最早複製的一項過期的時間；沒有項目就是 null。 */
-    val nextExpiry: Long?
-        get() = items.minOfOrNull { it.copiedAt }?.plus(KEEP_MILLIS)
+    /** 最早複製的一項過期的時間；沒有項目或不限時間就是 null。 */
+    fun nextExpiry(keepMillis: Long?): Long? = keepMillis?.let { keep -> items.minOfOrNull { it.copiedAt }?.plus(keep) }
 
     fun toJson(): String = JSONObject()
         .put(LAST_SEEN, lastSeen)
@@ -50,7 +50,6 @@ data class ClipboardHistory(val items: List<ClipboardItem> = emptyList(), val la
 
         /** 超過這個字數的文字不記。 */
         const val MAX_LENGTH = 10_000
-        const val KEEP_MILLIS = 60 * 60 * 1000L
 
         private const val LAST_SEEN = "lastSeen"
         private const val ITEMS = "items"
@@ -59,8 +58,8 @@ data class ClipboardHistory(val items: List<ClipboardItem> = emptyList(), val la
 
         fun accepts(text: String): Boolean = text.isNotBlank() && text.codePointCount(0, text.length) <= MAX_LENGTH
 
-        /** 複製超過 KEEP_MILLIS 就過期；時鐘向後調了超過 KEEP_MILLIS 的話也當作過期，免得留得太久。 */
-        fun expired(copiedAt: Long, now: Long): Boolean = abs(now - copiedAt) >= KEEP_MILLIS
+        /** 複製超過 keepMillis 就過期；時鐘向後調了超過 keepMillis 的話也當作過期，免得留得太久。null 是不限時間，不會過期。 */
+        fun expired(copiedAt: Long, now: Long, keepMillis: Long?): Boolean = keepMillis != null && abs(now - copiedAt) >= keepMillis
 
         /** 讀 toJson 的內容；格式不對的項目略過。內容可能是使用者複製的文字，出錯時不要記錄例外的訊息。 */
         fun fromJson(json: String): ClipboardHistory {

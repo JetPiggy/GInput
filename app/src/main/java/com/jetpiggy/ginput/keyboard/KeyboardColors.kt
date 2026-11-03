@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import com.jetpiggy.ginput.settings.KeyboardTheme
 import kotlin.math.abs
 import kotlin.math.cos
@@ -44,7 +45,17 @@ data class KeyboardColors(
     val preview: Color,
     /** 漸變主題的底色，鋪滿整個鍵盤；這時 background 是漸變最上面的顏色。純色主題是 null。 */
     val gradient: KeyboardGradient? = null,
-)
+) {
+    /**
+     * 鍵盤底部導航列的圖示（收起鍵盤、切換輸入法等）用深色：鍵盤最底的底色夠淺，深色圖示比白色的對比高。
+     * 漸變主題看最後一個色位，因為漸變由上到下或由左上到右下。
+     */
+    val darkNavigationIcons: Boolean
+        get() = (gradient?.colors?.last() ?: background).luminance() > DARK_ICON_LUMINANCE
+}
+
+/** WCAG 的相對亮度高過這個值，黑色比白色的對比高。 */
+private const val DARK_ICON_LUMINANCE = 0.179f
 
 /**
  * 漸變的底色：色位平均分佈，角度跟 CSS 的 linear-gradient（180 是由上到下，135 是由左上到右下）。
