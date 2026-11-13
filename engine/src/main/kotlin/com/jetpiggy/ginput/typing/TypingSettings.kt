@@ -9,6 +9,26 @@ enum class SpaceMode {
 
     /** 有候選字就寫入首選字，沒有才當英文寫入。 */
     SelectChinese,
+
+    /** 分邊：空白鍵分成兩半，一半等於 SelectChinese，一半等於 WriteEnglish；按了哪一半由鍵盤告訴 TypingSession.space。 */
+    Split;
+
+    /** 要標示首選字：空白鍵（或分邊的其中一半）會寫入它。 */
+    val marksTopCandidate: Boolean
+        get() = this != WriteEnglish
+
+    /** 按空白鍵要做的事；pressed 是分邊時按了的那一半，其他模式不理會。 */
+    fun resolve(pressed: SpaceChoice?): SpaceChoice = when (this) {
+        WriteEnglish -> SpaceChoice.English
+        SelectChinese -> SpaceChoice.Chinese
+        Split -> pressed ?: SpaceChoice.English
+    }
+}
+
+/** 按空白鍵要做的事：選中文（有候選字時寫入首選字）或寫英文。分邊的空白鍵每一半對應其中一樣。 */
+enum class SpaceChoice {
+    Chinese,
+    English,
 }
 
 data class TypingSettings(
@@ -97,4 +117,7 @@ enum class WriteKind {
 
     /** 英漢詞典的譯詞。 */
     Translation,
+
+    /** 手寫的候選字；不數進使用統計。 */
+    Handwriting,
 }

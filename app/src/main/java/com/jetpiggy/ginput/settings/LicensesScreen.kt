@@ -17,8 +17,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -110,6 +113,40 @@ internal val Licenses = listOf(
         "https://github.com/abovevacant/epitaph",
         notice = "licenses/epitaph.txt",
     ),
+    // 手寫（ADR 0013）：ML Kit 和 Google Play 服務程式庫不是開源，沒有授權全文可以附上，連到條款。
+    LicenseEntry(
+        "Google ML Kit Digital Ink Recognition",
+        "ML Kit Terms of Service (proprietary)",
+        R.string.license_usage_mlkit,
+        "https://developers.google.com/ml-kit/terms",
+    ),
+    LicenseEntry(
+        "Google Play services",
+        "Android Software Development Kit License (proprietary)",
+        R.string.license_usage_play_services,
+        "https://developer.android.com/studio/terms",
+    ),
+    LicenseEntry(
+        "Firebase Components / Data Transport",
+        APACHE_2,
+        R.string.license_usage_firebase,
+        "https://github.com/firebase/firebase-android-sdk",
+        notice = "licenses/apache-2.0.txt",
+    ),
+    LicenseEntry(
+        "OkHttp / Okio",
+        APACHE_2,
+        R.string.license_usage_okhttp,
+        "https://square.github.io/okhttp/",
+        notice = "licenses/apache-2.0.txt",
+    ),
+    LicenseEntry(
+        "Guava ListenableFuture / javax.inject",
+        APACHE_2,
+        R.string.license_usage_inject,
+        "https://github.com/google/guava",
+        notice = "licenses/apache-2.0.txt",
+    ),
     LicenseEntry(
         "Kotlin / kotlinx.coroutines",
         APACHE_2,
@@ -170,9 +207,10 @@ internal fun LicensesScreen(onBack: () -> Unit, onOpenNotice: (Int) -> Unit) {
 @Composable
 internal fun NoticeScreen(entry: LicenseEntry, onBack: () -> Unit) {
     val context = LocalContext.current
-    val text by produceState("", entry.notice) {
-        val path = entry.notice ?: return@produceState
-        value = withContext(Dispatchers.IO) {
+    var text by remember(entry.notice) { mutableStateOf("") }
+    LaunchedEffect(entry.notice) {
+        val path = entry.notice ?: return@LaunchedEffect
+        text = withContext(Dispatchers.IO) {
             context.assets.open(path).bufferedReader().use { it.readText() }
         }
     }

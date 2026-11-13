@@ -1,7 +1,9 @@
 package com.jetpiggy.ginput.update
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UpdateCheckTest {
@@ -63,5 +65,26 @@ class UpdateCheckTest {
         assertNull(UpdateCheck.announcement("""{"notice": {"zh-Hant": "沒有編號"}}""", chinese = true))
         assertNull(UpdateCheck.announcement("""{"notice": {"id": "a1"}}""", chinese = true))
         assertEquals("只有中文", UpdateCheck.announcement("""{"notice": {"id": "a1", "zh-Hant": "只有中文"}}""", false)?.text)
+    }
+
+    @Test
+    fun apkLinkIsOfferedBesideGooglePlay() {
+        val both = """{"versionCode": 20, "versionName": "1.0.1",
+            "pageUrl": "https://play.google.com/store/apps/details?id=com.jetpiggy.ginput",
+            "apkUrl": "https://github.com/JetPiggy/GInput/releases/latest/download/GInput.apk"}"""
+        val update = UpdateCheck.parse(both, 19, chinese = true)!!
+        assertEquals("https://github.com/JetPiggy/GInput/releases/latest/download/GInput.apk", update.apkUrl)
+        assertTrue(update.pageIsPlay)
+    }
+
+    @Test
+    fun apkLinkMustBeHttpsAndDifferent() {
+        val insecure = """{"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://ginput.jetpiggy.com/",
+            "apkUrl": "http://example.com/GInput.apk"}"""
+        assertNull(UpdateCheck.parse(insecure, 4, true)!!.apkUrl)
+        val same = """{"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://ginput.jetpiggy.com/",
+            "apkUrl": "https://ginput.jetpiggy.com/"}"""
+        assertNull(UpdateCheck.parse(same, 4, true)!!.apkUrl)
+        assertFalse(UpdateCheck.parse(same, 4, true)!!.pageIsPlay)
     }
 }

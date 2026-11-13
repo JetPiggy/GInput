@@ -17,9 +17,15 @@ class UserSettingsTest {
         assertEquals(UserSettings(), settings)
         assertEquals(listOf(Scheme.Quick), settings.typing.engine.schemes)
         assertEquals(SpaceMode.WriteEnglish, settings.typing.spaceMode)
+        assertEquals(SplitSpaceOrder.ChineseLeft, settings.splitSpaceOrder)
+        assertEquals(null, settings.keyboardOnScreen.splitSpace)
         assertTrue(settings.typing.smartSpaceRemoval)
         assertTrue(settings.typing.autoCapitalize)
         assertFalse(settings.typing.engine.continuousTyping)
+        // 工具列預設有「手寫」，但未同意說明，不可以用 ML Kit（ADR 0015）。
+        assertTrue(settings.handwriting)
+        assertFalse(settings.handwritingAccepted)
+        assertFalse(settings.handwritingActive)
         assertFalse(settings.typing.emojiKeywords)
         assertTrue(settings.typing.englishChinese)
         assertTrue(settings.clipboardHistory)
@@ -48,8 +54,11 @@ class UserSettingsTest {
             rememberCandidates = false,
             looseSpelling = false,
             continuousTyping = true,
+            handwriting = false,
+            handwritingAccepted = true,
             colloquialPriority = false,
-            spaceMode = SpaceMode.SelectChinese,
+            spaceMode = SpaceMode.Split,
+            splitSpaceOrder = SplitSpaceOrder.EnglishLeft,
             smartSpaceRemoval = false,
             autoCapitalize = false,
             emojiKeywords = true,
@@ -82,9 +91,21 @@ class UserSettingsTest {
     }
 
     @Test
+    fun theSpaceKeyIsSplitOnlyInSplitMode() {
+        val split = UserSettings(spaceMode = SpaceMode.Split, splitSpaceOrder = SplitSpaceOrder.EnglishLeft)
+        assertEquals(SplitSpaceOrder.EnglishLeft, split.keyboardOnScreen.splitSpace)
+        assertEquals(SpaceMode.Split, split.typing.spaceMode)
+        // 轉去其他模式，空白鍵不再分邊，但記住分邊次序。
+        val other = split.copy(spaceMode = SpaceMode.SelectChinese)
+        assertEquals(null, other.keyboardOnScreen.splitSpace)
+        assertEquals(SplitSpaceOrder.EnglishLeft, other.splitSpaceOrder)
+    }
+
+    @Test
     fun unknownValuesFallBackToDefaults() {
         val stored = mapOf(
             "space_mode" to "sideways",
+            "space_split_order" to "middle",
             "number_row" to "yes",
             "cangjie_generations" to "fourth",
             "schemes_enabled" to "stroke",
@@ -114,7 +135,9 @@ class UserSettingsTest {
             val settings = UserSettings(keyboard = KeyboardSettings(themeMode = mode))
             assertEquals(mode, SettingsPreferences.read(SettingsPreferences.write(settings)).keyboard.themeMode)
         }
-        // 主題連深淺都不放進使用統計。
+        // 主題連深淺都不放進使用統計；手寫也不放。
+        val handwriting = SettingsPreferences.forUsageStats(UserSettings(handwriting = true, handwritingAccepted = true))
+        assertFalse(handwriting.keys.any { it.startsWith("handwriting") })
         assertFalse("theme_mode" in SettingsPreferences.forUsageStats(UserSettings()))
     }
 

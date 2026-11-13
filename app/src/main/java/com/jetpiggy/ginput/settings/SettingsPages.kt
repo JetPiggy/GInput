@@ -1,6 +1,7 @@
 package com.jetpiggy.ginput.settings
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.annotation.StringRes
@@ -36,6 +37,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +61,8 @@ import com.jetpiggy.ginput.dictionary.PairMemoryFile
 import com.jetpiggy.ginput.engine.CangjieGeneration
 import com.jetpiggy.ginput.engine.Scheme
 import com.jetpiggy.ginput.engine.SharedCodeOrder
+import com.jetpiggy.ginput.handwriting.Handwriting
+import com.jetpiggy.ginput.handwriting.HandwritingModelStatus
 import com.jetpiggy.ginput.keyboard.KeyHaptic
 import com.jetpiggy.ginput.keyboard.KeyHaptics
 import com.jetpiggy.ginput.typing.SpaceMode
@@ -115,7 +120,7 @@ private fun SubPage(
     }
 }
 
-/** 輸入方案：啟用和排序、倉頡版本、寬鬆拼法、連打、重碼次序、記憶字。 */
+/** 輸入方案：啟用和排序、倉頡版本、寬鬆拼法、連打、手寫、重碼次序、記憶字。 */
 @Composable
 internal fun SchemesPage(settings: UserSettings, onChange: ((UserSettings) -> UserSettings) -> Unit, onBack: () -> Unit) {
     val snackbar = remember { SnackbarHostState() }
@@ -165,6 +170,10 @@ internal fun SchemesPage(settings: UserSettings, onChange: ((UserSettings) -> Us
                 checked = settings.continuousTyping,
                 onCheckedChange = { value -> onChange { it.copy(continuousTyping = value) } },
             )
+        }
+        // 關掉手寫就要再同意說明（ADR 0015）。
+        HandwritingRow(settings.handwriting, settings.handwritingAccepted) { on ->
+            onChange { it.copy(handwriting = on, handwritingAccepted = on && it.handwritingAccepted) }
         }
         ChoiceRow(
             title = stringResource(R.string.shared_code_order),
@@ -221,6 +230,42 @@ private fun SchemeRow(
     }
 }
 
+/**
+ * 手寫（ADR 0013、0015）：工具列有沒有「手寫」，預設開啟。第一次在鍵盤按「手寫」時才說明並同意，之後才下載模型；
+ * 關掉就刪除模型，再打開要重新同意。已同意的話，下面一行寫出模型的狀態和下載百分比，下載失敗時按一下再試。
+ * 未同意時不碰 ML Kit。
+ */
+@Composable
+private fun HandwritingRow(enabled: Boolean, accepted: Boolean, onEnabledChange: (Boolean) -> Unit) {
+    val context = LocalContext.current
+    val handwriting = remember { Handwriting.get(context) }
+    val status by handwriting.status.collectAsState()
+    val percent by handwriting.percent.collectAsState()
+    val active = enabled && accepted
+    // 已同意的話，查看模型（例如從備份還原了設定，模型未下載）。
+    LaunchedEffect(active) { if (active) handwriting.prepare() }
+    SwitchRow(
+        title = stringResource(R.string.handwriting),
+        summary = stringResource(R.string.handwriting_summary),
+        checked = enabled,
+        onCheckedChange = { on ->
+            onEnabledChange(on)
+            if (!on && accepted) handwriting.turnOff()
+        },
+    )
+    if (!enabled) return
+    val model = stringResource(R.string.handwriting_model)
+    when {
+        !accepted -> ActionRow(model, stringResource(R.string.handwriting_status_not_accepted))
+        status == HandwritingModelStatus.Ready -> ActionRow(model, stringResource(R.string.handwriting_status_ready))
+        status == HandwritingModelStatus.Failed ->
+            ActionRow(model, stringResource(R.string.handwriting_status_failed)) { handwriting.prepare() }
+        status == HandwritingModelStatus.Downloading ->
+            ActionRow(model, stringResource(R.string.handwriting_status_downloading, percent))
+        else -> ActionRow(model, stringResource(R.string.handwriting_status_preparing))
+    }
+}
+
 /** 清除全部記憶：先問一次，再刪掉檔案並通知執行中的輸入法。 */
 @Composable
 private fun ClearMemoryRow(snackbar: SnackbarHostState) {
@@ -259,7 +304,7 @@ private fun ClearMemoryRow(snackbar: SnackbarHostState) {
     )
 }
 
-/** 打字：口語優先、空白鍵模式、智能刪空格、自動大寫、Emoji 關鍵字；下面是手感（按鍵放大預覽、按鍵震動、按鍵音）。 */
+/** 打字：口語優先、空白鍵模式（分邊時多一行分邊次序）、智能刪空格、自動大寫、Emoji 關鍵字；下面是手感（按鍵放大預覽、按鍵震動、按鍵音）。 */
 @Composable
 internal fun TypingPage(settings: UserSettings, onChange: ((UserSettings) -> UserSettings) -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
@@ -276,10 +321,22 @@ internal fun TypingPage(settings: UserSettings, onChange: ((UserSettings) -> Use
             options = listOf(
                 SpaceMode.WriteEnglish to stringResource(R.string.space_english),
                 SpaceMode.SelectChinese to stringResource(R.string.space_chinese),
+                SpaceMode.Split to stringResource(R.string.space_split),
             ),
             selected = settings.spaceMode,
             onSelect = { value -> onChange { it.copy(spaceMode = value) } },
         )
+        if (settings.spaceMode == SpaceMode.Split) {
+            ChoiceRow(
+                title = stringResource(R.string.space_split_order),
+                options = listOf(
+                    SplitSpaceOrder.ChineseLeft to stringResource(R.string.split_chinese_left),
+                    SplitSpaceOrder.EnglishLeft to stringResource(R.string.split_english_left),
+                ),
+                selected = settings.splitSpaceOrder,
+                onSelect = { value -> onChange { it.copy(splitSpaceOrder = value) } },
+            )
+        }
         SwitchRow(
             title = stringResource(R.string.smart_space_removal),
             summary = stringResource(R.string.smart_space_removal_summary),
@@ -504,7 +561,7 @@ internal fun PrivacyPage(settings: UserSettings, onChange: ((UserSettings) -> Us
     }
 }
 
-/** 關於：品牌卡（版本、網站、原始碼、聯絡我們），下面是私隱政策和開源授權。連按品牌卡的飛豬，牠會飛過畫面。 */
+/** 關於：品牌卡（版本、網站、原始碼、聯絡我們），下面是為 GInput 評分、私隱政策和開源授權。連按品牌卡的飛豬，牠會飛過畫面。 */
 @Composable
 internal fun AboutPage(onOpenLicenses: () -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
@@ -531,7 +588,26 @@ internal fun AboutPage(onOpenLicenses: () -> Unit, onBack: () -> Unit) {
             onEasterEgg = { flying = true },
         )
         Spacer(Modifier.height(8.dp))
+        ActionRow(stringResource(R.string.rate_app), stringResource(R.string.rate_app_summary)) {
+            openPlayListing(context) { uriHandler.openUri(it) }
+        }
         ActionRow(stringResource(R.string.privacy_policy), null) { uriHandler.openUri(privacyPolicyUrl()) }
         ActionRow(stringResource(R.string.licenses), stringResource(R.string.licenses_summary), onOpenLicenses)
+    }
+}
+
+/**
+ * 打開 Google Play 上 GInput 的頁面，讓使用者評分：有 Play 商店 App 就用它打開；
+ * 沒有的話（例如從 GitHub 安裝、手機沒有 Google Play），用 openWeb 打開網頁版。
+ */
+private fun openPlayListing(context: Context, openWeb: (String) -> Unit) {
+    val id = context.packageName
+    val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$id"))
+        .setPackage("com.android.vending")
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(market)
+    } catch (e: ActivityNotFoundException) {
+        openWeb("https://play.google.com/store/apps/details?id=$id")
     }
 }

@@ -53,7 +53,10 @@ import com.jetpiggy.ginput.engine.EmojiKeywords
 import com.jetpiggy.ginput.engine.LearnedPair
 import com.jetpiggy.ginput.engine.PairMemory
 import com.jetpiggy.ginput.engine.Scheme
+import com.jetpiggy.ginput.handwriting.Handwriting
+import com.jetpiggy.ginput.handwriting.InkStrokes
 import com.jetpiggy.ginput.keyboard.ClipboardContent
+import com.jetpiggy.ginput.keyboard.HandwritingState
 import com.jetpiggy.ginput.keyboard.KeyAction
 import com.jetpiggy.ginput.keyboard.KeyboardLayout
 import com.jetpiggy.ginput.keyboard.KeyboardScreen
@@ -121,6 +124,11 @@ class GInputImeService : LifecycleInputMethodService() {
     private var phrases by mutableStateOf(SavedPhrases())
     private var cloudText by mutableStateOf(CloudTextState())
 
+    /** 工具列有「手寫」（設定，預設開啟）。未同意說明（handwriting.accepted）之前不碰 ML Kit（ADR 0015）。 */
+    private var handwritingEnabled by mutableStateOf(false)
+    private var handwriting by mutableStateOf(HandwritingState())
+    private var handwritingJob: Job? = null
+
     /** 更新了 GInput 之後，還未按「知道了」的新版簡介；見 WhatsNew。 */
     private var whatsNew by mutableStateOf(false)
 
@@ -187,6 +195,8 @@ class GInputImeService : LifecycleInputMethodService() {
                 keyboardSettings = it.keyboardOnScreen
                 clipboardHistoryEnabled = it.clipboardHistory
                 cloudText = cloudText.copy(noticeAccepted = it.cloudNoticeAccepted)
+                handwritingEnabled = it.handwriting
+                handwriting = handwriting.copy(accepted = it.handwritingAccepted)
                 // 使用者關了使用統計，就刪掉未送出的次數。
                 if (stats && !it.usageStats) usageStats.clear()
                 stats = it.usageStats
@@ -206,6 +216,13 @@ class GInputImeService : LifecycleInputMethodService() {
         }
         lifecycleScope.launch {
             phraseStore.phrases.collect { phrases = it }
+        }
+        // 只讀狀態，不會初始化 ML Kit。
+        lifecycleScope.launch {
+            Handwriting.get(applicationContext).status.collect { handwriting = handwriting.copy(status = it) }
+        }
+        lifecycleScope.launch {
+            Handwriting.get(applicationContext).percent.collect { handwriting = handwriting.copy(percent = it) }
         }
         allowanceLoad = lifecycleScope.launch {
             allowance = withContext(Dispatchers.IO) { DailyAllowanceFile.load(applicationContext) }
@@ -286,6 +303,9 @@ class GInputImeService : LifecycleInputMethodService() {
                         navigationBar = navigationBar,
                         voiceInput = voiceInput,
                         cloudText = cloudText,
+                        handwritingEnabled = handwritingEnabled,
+                        handwriting = handwriting,
+                        onHandwritingInk = ::recognizeHandwriting,
                         onUsage = ::recordUsage,
                         whatsNew = whatsNew,
                         settingsBadge = settingsBadge,
@@ -370,7 +390,7 @@ class GInputImeService : LifecycleInputMethodService() {
             learning = learning,
             offerCompletions = (info.inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS) == 0,
             onStateChanged = { keyboardState = it },
-            onWrite = { kind -> recordUsage(kind.usageEvent) },
+            onWrite = { kind -> kind.usageEvent?.let(::recordUsage) },
         ).also { it.start() }
         // 文字框的種類沒變的話，鍵盤仍然停在翻譯面板或改寫面板：同一個文字框保留處理中的工作和結果，
         // 換了文字框就重新讀原文。種類變了，鍵盤會回到字母頁。
@@ -389,6 +409,8 @@ class GInputImeService : LifecycleInputMethodService() {
     override fun onFinishInputView(finishingInput: Boolean) {
         session?.finish()
         cloudJob?.cancel()
+        clearHandwriting()
+        handwriting = handwriting.copy(hidden = handwriting.hidden + 1)
         usageStats.save()
         super.onFinishInputView(finishingInput)
     }
@@ -430,6 +452,15 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.RunTextTask -> runTextTask(action.task)
             KeyAction.ApplyTextResult -> applyTextResult()
             KeyAction.CloseCloudTool -> closeCloudTool()
+            KeyAction.OpenHandwriting, KeyAction.RetryHandwritingDownload ->
+                if (handwritingEnabled && handwriting.accepted) Handwriting.get(applicationContext).prepare(warmUp = true)
+            // 第一次按「手寫」時看了說明，按「開啟」：之後才初始化 ML Kit 和下載模型（ADR 0015）。
+            KeyAction.AcceptHandwriting -> if (handwritingEnabled) {
+                settingsStore.update { it.copy(handwritingAccepted = true) }
+                handwriting = handwriting.copy(accepted = true)
+                Handwriting.get(applicationContext).prepare(warmUp = true)
+            }
+            KeyAction.CloseHandwriting -> clearHandwriting()
             KeyAction.DismissWhatsNew -> {
                 whatsNew = false
                 settingsStore.update { it.copy(whatsNewSeen = WhatsNew.VERSION) }
@@ -447,6 +478,7 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.Text -> session.symbol(action.text, offerRelated = true)
             is KeyAction.SmartPunctuation -> session.punctuation(action.key)
             KeyAction.Space -> session.space()
+            is KeyAction.SplitSpace -> session.space(action.choice)
             KeyAction.Enter -> session.enter()
             KeyAction.Delete -> session.delete()
             KeyAction.Shift -> session.shift()
@@ -459,6 +491,10 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.ForgetCandidate -> session.forget(action.text)
             is KeyAction.StartCharacterFix -> session.startCharacterFix(action.index)
             is KeyAction.FixCharacter -> session.fixCharacter(action.text)
+            is KeyAction.PickHandwriting -> {
+                clearHandwriting()
+                session.handwriting(action.text)
+            }
             is KeyAction.CommitEmoji -> {
                 session.symbol(action.emoji)
                 if (learning) rememberEmoji(action.emoji)
@@ -490,6 +526,10 @@ class GInputImeService : LifecycleInputMethodService() {
             is KeyAction.RunTextTask,
             KeyAction.ApplyTextResult,
             KeyAction.CloseCloudTool,
+            KeyAction.OpenHandwriting,
+            KeyAction.AcceptHandwriting,
+            KeyAction.RetryHandwritingDownload,
+            KeyAction.CloseHandwriting,
             KeyAction.DismissWhatsNew,
             is KeyAction.SetKeyboardHeight -> Unit
         }
@@ -508,13 +548,15 @@ class GInputImeService : LifecycleInputMethodService() {
         if (learning && !passwordField) usageStats.record(event)
     }
 
-    private val WriteKind.usageEvent: UsageEvent
+    /** 手寫不數進使用統計（docs/spec/v1.md 的「手寫」）。 */
+    private val WriteKind.usageEvent: UsageEvent?
         get() = when (this) {
             WriteKind.Chinese -> UsageEvent.Chinese
             WriteKind.Association -> UsageEvent.Association
             WriteKind.English -> UsageEvent.English
             WriteKind.EnglishSuggestion -> UsageEvent.EnglishSuggestion
             WriteKind.Translation -> UsageEvent.Translation
+            WriteKind.Handwriting -> null
         }
 
     /** 由按鍵動作得出的使用統計項目；寫入文字的由 TypingSession 的 onWrite 數，這裏不重複。 */
@@ -540,14 +582,19 @@ class GInputImeService : LifecycleInputMethodService() {
 
     private fun findVoiceInput() = getSystemService(InputMethodManager::class.java)?.enabledVoiceInput(packageName)
 
-    /** 切換到語音輸入法，用完由它切換回來。剛好被停用了的話，再按就會提示到設定啟用。 */
+    /**
+     * 切換到語音輸入法，用完由它切換回來；沒有語音輸入法就切換到鍵盤上有咪高峰鍵的輸入法。
+     * 剛好被停用了的話，再按就會提示到設定啟用。
+     */
     private fun switchToVoiceInput() {
-        val (method, subtype) = findVoiceInput() ?: run {
+        val target = findVoiceInput() ?: run {
             voiceInput = VoiceInputKey.NotEnabled
             return
         }
-        runCatching { switchInputMethod(method.id, subtype) }
-            .onFailure { Log.w(TAG, "無法切換到語音輸入法", it) }
+        runCatching {
+            val subtype = target.subtype
+            if (subtype != null) switchInputMethod(target.method.id, subtype) else switchInputMethod(target.method.id)
+        }.onFailure { Log.w(TAG, "無法切換到語音輸入法", it) }
     }
 
     /** 工具列的「翻譯」或「改寫」。已經打開同一個面板的話，只重新讀原文。 */
@@ -640,6 +687,30 @@ class GInputImeService : LifecycleInputMethodService() {
         cloudTool = null
         cloudSource = null
         cloudText = cloudText.copy(source = "", status = CloudTextStatus.Ready)
+    }
+
+    /**
+     * 手寫板的筆跡改變了：辨識整個字，候選列列出結果。筆跡清走了就收起候選字。
+     * 游標前的文字只交給手機上的 ML Kit 提高準確度，不會送出。
+     */
+    private fun recognizeHandwriting(ink: InkStrokes) {
+        handwritingJob?.cancel()
+        if (ink.isEmpty || !handwritingEnabled || !handwriting.accepted) {
+            handwriting = handwriting.copy(candidates = emptyList())
+            return
+        }
+        val before = editor.textBeforeCursor(Handwriting.PRE_CONTEXT_LENGTH)
+        handwritingJob = lifecycleScope.launch {
+            val candidates = Handwriting.get(applicationContext).recognize(ink, before)
+            handwriting = handwriting.copy(candidates = candidates)
+        }
+    }
+
+    /** 不再理會未完成的辨識，收起手寫的候選字。 */
+    private fun clearHandwriting() {
+        handwritingJob?.cancel()
+        handwritingJob = null
+        if (handwriting.candidates.isNotEmpty()) handwriting = handwriting.copy(candidates = emptyList())
     }
 
     /** 面板顯示的原文：去掉前後空白；讀不到原文就是空白。 */

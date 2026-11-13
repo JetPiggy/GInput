@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR 0013
 ---
 
 # 1.0 前閉源；程式碼只用寬鬆授權，CC-BY-SA 資料要獨立成檔

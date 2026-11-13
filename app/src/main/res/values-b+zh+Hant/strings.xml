@@ -53,6 +53,7 @@
     <string name="list_separator">、</string>
     <string name="space_mode_short_english">空白鍵寫英文</string>
     <string name="space_mode_short_chinese">空白鍵選中文</string>
+    <string name="space_mode_short_split">空白鍵分邊</string>
     <plurals name="phrase_count">
         <item quantity="other">%1$d 個常用短語</item>
     </plurals>
@@ -80,6 +81,22 @@
     <string name="remember_candidates_summary">選過兩次的字排在最前，以淺綠底標示（只限常用度次序）；開了連打的話，也記住前後兩個字，令整句候選更準</string>
     <string name="continuous_typing">連打</string>
     <string name="continuous_typing_summary">速成和倉頡可以連續打幾個字的碼，候選列出整句；速成會猜錯，要看清楚才選；長按整句可以改字</string>
+    <string name="handwriting">手寫</string>
+    <string name="handwriting_summary">工具列顯示「手寫」，在手寫板用手指寫字，由 Google ML Kit 在手機上辨識；第一次用時會說明傳送甚麼資料。關掉就刪除模型</string>
+    <string name="handwriting_model">手寫模型</string>
+    <string name="handwriting_status_downloading">正在下載手寫模型… %1$d%%</string>
+    <string name="handwriting_status_preparing">正在準備手寫模型…</string>
+    <string name="handwriting_status_not_accepted">未下載：第一次按鍵盤工具列的「手寫」，同意說明後才下載</string>
+    <string name="handwriting_status_ready">已下載，在鍵盤的工具列按「手寫」</string>
+    <string name="handwriting_status_failed">未能下載手寫模型，按這裏再試</string>
+    <string name="handwriting_notice">手寫由 Google ML Kit 在手機上辨識，你寫的字不會離開手機。按「開啟」會從 Google 下載約 26 MB 的香港中文手寫模型；ML Kit 也會把診斷資料送往 Google，包括手機型號、Android 和 App 版本、每次安裝不同的識別碼、效能數字、出錯代碼和設定的語言，GInput 關不掉這部分。不想用的話，可以在設定的「輸入方案」關掉手寫。</string>
+    <string name="handwriting_notice_confirm">開啟</string>
+    <string name="handwriting_pad">手寫板</string>
+    <string name="handwriting_hint">在這裏寫字</string>
+    <string name="handwriting_downloading">正在下載手寫模型… %1$d%%</string>
+    <string name="handwriting_preparing">正在準備手寫模型…</string>
+    <string name="handwriting_download_failed">未能下載手寫模型，請檢查網絡</string>
+    <string name="handwriting_retry">再試</string>
     <string name="clear_memory">清除全部記憶</string>
     <string name="clear_memory_summary">全部記憶字回到原來的位置，連打記住的前後兩個字也會忘記</string>
     <string name="clear_memory_confirm_title">清除全部記憶？</string>
@@ -92,6 +109,10 @@
     <string name="space_mode">空白鍵模式</string>
     <string name="space_english">寫英文：把字母當英文寫入</string>
     <string name="space_chinese">選中文：有候選字時寫入首選字</string>
+    <string name="space_split">分邊：一邊選中文，一邊寫英文</string>
+    <string name="space_split_order">分邊次序</string>
+    <string name="split_chinese_left">左中右英</string>
+    <string name="split_english_left">左英右中</string>
     <string name="smart_space_removal">智能刪空格</string>
     <string name="smart_space_removal_summary">英文之後接中文或標點時，自動刪掉英文後面的空格</string>
     <string name="auto_capitalize">自動大寫</string>
@@ -205,6 +226,8 @@
     <string name="source_code">原始碼</string>
     <string name="contact">聯絡我們</string>
     <string name="no_email_app">找不到可以寄電郵的 App。電郵地址：%1$s</string>
+    <string name="rate_app">為 GInput 評分</string>
+    <string name="rate_app_summary">喜歡 GInput 的話，請在 Google Play 給我們評分</string>
     <string name="privacy_policy">私隱政策</string>
     <string name="licenses">開源授權</string>
     <string name="licenses_summary">GInput 用到的程式庫和資料</string>
@@ -212,6 +235,9 @@
     <!-- 更新提示（不是從 Google Play 安裝的版本） -->
     <string name="update_available">有新版本：%1$s</string>
     <string name="update_open">下載新版本</string>
+    <string name="update_open_play">在 Google Play 更新</string>
+    <string name="update_download_apk">下載 APK</string>
+    <string name="update_apk_hint">手機沒有 Google Play？按「下載 APK」，下載後直接安裝，設定和記憶字會保留。</string>
     <string name="notice_title">GInput 公告</string>
     <string name="notice_more">了解更多</string>
     <string name="notice_dismiss">知道了</string>
@@ -232,6 +258,11 @@
     <string name="license_usage_sentry">當機回報</string>
     <string name="license_usage_epitaph">Sentry 用來讀取原生當機記錄的程式庫（GInput 沒有開啟這個功能）</string>
     <string name="license_usage_kotlin">程式語言和背景工作，連同 JetBrains Annotations</string>
+    <string name="license_usage_mlkit">手寫辨識（預設關閉）。不是開源，按 Google ML Kit 服務條款提供</string>
+    <string name="license_usage_play_services">ML Kit 連帶使用的 play-services-base、basement 和 tasks。不是開源，按 Android 軟件開發套件授權提供</string>
+    <string name="license_usage_firebase">ML Kit 連帶使用：載入 ML Kit 的元件，傳送 ML Kit 的診斷資料</string>
+    <string name="license_usage_okhttp">ML Kit 連帶使用：下載手寫模型</string>
+    <string name="license_usage_inject">ML Kit 連帶使用</string>
 
     <!-- 123 頁在常用和更多兩組符號之間切換的按鍵 -->
     <string name="key_more">更多</string>
@@ -241,6 +272,7 @@
     <string name="toolbar_clipboard">剪貼簿</string>
     <string name="toolbar_translate">翻譯</string>
     <string name="toolbar_rewrite">改寫</string>
+    <string name="toolbar_handwriting">手寫</string>
     <string name="toolbar_settings">設定</string>
     <string name="toolbar_settings_badge">設定，有新版本或公告</string>
     <string name="toolbar_voice_input">語音輸入</string>
@@ -315,9 +347,9 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>主題可以固定用淺色或深色，不一定跟隨系統：在「主題」頁的頂部揀。</item>
-        <item>調整鍵盤高度時可以照常打字，一邊拖一邊試。</item>
-        <item>剪貼簿歷史可以揀保留多久：1 小時、1 日、7 日或不限。</item>
+        <item>新增手寫：在工具列按「手寫」，用手指寫字，停一停就自動出字。第一次用時會先說明，同意後才下載模型。</item>
+        <item>新增「分邊」空白鍵：空白鍵分成兩半，一半選中文，一半寫英文。在設定的「打字」→「空白鍵模式」開啟。</item>
+        <item>修正：在某些文字框移動游標時，GInput 可能停止運作；沒有 Google 語音輸入的手機，按咪高峰會改為切換到訊飛等鍵盤上有咪高峰的輸入法。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 
@@ -330,6 +362,10 @@
     <string name="state_unavailable">不可用</string>
     <string name="key_delete">刪除</string>
     <string name="key_space">空白</string>
+    <string name="key_space_chinese">空白（選中文）</string>
+    <string name="key_space_english">空白（寫英文）</string>
+    <string name="key_space_label_chinese">中</string>
+    <string name="key_space_label_english">英</string>
     <string name="key_enter">Enter</string>
     <string name="key_emoji">Emoji</string>
     <string name="key_switch_keyboard">切換輸入法</string>

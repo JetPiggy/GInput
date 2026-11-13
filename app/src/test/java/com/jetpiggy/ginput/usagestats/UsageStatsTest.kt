@@ -71,7 +71,7 @@ class UsageStatsTest {
         )
 
         val report = JSONObject(json)
-        assertEquals(setOf("schema", "day", "app", "sdk", "settings", "counts"), report.keySet())
+        assertEquals(setOf("schema", "day", "app", "sdk", "settings", "counts"), report.keys().asSequence().toSet())
         assertEquals(1, report.getInt("schema"))
         assertEquals("2026-10-09", report.getString("day"))
         assertEquals("0.6.0", report.getString("app"))
@@ -88,7 +88,7 @@ class UsageStatsTest {
         assertFalse(reportedSettings.has("setup_done"))
         assertFalse(reportedSettings.has("whats_new_seen"))
         val counts = report.getJSONObject("counts")
-        assertEquals(setOf("chinese", "englishSuggestion"), counts.keySet())
+        assertEquals(setOf("chinese", "englishSuggestion"), counts.keys().asSequence().toSet())
         assertEquals(12, counts.getInt("chinese"))
     }
 

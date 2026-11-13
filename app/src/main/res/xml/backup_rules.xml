@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 只備份設定和常用短語（ADR 0001），兩者都在 SharedPreferences；其餘資料放在 noBackupFilesDir。Android 11 或以下用這個檔案。 -->
+<!-- 只備份設定（settings）和常用短語（phrases），兩者都在 SharedPreferences（ADR 0001）；其餘資料放在 noBackupFilesDir。
+     逐個檔案列出，因為手寫用的 ML Kit 也把識別碼和模型紀錄放在 SharedPreferences，這些不備份（ADR 0015）。Android 11 或以下用這個檔案。 -->
 <full-backup-content>
-    <include domain="sharedpref" path="." />
+    <include domain="sharedpref" path="settings.xml" />
+    <include domain="sharedpref" path="phrases.xml" />
 </full-backup-content>

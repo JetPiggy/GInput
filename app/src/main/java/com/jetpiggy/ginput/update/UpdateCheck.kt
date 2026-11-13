@@ -6,15 +6,21 @@ import java.net.HttpURLConnection
 import java.net.URL
 import org.json.JSONObject
 
-/** 網站的 latest.json 公佈的新版本。 */
-data class AvailableUpdate(val versionName: String, val pageUrl: String, val notes: String?)
+/**
+ * 網站的 latest.json 公佈的新版本。[apkUrl] 是另一個直接下載 APK 的連結，給沒有 Google Play 的手機；
+ * 有的話，更新提示有兩個按鈕，由使用者自己揀。
+ */
+data class AvailableUpdate(val versionName: String, val pageUrl: String, val notes: String?, val apkUrl: String? = null) {
+    /** [pageUrl] 是 Google Play 的商店頁：按鈕寫「在 Google Play 更新」。 */
+    val pageIsPlay: Boolean get() = pageUrl.startsWith("https://play.google.com/")
+}
 
 /** latest.json 的公告，例如服務暫停或要盡快更新；按「知道了」之後不再顯示。 */
 data class Announcement(val id: String, val text: String, val url: String?)
 
 /**
  * 更新提示（規格「發佈」）：不是從 Google Play 安裝的版本，才讀網站的 latest.json；
- * 有新版本就提示，按鈕交給瀏覽器下載 APK，不在 App 內下載。latest.json 也可以帶一則公告。
+ * 有新版本就提示，按鈕交給瀏覽器打開 Google Play 或下載 APK，不在 App 內下載。latest.json 也可以帶一則公告。
  */
 object UpdateCheck {
 
@@ -52,11 +58,12 @@ object UpdateCheck {
         }.getOrNull()
 
     /**
-     * latest.json 的格式（notice 可以沒有；url 可以沒有）：
-     * {"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://github.com/…/GInput.apk",
+     * latest.json 的格式（apkUrl、notice 可以沒有；url 可以沒有）：
+     * {"versionCode": 5, "versionName": "0.6.0", "pageUrl": "https://play.google.com/…",
+     *  "apkUrl": "https://github.com/…/GInput.apk",
      *  "notes": {"zh-Hant": "…", "en": "…"},
      *  "notice": {"id": "2026-10-20", "zh-Hant": "…", "en": "…", "url": "https://…"}}
-     * 格式有問題就當作沒有新版本。
+     * 格式有問題就當作沒有新版本；apkUrl 不是 https 就當作沒有。
      */
     internal fun parse(json: String, currentVersionCode: Int, chinese: Boolean): AvailableUpdate? {
         val latest = read(json) ?: return null
@@ -64,7 +71,8 @@ object UpdateCheck {
         val versionName = latest.optString("versionName").takeIf { it.isNotBlank() } ?: return null
         val pageUrl = latest.optString("pageUrl").takeIf { it.startsWith("https://") } ?: return null
         val notes = latest.optJSONObject("notes")?.let { inLanguage(it, chinese) }
-        return AvailableUpdate(versionName, pageUrl, notes)
+        val apkUrl = latest.optString("apkUrl").takeIf { it.startsWith("https://") && it != pageUrl }
+        return AvailableUpdate(versionName, pageUrl, notes, apkUrl)
     }
 
     /** latest.json 公佈的 versionCode；格式有問題是 0。 */

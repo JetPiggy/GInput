@@ -3,6 +3,7 @@ package com.jetpiggy.ginput.keyboard
 import com.jetpiggy.ginput.cloudtext.CloudTool
 import com.jetpiggy.ginput.cloudtext.TextTask
 import com.jetpiggy.ginput.typing.PunctuationKey
+import com.jetpiggy.ginput.typing.SpaceChoice
 
 /** 鍵盤交給輸入法處理的動作。 */
 sealed interface KeyAction {
@@ -15,6 +16,9 @@ sealed interface KeyAction {
     /** 「，」「。」鍵和 123 頁的 ! ? : ; ( ) ~，按智能全形標點決定全形或半形。 */
     data class SmartPunctuation(val key: PunctuationKey) : KeyAction
     data object Space : KeyAction
+
+    /** 分邊空白鍵的其中一半：選中文或寫英文。 */
+    data class SplitSpace(val choice: SpaceChoice) : KeyAction
     data object Enter : KeyAction
     data object Delete : KeyAction
     data object Shift : KeyAction
@@ -102,6 +106,21 @@ sealed interface KeyAction {
 
     /** 離開翻譯面板或改寫面板；未完成的處理不再理會。 */
     data object CloseCloudTool : KeyAction
+
+    /** 工具列的「手寫」：打開手寫板；模型未下載好就開始下載。 */
+    data object OpenHandwriting : KeyAction
+
+    /** 第一次按「手寫」時，在說明按「開啟」：同意 ML Kit 傳送診斷資料，開始下載模型（ADR 0015）。 */
+    data object AcceptHandwriting : KeyAction
+
+    /** 手寫的候選字：寫入它，之後照常出聯想。 */
+    data class PickHandwriting(val text: String) : KeyAction
+
+    /** 手寫模型下載失敗後按「再試」。 */
+    data object RetryHandwritingDownload : KeyAction
+
+    /** 離開手寫板：不再理會未完成的辨識。 */
+    data object CloseHandwriting : KeyAction
 
     /** 新版簡介的「知道了」：之後不再顯示這個版本的簡介。 */
     data object DismissWhatsNew : KeyAction

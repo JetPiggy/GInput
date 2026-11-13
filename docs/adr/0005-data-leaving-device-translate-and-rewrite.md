@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by ADR 0014
 ---
 
 # 翻譯和改寫可以送出使用者選定的文字

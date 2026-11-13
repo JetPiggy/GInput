@@ -4,9 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -18,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -31,6 +37,8 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import com.jetpiggy.ginput.R
+import com.jetpiggy.ginput.settings.SplitSpaceOrder
+import com.jetpiggy.ginput.typing.SpaceChoice
 import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -46,19 +54,26 @@ private const val REPEAT_FIRST_INTERVAL_MILLIS = 90L
 private const val REPEAT_SPEEDUP_MILLIS = 6L
 private const val REPEAT_FASTEST_INTERVAL_MILLIS = 30L
 
-/** 空白鍵：按一下打空格；按住左右掃，移過 touch slop 就開始游標滑動，不用像其他鍵移那麼遠。 */
+/**
+ * 空白鍵：按一下打空格；按住左右掃，移過 touch slop 就開始游標滑動，不用像其他鍵移那麼遠。
+ * split 不是 null 就分邊：左右兩半各自選中文或寫英文，按了哪一半看手指按下的位置。
+ */
 @Composable
 internal fun RowScope.SpaceKey(
     colors: KeyboardColors,
     weight: Float,
     onKey: (KeyAction) -> Unit,
+    split: SplitSpaceOrder? = null,
 ) {
     val view = LocalView.current
     val slide = LocalCursorSlide.current
     val currentOnKey by rememberUpdatedState(onKey)
+    val currentSplit by rememberUpdatedState(split)
     val feedback by rememberUpdatedState(LocalKeyFeedback.current)
     val description = stringResource(R.string.key_space)
     var pressed by remember { mutableStateOf(false) }
+    /** 分邊時按着的那一半。 */
+    var pressedHalf by remember { mutableStateOf<SpaceChoice?>(null) }
 
     Box(
         modifier = Modifier
@@ -67,36 +82,105 @@ internal fun RowScope.SpaceKey(
             .padding(horizontal = KeyPaddingX, vertical = KeyPaddingY)
             .keyShadow(colors.keyShadow)
             .clip(KeyShape)
-            .background(if (pressed) colors.pressedKey else colors.key)
-            .clearAndSetSemantics {
-                contentDescription = description
-                role = Role.Button
-                onClick { currentOnKey(KeyAction.Space); true }
-            }
+            .background(if (pressed && split == null) colors.pressedKey else colors.key)
+            .then(
+                // 分邊時兩半各自是一個按鈕（SplitSpaceHalves）。
+                if (split != null) {
+                    Modifier
+                } else {
+                    Modifier.clearAndSetSemantics {
+                        contentDescription = description
+                        role = Role.Button
+                        onClick { currentOnKey(KeyAction.Space); true }
+                    }
+                },
+            )
             .pointerInput(slide) {
                 awaitEachGesture {
                     val down = awaitFirstDown()
+                    val half = currentSplit?.choiceAt(left = down.position.x < size.width / 2f)
                     pressed = true
+                    pressedHalf = half
                     feedback.press(view, KeySound.Space)
                     try {
                         while (true) {
                             val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
                             if (!change.pressed) {
-                                currentOnKey(KeyAction.Space)
+                                currentOnKey(if (half == null) KeyAction.Space else KeyAction.SplitSpace(half))
                                 break
                             }
                             if (slide != null && abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) {
+                                pressedHalf = null
                                 followCursorSlide(down.id, slide, view, feedback)
                                 break
                             }
                         }
                     } finally {
                         pressed = false
+                        pressedHalf = null
                     }
                 }
             },
+    ) {
+        if (split != null) SplitSpaceHalves(split, pressedHalf, colors) { currentOnKey(KeyAction.SplitSpace(it)) }
+    }
+}
+
+/** 分邊次序下，左半或右半是哪一樣。 */
+private fun SplitSpaceOrder.choiceAt(left: Boolean): SpaceChoice =
+    if ((this == SplitSpaceOrder.ChineseLeft) == left) SpaceChoice.Chinese else SpaceChoice.English
+
+/**
+ * 分邊空白鍵的鍵面：兩半各有一個小字（「中」「英」，和鍵角落的小字一樣大），在那一半的中間；
+ * 中間的分隔線用次要字色加透明度，深色主題也看得到。按着的那一半變深色。
+ */
+@Composable
+private fun BoxScope.SplitSpaceHalves(
+    split: SplitSpaceOrder,
+    pressedHalf: SpaceChoice?,
+    colors: KeyboardColors,
+    onClick: (SpaceChoice) -> Unit,
+) {
+    val dimensions = LocalKeyboardDimensions.current
+    val labels = mapOf(
+        SpaceChoice.Chinese to stringResource(R.string.key_space_label_chinese),
+        SpaceChoice.English to stringResource(R.string.key_space_label_english),
+    )
+    val descriptions = mapOf(
+        SpaceChoice.Chinese to stringResource(R.string.key_space_chinese),
+        SpaceChoice.English to stringResource(R.string.key_space_english),
+    )
+    Row(Modifier.fillMaxSize()) {
+        for (left in listOf(true, false)) {
+            val choice = split.choiceAt(left)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(if (pressedHalf == choice) colors.pressedKey else Color.Transparent)
+                    .clearAndSetSemantics {
+                        contentDescription = descriptions.getValue(choice)
+                        role = Role.Button
+                        onClick { onClick(choice); true }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(labels.getValue(choice), color = colors.secondaryLabel, style = tightText(dimensions.cornerSize))
+            }
+        }
+    }
+    Box(
+        Modifier
+            .align(Alignment.Center)
+            .width(1.dp)
+            .fillMaxHeight(SPLIT_DIVIDER_HEIGHT)
+            .background(colors.secondaryLabel.copy(alpha = SPLIT_DIVIDER_ALPHA)),
     )
 }
+
+/** 分邊空白鍵中間的分隔線：佔鍵高的四成，次要字色的 40%。 */
+private const val SPLIT_DIVIDER_HEIGHT = 0.4f
+private const val SPLIT_DIVIDER_ALPHA = 0.4f
 
 /**
  * Delete 鍵：按一下刪一個字；按住連續刪除並逐漸加速；

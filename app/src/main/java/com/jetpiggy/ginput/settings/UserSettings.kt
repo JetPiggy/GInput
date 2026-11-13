@@ -184,7 +184,21 @@ data class KeyboardSettings(
      * 見 UserSettings.keyboardOnScreen。
      */
     val radicals: Boolean = true,
+    /**
+     * 分邊空白鍵的次序；不是分邊就是 null。由空白鍵模式和分邊次序決定，不另外儲存；
+     * 見 UserSettings.keyboardOnScreen。
+     */
+    val splitSpace: SplitSpaceOrder? = null,
 )
+
+/** 分邊次序：分邊時空白鍵哪一半選中文。 */
+enum class SplitSpaceOrder {
+    /** 左中右英（預設） */
+    ChineseLeft,
+
+    /** 左英右中 */
+    EnglishLeft,
+}
 
 /** 設定 App 的全部設定。規則和預設值見 docs/spec/v1.md。 */
 data class UserSettings(
@@ -199,8 +213,14 @@ data class UserSettings(
     val looseSpelling: Boolean = true,
     /** 連打：速成和倉頡可以連續打幾個字的碼，出整句候選；預設關閉。 */
     val continuousTyping: Boolean = false,
+    /** 工具列有「手寫」（ADR 0013、0015）；預設開啟。 */
+    val handwriting: Boolean = true,
+    /** 已經同意手寫第一次使用時的說明（ML Kit 會傳送診斷資料，ADR 0015）；關掉手寫就要再同意。 */
+    val handwritingAccepted: Boolean = false,
     val colloquialPriority: Boolean = true,
     val spaceMode: SpaceMode = SpaceMode.WriteEnglish,
+    /** 分邊次序；只在空白鍵模式是分邊時用到，轉去其他模式也記住。 */
+    val splitSpaceOrder: SplitSpaceOrder = SplitSpaceOrder.ChineseLeft,
     val smartSpaceRemoval: Boolean = true,
     /** 句首自動大寫。 */
     val autoCapitalize: Boolean = true,
@@ -216,13 +236,16 @@ data class UserSettings(
     val crashReports: Boolean = true,
     /** 使用統計（ADR 0001）。 */
     val usageStats: Boolean = false,
-    /** 已經同意雲端翻譯和改寫第一次使用時的說明（ADR 0005）。 */
+    /** 已經同意雲端翻譯和改寫第一次使用時的說明（ADR 0015）。 */
     val cloudNoticeAccepted: Boolean = false,
     /** 已經完成首次設定精靈。 */
     val setupDone: Boolean = false,
     /** 已經看過（按了「知道了」）的新版簡介，是 WhatsNew.VERSION 的值；全新安裝時直接當作看過。 */
     val whatsNewSeen: Int = 0,
 ) {
+    /** 可以用 ML Kit：工具列有「手寫」，而且已經同意說明（ADR 0015）。 */
+    val handwritingActive: Boolean get() = handwriting && handwritingAccepted
+
     /** 打字用的設定，交給 TypingSession。 */
     val typing: TypingSettings = TypingSettings(
         engine = EngineSettings(
@@ -241,8 +264,11 @@ data class UserSettings(
         englishChinese = englishChinese,
     )
 
-    /** 鍵盤畫面用的外觀設定：沒有啟用速成或倉頡時，字根沒有用處，不顯示。 */
-    val keyboardOnScreen: KeyboardSettings = keyboard.copy(radicals = enabledSchemes.any { it != Scheme.Jyutping })
+    /** 鍵盤畫面用的外觀設定：沒有啟用速成或倉頡時，字根沒有用處，不顯示；分邊時空白鍵分成兩半。 */
+    val keyboardOnScreen: KeyboardSettings = keyboard.copy(
+        radicals = enabledSchemes.any { it != Scheme.Jyutping },
+        splitSpace = splitSpaceOrder.takeIf { spaceMode == SpaceMode.Split },
+    )
 
     /** 只啟用 scheme，並把它排到最前；首次設定精靈用。 */
     fun withOnlyScheme(scheme: Scheme): UserSettings =

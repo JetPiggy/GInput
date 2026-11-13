@@ -53,6 +53,7 @@
     <string name="list_separator">", "</string>
     <string name="space_mode_short_english">Space writes English</string>
     <string name="space_mode_short_chinese">Space picks Chinese</string>
+    <string name="space_mode_short_split">Split space bar</string>
     <plurals name="phrase_count">
         <item quantity="one">%1$d saved phrase</item>
         <item quantity="other">%1$d saved phrases</item>
@@ -81,6 +82,22 @@
     <string name="remember_candidates_summary">Characters you pick twice move to the front, highlighted in green (most-common-first order only). With continuous typing on, it also remembers which characters go together, for better sentences</string>
     <string name="continuous_typing">Continuous typing</string>
     <string name="continuous_typing_summary">Type the codes of several characters in a row in Quick or Cangjie and pick the whole sentence. Quick can guess wrong, so check before you pick. Long-press the sentence to fix a character</string>
+    <string name="handwriting">Handwriting</string>
+    <string name="handwriting_summary">Shows Handwriting on the toolbar: write with your finger on the handwriting pad, and Google ML Kit recognises it on your phone. The first time, you’ll see what gets sent. Turning it off deletes the model</string>
+    <string name="handwriting_model">Handwriting model</string>
+    <string name="handwriting_status_downloading">Downloading the handwriting model… %1$d%%</string>
+    <string name="handwriting_status_preparing">Preparing the handwriting model…</string>
+    <string name="handwriting_status_not_accepted">Not downloaded. Tap Handwriting on the keyboard toolbar and agree to the notice to download it</string>
+    <string name="handwriting_status_ready">Downloaded. Tap Handwriting on the keyboard toolbar</string>
+    <string name="handwriting_status_failed">Couldn’t download the handwriting model. Tap to try again</string>
+    <string name="handwriting_notice">Google ML Kit recognises your handwriting on your phone. What you write never leaves your phone. Tapping Turn on downloads the Hong Kong Chinese handwriting model (about 26 MB) from Google. ML Kit also sends diagnostic data to Google: phone model, Android and app version, a per-installation identifier, performance figures, error codes and the configured language. GInput can’t turn this off. If you don’t want it, turn off handwriting under Chinese input in Settings.</string>
+    <string name="handwriting_notice_confirm">Turn on</string>
+    <string name="handwriting_pad">Handwriting pad</string>
+    <string name="handwriting_hint">Write here</string>
+    <string name="handwriting_downloading">Downloading the handwriting model… %1$d%%</string>
+    <string name="handwriting_preparing">Preparing the handwriting model…</string>
+    <string name="handwriting_download_failed">Couldn’t download the handwriting model. Check your connection.</string>
+    <string name="handwriting_retry">Try again</string>
     <string name="clear_memory">Clear remembered characters</string>
     <string name="clear_memory_summary">Puts every remembered character back in its usual place and forgets the characters continuous typing remembered together</string>
     <string name="clear_memory_confirm_title">Clear all remembered characters?</string>
@@ -93,6 +110,10 @@
     <string name="space_mode">Space bar</string>
     <string name="space_english">Writes the letters as English</string>
     <string name="space_chinese">Picks the first Chinese candidate</string>
+    <string name="space_split">Split: one half picks Chinese, the other writes English</string>
+    <string name="space_split_order">Split order</string>
+    <string name="split_chinese_left">Chinese on the left, English on the right</string>
+    <string name="split_english_left">English on the left, Chinese on the right</string>
     <string name="smart_space_removal">Smart space removal</string>
     <string name="smart_space_removal_summary">Removes the space after an English word when Chinese or punctuation follows</string>
     <string name="auto_capitalize">Auto-capitalisation</string>
@@ -206,6 +227,8 @@
     <string name="source_code">Source code</string>
     <string name="contact">Contact us</string>
     <string name="no_email_app">No email app found. Our address is %1$s</string>
+    <string name="rate_app">Rate GInput</string>
+    <string name="rate_app_summary">If you like GInput, leave a rating on Google Play</string>
     <string name="privacy_policy">Privacy policy</string>
     <string name="licenses">Open source licences</string>
     <string name="licenses_summary">Libraries and data GInput uses</string>
@@ -213,6 +236,9 @@
     <!-- 更新提示（不是從 Google Play 安裝的版本） -->
     <string name="update_available">Version %1$s is available</string>
     <string name="update_open">Download update</string>
+    <string name="update_open_play">Update on Google Play</string>
+    <string name="update_download_apk">Download APK</string>
+    <string name="update_apk_hint">No Google Play on your phone? Tap Download APK and install it over this version. Your settings and remembered characters are kept.</string>
     <string name="notice_title">GInput notice</string>
     <string name="notice_more">Learn more</string>
     <string name="notice_dismiss">Got it</string>
@@ -233,6 +259,11 @@
     <string name="license_usage_sentry">Crash reports</string>
     <string name="license_usage_epitaph">Used by Sentry to read native crash records (turned off in GInput)</string>
     <string name="license_usage_kotlin">Programming language and background work, including JetBrains Annotations</string>
+    <string name="license_usage_mlkit">Handwriting recognition (off by default). Not open source; provided under the Google ML Kit Terms of Service</string>
+    <string name="license_usage_play_services">play-services-base, basement and tasks, used by ML Kit. Not open source; provided under the Android Software Development Kit License</string>
+    <string name="license_usage_firebase">Used by ML Kit to load its components and send its diagnostic data</string>
+    <string name="license_usage_okhttp">Used by ML Kit to download the handwriting model</string>
+    <string name="license_usage_inject">Used by ML Kit</string>
 
     <!-- 123 頁在常用和更多兩組符號之間切換的按鍵 -->
     <string name="key_more">#+=</string>
@@ -242,6 +273,7 @@
     <string name="toolbar_clipboard">Clipboard</string>
     <string name="toolbar_translate">Translate</string>
     <string name="toolbar_rewrite">Rewrite</string>
+    <string name="toolbar_handwriting">Handwriting</string>
     <string name="toolbar_settings">Settings</string>
     <string name="toolbar_settings_badge">Settings, new version or notice</string>
     <string name="toolbar_voice_input">Voice input</string>
@@ -316,9 +348,9 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput updated to %1$s</string>
     <string-array name="whats_new_items">
-        <item>Themes can stay light or dark instead of following your system: choose at the top of the Themes page.</item>
-        <item>While you adjust the keyboard height, you can keep typing to try it out.</item>
-        <item>Choose how long clipboard history keeps items: 1 hour, 1 day, 7 days or no limit.</item>
+        <item>New: handwriting. Tap Handwriting on the toolbar and write with your finger; each character goes in when you pause. The first time, you’ll see a notice, and the model downloads only after you agree.</item>
+        <item>New: split space bar. One half picks Chinese, the other writes English. Turn it on in Settings › Typing › Space bar.</item>
+        <item>Fixed: GInput could stop when you moved the cursor in some text boxes; on phones without Google voice typing, the mic now switches to a keyboard that has its own mic, such as iFlytek.</item>
     </string-array>
     <string name="whats_new_ok">Got it</string>
 
@@ -331,6 +363,10 @@
     <string name="state_unavailable">Unavailable</string>
     <string name="key_delete">Delete</string>
     <string name="key_space">Space</string>
+    <string name="key_space_chinese">Space (pick Chinese)</string>
+    <string name="key_space_english">Space (write English)</string>
+    <string name="key_space_label_chinese">中</string>
+    <string name="key_space_label_english">英</string>
     <string name="key_enter">Enter</string>
     <string name="key_emoji">Emoji</string>
     <string name="key_switch_keyboard">Switch keyboard</string>

@@ -107,6 +107,10 @@ internal fun CandidateBar(
     settingsBadge: Boolean,
     /** 工具列有沒有「翻譯」和「改寫」；密碼欄位沒有。 */
     cloudTools: Boolean,
+    /** 工具列有沒有「手寫」：設定打開了手寫，而且不是密碼欄位。 */
+    handwritingTool: Boolean,
+    /** 手寫板上筆跡的候選字；第一個加底色，是自動寫入的那個。 */
+    handwritingCandidates: List<String>,
     /** 打開候選字格時，組字後面顯示倉頡字根；只啟用粵拼時不顯示。 */
     radicals: Boolean,
     colors: KeyboardColors,
@@ -116,6 +120,8 @@ internal fun CandidateBar(
     onClosePrompt: () -> Unit,
     onToggleGrid: () -> Unit,
     onOpenClipboard: () -> Unit,
+    onOpenHandwriting: () -> Unit,
+    onPickHandwriting: (String) -> Unit,
     onOpenCloudTool: (CloudTool) -> Unit,
     /** 長按工具列的「設定」：打開調整高度模式。 */
     onAdjustHeight: () -> Unit,
@@ -199,7 +205,15 @@ internal fun CandidateBar(
                     }
                     CloseButton(colors, onCloseMenu)
                 }
-                toolsOpen -> Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool, onAdjustHeight)
+                // 手寫的候選字：手寫板上有筆跡時才有，不會和組字同時出現。
+                handwritingCandidates.isNotEmpty() -> {
+                    ItemsRow(resetKey = handwritingCandidates) {
+                        itemsIndexed(handwritingCandidates) { index, text ->
+                            BarItem(text, colors, marked = index == 0) { onPickHandwriting(text) }
+                        }
+                    }
+                }
+                toolsOpen -> Toolbar(colors, cloudTools, handwritingTool, settingsBadge, onKey, onOpenClipboard, onOpenHandwriting, onOpenCloudTool, onAdjustHeight)
                 state.composition.isNotEmpty() && gridOpen -> {
                     val radicalText = if (radicals) "  " + state.composition.map(::cangjieRadical).joinToString("") else ""
                     Text(
@@ -318,7 +332,7 @@ internal fun CandidateBar(
                 }
                 digits -> BarDigits(colors, onKey)
                 else -> {
-                    Toolbar(colors, cloudTools, settingsBadge, onKey, onOpenClipboard, onOpenCloudTool, onAdjustHeight)
+                    Toolbar(colors, cloudTools, handwritingTool, settingsBadge, onKey, onOpenClipboard, onOpenHandwriting, onOpenCloudTool, onAdjustHeight)
                     // 語音輸入在最右邊，和 ✕ ▼ 一樣只有圖示，不擠走其他按鈕的文字。
                     if (voiceInput != VoiceInputKey.Hidden) {
                         BarButton(R.drawable.ic_mic, stringResource(R.string.toolbar_voice_input), colors, iconSize = 22.dp) {
@@ -512,7 +526,7 @@ private val ToolbarTextSize = 13.sp
 private val BadgeSize = 7.dp
 
 /**
- * 候選列空閒時的工具列：剪貼簿、翻譯、改寫和設定（密碼欄位沒有翻譯和改寫）。圖示和文字並排，
+ * 候選列空閒時的工具列：剪貼簿、手寫（打開了才有）、翻譯、改寫和設定（密碼欄位沒有手寫、翻譯和改寫）。圖示和文字並排，
  * 按各自需要的闊度分配，「剪貼簿」這類較長的文字分得較闊。全部文字放不下（例如英文較長），
  * 就全部只顯示圖示、平分闊度；TalkBack 仍然讀出文字。長按「設定」打開調整高度模式。
  */
@@ -520,15 +534,18 @@ private val BadgeSize = 7.dp
 private fun RowScope.Toolbar(
     colors: KeyboardColors,
     cloudTools: Boolean,
+    handwritingTool: Boolean,
     settingsBadge: Boolean,
     onKey: (KeyAction) -> Unit,
     onOpenClipboard: () -> Unit,
+    onOpenHandwriting: () -> Unit,
     onOpenCloudTool: (CloudTool) -> Unit,
     onAdjustHeight: () -> Unit,
 ) {
     val settingsLabel = stringResource(R.string.toolbar_settings)
     val items = listOfNotNull(
         ToolbarItem(R.drawable.ic_assignment, stringResource(R.string.toolbar_clipboard), onTap = onOpenClipboard),
+        if (handwritingTool) ToolbarItem(R.drawable.ic_draw, stringResource(R.string.toolbar_handwriting), onTap = onOpenHandwriting) else null,
         if (cloudTools) {
             ToolbarItem(R.drawable.ic_translate, stringResource(R.string.toolbar_translate)) { onOpenCloudTool(CloudTool.Translation) }
         } else {

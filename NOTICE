@@ -38,3 +38,12 @@ Except as noted below, this project is licensed under the Apache License 2.0
    「開源授權」頁。
    They keep their own licenses. See app/src/main/assets/licenses/ and the
    open source licences page in the app.
+
+   手寫用的 Google ML Kit 數位墨水辨識（com.google.mlkit:digital-ink-recognition）
+   和它連帶的 Google Play 服務程式庫不是開源，按 Google 的條款提供，
+   見 docs/adr/0013-permissive-deps-mlkit-handwriting-exception.md。
+   Google ML Kit Digital Ink Recognition
+   (com.google.mlkit:digital-ink-recognition), used for handwriting, and the
+   Google Play services libraries it brings in are not open source and are
+   provided under Google's terms. See
+   docs/adr/0013-permissive-deps-mlkit-handwriting-exception.md.

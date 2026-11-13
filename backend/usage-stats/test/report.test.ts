@@ -46,6 +46,12 @@ test("the English-Chinese dictionary is a setting and its translations a count a
   assert.equal(parseReport(report({ settings: { english_chinese: "on" } }), now), null);
 });
 
+test("split space mode and its order are accepted", () => {
+  const parsed = parseReport(report({ settings: { space_mode: "split", space_split_order: "english_left" } }), now);
+  assert.deepEqual(parsed?.settings, { space_mode: "split", space_split_order: "english_left" });
+  assert.equal(parseReport(report({ settings: { space_split_order: "middle" } }), now), null);
+});
+
 test("keyboard height is a percentage for portrait and landscape; older apps send one of three sizes", () => {
   const parsed = parseReport(
     report({ settings: { keyboard_height_portrait: "110", keyboard_height_landscape: "80" } }),

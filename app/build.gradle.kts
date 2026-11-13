@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 /** local.properties 不進版控：放 Sentry 的 DSN，也可以把網址改指測試用的伺服器。 */
@@ -33,8 +34,8 @@ android {
         applicationId = "com.jetpiggy.ginput"
         minSdk = 28
         targetSdk = 36
-        versionCode = 17
-        versionName = "0.17.0"
+        versionCode = 21
+        versionName = "1.0.1"
 
         // 當機回報（ADR 0001）：沒有 DSN 就不啟用 Sentry。
         buildConfigField("String", "SENTRY_DSN", localProperty("SENTRY_DSN").asBuildConfigString())
@@ -94,9 +95,6 @@ android {
         buildConfig = true
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
@@ -120,6 +118,9 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     // 當機回報（MIT）；連帶 epitaph（MIT）。
     implementation("io.sentry:sentry-android-core:8.57.0")
+    // 手寫（ADR 0013、0014）：Google ML Kit 數位墨水辨識，專有授權，不是開源；預設關閉。
+    // 要用 19.0.0 或以上：18.1.0 的 libdigitalink.so 只支援 4 KB 記憶體分頁，Google Play 不接受（要支援 16 KB）。
+    implementation("com.google.mlkit:digital-ink-recognition:19.0.0")
     testImplementation("junit:junit:4.13.2")
     // 只供單元測試解析 JSON（Android 內置 org.json，JVM 測試沒有）。
     testImplementation("org.json:json:20240303")

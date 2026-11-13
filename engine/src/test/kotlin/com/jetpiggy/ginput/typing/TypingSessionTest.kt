@@ -193,6 +193,50 @@ class TypingSessionTest {
     }
 
     @Test
+    fun splitSpaceChineseHalfWritesTheTopCandidate() {
+        settings = TypingSettings(spaceMode = SpaceMode.Split)
+        val editor = FakeEditor()
+        val session = session(editor)
+        session.type("ab")
+        assertTrue(session.state.markTopCandidate)
+        session.space(SpaceChoice.Chinese)
+        assertEquals("明", editor.text)
+        // 沒有候選字時，選中文的一半也當英文寫入。
+        session.type("xyz")
+        session.space(SpaceChoice.Chinese)
+        assertEquals("明xyz ", editor.text)
+    }
+
+    @Test
+    fun splitSpaceEnglishHalfWritesTheLetters() {
+        settings = TypingSettings(spaceMode = SpaceMode.Split)
+        val editor = FakeEditor()
+        val session = session(editor)
+        session.type("ab")
+        session.space(SpaceChoice.English)
+        assertEquals("ab ", editor.text)
+        // 沒有組字時兩半都只打空格。
+        session.space(SpaceChoice.Chinese)
+        session.space(SpaceChoice.English)
+        assertEquals("ab   ", editor.text)
+    }
+
+    @Test
+    fun otherSpaceModesIgnoreTheHalfThatWasPressed() {
+        settings = TypingSettings(spaceMode = SpaceMode.WriteEnglish)
+        val editor = FakeEditor()
+        val session = session(editor)
+        session.type("ab")
+        session.space(SpaceChoice.Chinese)
+        assertEquals("ab ", editor.text)
+        settings = TypingSettings(spaceMode = SpaceMode.SelectChinese)
+        session.type("ab")
+        session.space(SpaceChoice.English)
+        // 智能刪空格刪掉了 ab 後面的空格。
+        assertEquals("ab明", editor.text)
+    }
+
+    @Test
     fun enterWritesComposingLettersWithoutSendingEnter() {
         val editor = FakeEditor()
         val session = session(editor)
@@ -531,6 +575,43 @@ class TypingSessionTest {
         assertEquals("ab", editor.text)
     }
 
+    /** 在 finishComposingText 裏面即刻回報游標改變的文字框，例如和輸入法同一個行程的設定 App 試打框。 */
+    private fun reportingDuringFinish(editor: FakeEditor, session: () -> TypingSession, onFinish: () -> Unit) =
+        object : Editor by editor {
+            override fun finishComposingText() {
+                onFinish()
+                editor.finishComposingText()
+                session().selectionChanged(editor.cursor, editor.cursor, -1, -1)
+            }
+        }
+
+    @Test
+    fun movingTheCursorFinishesOnceWhenTheFieldReportsDuringFinish() {
+        val editor = FakeEditor()
+        lateinit var session: TypingSession
+        var finishes = 0
+        session = session(reportingDuringFinish(editor, { session }) { finishes++ })
+        session.type("ab")
+        session.selectionChanged(0, 0, 0, 2)
+        assertEquals(1, finishes)
+        assertEquals("", session.state.composition)
+        assertEquals("ab", editor.text)
+    }
+
+    @Test
+    fun closingTheKeyboardFinishesOnceWhenTheFieldReportsDuringFinish() {
+        val editor = FakeEditor()
+        lateinit var session: TypingSession
+        var finishes = 0
+        session = session(reportingDuringFinish(editor, { session }) { finishes++ })
+        session.type("ab")
+        session.selectionChanged(2, 2, 0, 2)
+        session.finish()
+        assertEquals(1, finishes)
+        assertEquals("", editor.composing)
+        assertEquals("ab", editor.text)
+    }
+
     @Test
     fun lateUpdateWithoutCompositionIsIgnoredUntilTheEchoArrives() {
         val editor = FakeEditor()
@@ -613,6 +694,22 @@ class TypingSessionTest {
             listOf(WriteKind.Chinese, WriteKind.Association, WriteKind.English, WriteKind.EnglishSuggestion),
             kinds,
         )
+    }
+
+    @Test
+    fun handwritingWritesAtTheCursorWithAssociationsButIsNotRemembered() {
+        val kinds = mutableListOf<WriteKind>()
+        val editor = FakeEditor("好")
+        val session = TypingSession(
+            editor, FieldKind.Text, true, { settings }, { engine }, clock = { now },
+            onWrite = { kinds += it },
+        ).also { it.start() }
+        session.handwriting("明")
+        assertEquals("好明", editor.text)
+        assertEquals(listOf("天", "白"), session.state.associations)
+        assertEquals(listOf(WriteKind.Handwriting), kinds)
+        session.type("ab")
+        assertFalse(session.state.candidates.any { it.remembered })
     }
 
     @Test

@@ -8,7 +8,7 @@ import java.net.URL
 import org.json.JSONObject
 
 /**
- * 把原文送往 backend/ai（ADR 0005、0006）。請求只有工作和原文，沒有任何識別碼，User-Agent 也只寫「GInput」。
+ * 把原文送往 backend/ai（ADR 0015、0006）。請求只有工作和原文，沒有任何識別碼，User-Agent 也只寫「GInput」。
  * 日誌不可以帶有原文或結果。會連線，要在背景執行。
  */
 class CloudTextClient(private val url: String = BuildConfig.CLOUD_TEXT_URL) {

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -35,9 +36,11 @@ import com.jetpiggy.ginput.R
 import com.jetpiggy.ginput.cloudtext.CloudTextState
 import com.jetpiggy.ginput.cloudtext.CloudTool
 import com.jetpiggy.ginput.emoji.EmojiCategory
+import com.jetpiggy.ginput.handwriting.InkStrokes
 import com.jetpiggy.ginput.settings.KeyLabels
 import com.jetpiggy.ginput.settings.KeyboardHeight
 import com.jetpiggy.ginput.settings.KeyboardSettings
+import com.jetpiggy.ginput.settings.SplitSpaceOrder
 import com.jetpiggy.ginput.typing.FieldKind
 import com.jetpiggy.ginput.typing.KeyboardState
 import com.jetpiggy.ginput.typing.Punctuation
@@ -45,7 +48,7 @@ import com.jetpiggy.ginput.typing.PunctuationKey
 import com.jetpiggy.ginput.typing.ShiftState
 import com.jetpiggy.ginput.usagestats.UsageEvent
 
-private enum class Page { Letters, Symbols, MoreSymbols, Emoji, Clipboard, Translate, Rewrite }
+private enum class Page { Letters, Symbols, MoreSymbols, Emoji, Clipboard, Handwriting, Translate, Rewrite }
 
 /** 123 頁的兩組符號。以半形寫的 ! ? : ; ( ) ~ 按智能全形標點出全形或半形，見 PunctuationKey。 */
 private val CommonSymbols = listOf(
@@ -75,6 +78,12 @@ fun KeyboardScreen(
     voiceInput: VoiceInputKey = VoiceInputKey.Hidden,
     /** 翻譯面板和改寫面板的內容。 */
     cloudText: CloudTextState = CloudTextState(),
+    /** 設定打開了手寫：工具列有「手寫」。 */
+    handwritingEnabled: Boolean = false,
+    /** 手寫模型的狀態和手寫的候選字。 */
+    handwriting: HandwritingState = HandwritingState(),
+    /** 手寫板的筆跡改變了，交去辨識。 */
+    onHandwritingInk: (InkStrokes) -> Unit = {},
     /** 只有鍵盤自己知道的動作（打開候選字格、標點選單、游標滑動），給使用統計。 */
     onUsage: (UsageEvent) -> Unit = {},
     /** 更新了 GInput 之後，還未按「知道了」的新版簡介。 */
@@ -110,7 +119,7 @@ fun KeyboardScreen(
     ) {
         KeyboardContent(
             state, settings, field, emojiCategories, recentEmoji, clipboard, onKey, navigationBar, voiceInput, cloudText,
-            onUsage, whatsNew, settingsBadge, layout, canSwitchInputMethod,
+            handwritingEnabled, handwriting, onHandwritingInk, onUsage, whatsNew, settingsBadge, layout, canSwitchInputMethod,
             adjustment = adjustment,
             onAdjustHeight = { open ->
                 adjustment = if (open) {
@@ -137,6 +146,9 @@ private fun KeyboardContent(
     navigationBar: NavigationBarSpace,
     voiceInput: VoiceInputKey,
     cloudText: CloudTextState,
+    handwritingEnabled: Boolean,
+    handwriting: HandwritingState,
+    onHandwritingInk: (InkStrokes) -> Unit,
     onUsage: (UsageEvent) -> Unit,
     whatsNew: Boolean,
     settingsBadge: Boolean,
@@ -189,6 +201,20 @@ private fun KeyboardContent(
     // 系統沒有顯示輸入法的按鈕時，側欄才有收起鍵盤和切換輸入法。
     val sideSystemKeys = landscape && !navigationBar.systemButtons
     val area = remember { KeyboardArea() }
+    // 手寫板的筆跡；換了文字框或收起了鍵盤就丟掉。
+    val inkPad = remember(field, handwriting.hidden) { InkPad() }
+    val inHandwriting = page == Page.Handwriting
+    // 在設定關掉了手寫，手寫板就回到字母頁。
+    LaunchedEffect(handwritingEnabled) {
+        if (!handwritingEnabled && page == Page.Handwriting) page = Page.Letters
+    }
+    // 由手寫板去了別的頁面（例如工具列的剪貼簿），未寫入的筆跡就丟掉。
+    LaunchedEffect(inHandwriting) {
+        if (!inHandwriting && !inkPad.isEmpty) {
+            inkPad.clear()
+            onKey(KeyAction.CloseHandwriting)
+        }
+    }
 
     CompositionLocalProvider(LocalKeyboardArea provides area) {
         Box(
@@ -280,6 +306,8 @@ private fun KeyboardContent(
                             voiceInput = voiceInput,
                             settingsBadge = settingsBadge,
                             cloudTools = field != FieldKind.Password,
+                            handwritingTool = handwritingEnabled && field != FieldKind.Password,
+                            handwritingCandidates = if (inHandwriting) handwriting.candidates else emptyList(),
                             radicals = settings.radicals,
                             colors = colors,
                             onKey = handle,
@@ -293,6 +321,14 @@ private fun KeyboardContent(
                             onOpenClipboard = {
                                 handle(KeyAction.OpenClipboard)
                                 page = Page.Clipboard
+                            },
+                            onOpenHandwriting = {
+                                handle(KeyAction.OpenHandwriting)
+                                page = Page.Handwriting
+                            },
+                            onPickHandwriting = { text ->
+                                inkPad.clear()
+                                handle(KeyAction.PickHandwriting(text))
                             },
                             onOpenCloudTool = { tool ->
                                 handle(KeyAction.OpenCloudTool(tool))
@@ -341,6 +377,20 @@ private fun KeyboardContent(
                                     page = Page.Letters
                                 },
                             )
+                            page == Page.Handwriting -> HandwritingPanel(
+                                pad = inkPad,
+                                handwriting = handwriting,
+                                state = state,
+                                keyArea = keyArea,
+                                colors = colors,
+                                slide = slide,
+                                onKey = handle,
+                                onInk = onHandwritingInk,
+                                onBackToLetters = {
+                                    handle(KeyAction.CloseHandwriting)
+                                    page = Page.Letters
+                                },
+                            )
                             // 兩個面板共用同一個位置，在兩者之間切換時面板不會重新建立。
                             page == Page.Translate || page == Page.Rewrite -> CloudTextPanel(
                                 tool = if (page == Page.Translate) CloudTool.Translation else CloudTool.Rewrite,
@@ -384,6 +434,8 @@ private fun KeyboardContent(
                                     field = field,
                                     lettersShown = page == Page.Letters,
                                     fullWidth = state.fullWidthPunctuation,
+                                    // 密碼這類不打中文的欄位，空白鍵不分邊。
+                                    splitSpace = settings.splitSpace.takeIf { field.allowsChinese },
                                     colors = colors,
                                     onKey = handle,
                                     onOpenEmoji = { page = Page.Emoji },
@@ -409,7 +461,7 @@ private fun KeyboardContent(
  * 一行裏不是按鍵的地方（a 行兩端的空位、鍵盤左右的邊距）都算同一行最近的鍵。
  */
 @Composable
-private fun TypingKeys(slide: CursorSlide, content: @Composable () -> Unit) {
+internal fun TypingKeys(slide: CursorSlide, content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalCursorSlide provides slide,
         LocalNearestKeyInRow provides true,
@@ -557,6 +609,7 @@ private fun BottomRow(
     field: FieldKind,
     lettersShown: Boolean,
     fullWidth: Boolean,
+    splitSpace: SplitSpaceOrder?,
     colors: KeyboardColors,
     onKey: (KeyAction) -> Unit,
     onOpenEmoji: () -> Unit,
@@ -589,12 +642,12 @@ private fun BottomRow(
             Key(colors, weight = 1f, description = "@", preview = "@", onTap = { onKey(KeyAction.Text("@")) }) {
                 KeyLabel("@", colors)
             }
-            SpaceKey(colors, weight = 4f, onKey = onKey)
+            SpaceKey(colors, weight = 4f, onKey = onKey, split = splitSpace)
             Key(colors, weight = 1f, description = ".", preview = ".", onTap = { onKey(KeyAction.Text(".")) }) {
                 KeyLabel(".", colors)
             }
         } else {
-            SpaceKey(colors, weight = 4f, onKey = onKey)
+            SpaceKey(colors, weight = 4f, onKey = onKey, split = splitSpace)
             val comma = if (fullWidth) "，" else ","
             val period = if (fullWidth) "。" else "."
             val more = stringResource(R.string.key_more_punctuation)

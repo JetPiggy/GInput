@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -147,6 +150,7 @@ private fun ImeStatusCard(status: ImeStatus) {
  * 不是從 Google Play 安裝的版本：網站的 latest.json 有公告或新版本時，在設定主頁最上面顯示（規格「發佈」）。
  * 新版本的按鈕交給瀏覽器下載 APK，不在 App 內下載。在這裏看過之後，鍵盤工具列的「設定」不再加小點。
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun UpdateCards() {
     val context = LocalContext.current
@@ -181,7 +185,15 @@ private fun UpdateCards() {
         UpdateCard {
             Text(stringResource(R.string.update_available, update.versionName), style = MaterialTheme.typography.titleMedium)
             if (update.notes != null) Text(update.notes, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = { uriHandler.openUri(update.pageUrl) }) { Text(stringResource(R.string.update_open)) }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { uriHandler.openUri(update.pageUrl) }) {
+                    Text(stringResource(if (update.pageIsPlay) R.string.update_open_play else R.string.update_open))
+                }
+                update.apkUrl?.let { apkUrl ->
+                    OutlinedButton(onClick = { uriHandler.openUri(apkUrl) }) { Text(stringResource(R.string.update_download_apk)) }
+                }
+            }
+            if (update.apkUrl != null) Text(stringResource(R.string.update_apk_hint), style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -217,6 +229,8 @@ private fun CategoryList(settings: UserSettings, phraseCount: Int, onOpen: (Sett
             summary(
                 enabledSchemes.map { schemeName(it) }.joinToString(stringResource(R.string.list_separator)),
                 if (enabledSchemes.any { it != Scheme.Jyutping }) settingState(R.string.continuous_typing, settings.continuousTyping) else null,
+                // 手寫預設關閉，打開了才寫出來，摘要不會太長。
+                if (settings.handwriting) settingState(R.string.handwriting, true) else null,
             ),
         ),
         CategoryEntry(
@@ -228,6 +242,7 @@ private fun CategoryList(settings: UserSettings, phraseCount: Int, onOpen: (Sett
                     when (settings.spaceMode) {
                         SpaceMode.WriteEnglish -> R.string.space_mode_short_english
                         SpaceMode.SelectChinese -> R.string.space_mode_short_chinese
+                        SpaceMode.Split -> R.string.space_mode_short_split
                     },
                 ),
                 settingState(R.string.auto_capitalize, settings.autoCapitalize),

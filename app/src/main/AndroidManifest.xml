@@ -2,10 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 當機回報、使用統計、更新提示，以及雲端翻譯和改寫（ADR 0005）。除了使用者按翻譯或改寫時的原文，輸入內容不會送出。 -->
+    <!-- 當機回報、使用統計、更新提示、雲端翻譯和改寫，以及同意了手寫的說明後下載模型（ADR 0015）。除了使用者按翻譯或改寫時的原文，輸入內容不會送出。 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 按鍵震動選了輕、標準或強時，由 GInput 自己用震動器震（keyboard/KeyHaptics.kt）。 -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- 手寫用的 ML Kit 連帶 WorkManager（下載模型），它的開機啟動和前景服務權限用不着（ADR 0015）。 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 
     <!-- 找出手機已啟用的語音輸入法（工具列的語音輸入）。Android 11 起要宣告，才看得到其他輸入法。 -->
     <queries>
@@ -58,6 +61,22 @@
             android:name="io.sentry.android.core.SentryPerformanceProvider"
             android:authorities="${applicationId}.SentryPerformanceProvider"
             tools:node="remove" />
+        <!-- ML Kit 會把診斷資料送往 Google，所以不讓它在 App 啟動時自動初始化；使用者同意手寫的說明後才初始化（handwriting/Handwriting.kt，ADR 0015）。 -->
+        <provider
+            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+            android:authorities="${applicationId}.mlkitinitprovider"
+            tools:node="remove" />
+        <!-- WorkManager 只有 ML Kit 下載模型時用，不讓它在 App 啟動時初始化；GInputApplication 提供設定，用時才初始化。 -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
     </application>
 
 </manifest>

@@ -15,6 +15,6 @@ GInput 是 Android 輸入法，讓香港使用者中英混打，不用切換。�
 
 - 產生或安裝 APK、發佈和 push 都要等使用者明確要求才做；編譯和跑單元測試可以直接做。
 - 這個 repo 是公開的：不可以加入個人姓名、私人電郵、個人帳戶名、本機路徑或秘密（金鑰、密碼、DSN、token）。聯絡一律用 jetpiggy.com 的地址。
-- 加入會打包進 App 的程式庫、字庫或任何資料之前，先確認它是寬鬆授權：Apache、MIT、BSD、ISC、CC0、CC-BY、Unicode 授權或公有領域（ADR 0004、0007）。GPL、LGPL 和禁止商用的一律不用。CC-BY-SA 只限資料，而且要獨立成檔，檔案本身以 CC BY-SA 4.0 授權、寫明出處，不可加密。加入之後，更新 App 內的「開源授權」頁（`app/src/main/java/com/jetpiggy/ginput/settings/LicensesScreen.kt` 的 `Licenses`）。
-- 輸入內容只留在手機上：日誌、當機報告和使用統計都不可以帶有輸入內容（ADR 0005）。唯一的例外是使用者主動按「翻譯」或「改寫」時送出的那段文字。會傳送資料的功能有改動時，提醒使用者私隱政策和 Play 的資料安全表格要一起改。
+- 加入會打包進 App 的程式庫、字庫或任何資料之前，先確認它是寬鬆授權：Apache、MIT、BSD、ISC、CC0、CC-BY、Unicode 授權或公有領域（ADR 0013、0007）。GPL、LGPL 和禁止商用的一律不用。唯一的閉源例外是手寫用的 Google ML Kit 數位墨水辨識（ADR 0013），再加閉源元件要另寫 ADR。CC-BY-SA 只限資料，而且要獨立成檔，檔案本身以 CC BY-SA 4.0 授權、寫明出處，不可加密。加入之後，更新 App 內的「開源授權」頁（`app/src/main/java/com/jetpiggy/ginput/settings/LicensesScreen.kt` 的 `Licenses`）。
+- 輸入內容只留在手機上：日誌、當機報告和使用統計都不可以帶有輸入內容（ADR 0015）。唯一的例外是使用者主動按「翻譯」或「改寫」時送出的那段文字。手寫的筆跡也只在手機上辨識；工具列預設有「手寫」，但使用者第一次按「手寫」並同意說明之前，不可以初始化 ML Kit，因為它會把診斷資料送往 Google（ADR 0015）。會傳送資料的功能有改動時，提醒使用者私隱政策和 Play 的資料安全表格要一起改。
 - 使用者有未 commit 的工作時，只 `git add` 自己改過的檔案。

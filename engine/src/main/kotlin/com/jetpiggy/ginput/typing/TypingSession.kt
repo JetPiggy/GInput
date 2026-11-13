@@ -85,14 +85,15 @@ class TypingSession(
         finishAction()
     }
 
-    fun space() {
+    /** pressed：分邊時按了空白鍵的哪一半；其他空白鍵模式不理會。 */
+    fun space(pressed: SpaceChoice? = null) {
         clearFollowUps()
         when {
             composition.isEmpty() -> {
                 editor.commitText(" ")
                 autoSpace = null
             }
-            settings().spaceMode == SpaceMode.SelectChinese && candidates.isNotEmpty() ->
+            settings().spaceMode.resolve(pressed) == SpaceChoice.Chinese && candidates.isNotEmpty() ->
                 candidates.first().let {
                     writeChinese(it.text, WriteKind.Chinese, codeLength = it.codeLength, sentence = it.sentence, symbol = it.symbol)
                 }
@@ -198,6 +199,13 @@ class TypingSession(
         finishAction()
     }
 
+    /** 手寫的候選字：和聯想一樣在游標處寫入，之後出聯想；不記錄成記憶字。 */
+    fun handwriting(text: String) {
+        leaveComposition()
+        writeChinese(text, WriteKind.Handwriting)
+        finishAction()
+    }
+
     /** 英漢詞典的譯詞：整串組字換成 text，之後和選了候選字一樣，只是不記錄成記憶字。 */
     fun translation(text: String) {
         writeChinese(text, WriteKind.Translation)
@@ -297,12 +305,12 @@ class TypingSession(
 
     /** 組字留在文字框裏當作英文；同時收起聯想、放棄刪空格。 */
     private fun leaveComposition() {
-        if (composition.isNotEmpty()) {
-            if (composing) editor.finishComposingText()
-            clearComposition()
-        }
+        val finishing = composing && composition.isNotEmpty()
+        if (composition.isNotEmpty()) clearComposition()
         clearFollowUps()
         autoSpace = null
+        // 先清除組字才結束：有些文字框在 finishComposingText 裏面即刻回報游標改變，見 selectionChanged。
+        if (finishing) editor.finishComposingText()
     }
 
     /** 英文建議：寫入該字並加一個空格。 */
@@ -347,18 +355,22 @@ class TypingSession(
             awaitingComposingEcho = false
             if (selectionStart == selectionEnd && selectionEnd == compositionEnd) return
         }
-        editor.finishComposingText()
+        // 先清除組字才結束：有些文字框（例如和輸入法同一個行程的試打框）在 finishComposingText 裏面
+        // 即刻回報游標改變，組字未清除的話又會再結束一次，無限循環。
         clearComposition()
         autoSpace = null
+        editor.finishComposingText()
         finishAction()
     }
 
     /** 鍵盤收起或文字框失去焦點：組字留在文字框裏。 */
     fun finish() {
-        if (composing && composition.isNotEmpty()) editor.finishComposingText()
+        val finishing = composing && composition.isNotEmpty()
         clearComposition()
         clearFollowUps()
         autoSpace = null
+        // 先清除組字才結束，見 selectionChanged。
+        if (finishing) editor.finishComposingText()
     }
 
     /**
@@ -529,7 +541,7 @@ class TypingSession(
             englishSuggestions = if (typed.isEmpty()) emptyList() else (listOf(typedEnglish()) + completions).distinct(),
             associations = associations,
             keywordEmoji = keywordEmoji,
-            markTopCandidate = settings().spaceMode == SpaceMode.SelectChinese && candidates.isNotEmpty(),
+            markTopCandidate = settings().spaceMode.marksTopCandidate && candidates.isNotEmpty(),
             fullWidthPunctuation = smartPunctuation && Punctuation.fullWidthAfter(before),
             fullWidthCloseParenthesis = smartPunctuation && Punctuation.fullWidth(PunctuationKey.CloseParenthesis, before),
             relatedSymbols = relatedSymbols,

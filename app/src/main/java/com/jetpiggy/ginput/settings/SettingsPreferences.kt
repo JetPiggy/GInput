@@ -18,8 +18,12 @@ internal object SettingsPreferences {
     private const val REMEMBER_CANDIDATES = "remember_candidates"
     private const val LOOSE_SPELLING = "loose_spelling"
     private const val CONTINUOUS_TYPING = "continuous_typing"
+    /** 1.0.1 之前未發佈的 "handwriting" 是「打開並同意」，意思不同，所以用新的鍵。 */
+    private const val HANDWRITING = "handwriting_tool"
+    private const val HANDWRITING_ACCEPTED = "handwriting_accepted"
     private const val COLLOQUIAL_PRIORITY = "colloquial_priority"
     private const val SPACE_MODE = "space_mode"
+    private const val SPACE_SPLIT_ORDER = "space_split_order"
     private const val SMART_SPACE_REMOVAL = "smart_space_removal"
     private const val AUTO_CAPITALIZE = "auto_capitalize"
     private const val EMOJI_KEYWORDS = "emoji_keywords"
@@ -50,7 +54,15 @@ internal object SettingsPreferences {
         setOf(CangjieGeneration.Fifth) to "fifth",
     )
     private val OrderCodes = mapOf(SharedCodeOrder.Frequency to "frequency", SharedCodeOrder.Windows to "windows")
-    private val SpaceModeCodes = mapOf(SpaceMode.WriteEnglish to "english", SpaceMode.SelectChinese to "chinese")
+    private val SpaceModeCodes = mapOf(
+        SpaceMode.WriteEnglish to "english",
+        SpaceMode.SelectChinese to "chinese",
+        SpaceMode.Split to "split",
+    )
+    private val SplitOrderCodes = mapOf(
+        SplitSpaceOrder.ChineseLeft to "chinese_left",
+        SplitSpaceOrder.EnglishLeft to "english_left",
+    )
     private val RetentionCodes = mapOf(
         ClipboardRetention.Hour to "hour",
         ClipboardRetention.Day to "day",
@@ -131,8 +143,11 @@ internal object SettingsPreferences {
             rememberCandidates = flag(REMEMBER_CANDIDATES, defaults.rememberCandidates),
             looseSpelling = flag(LOOSE_SPELLING, defaults.looseSpelling),
             continuousTyping = flag(CONTINUOUS_TYPING, defaults.continuousTyping),
+            handwriting = flag(HANDWRITING, defaults.handwriting),
+            handwritingAccepted = flag(HANDWRITING_ACCEPTED, defaults.handwritingAccepted),
             colloquialPriority = flag(COLLOQUIAL_PRIORITY, defaults.colloquialPriority),
             spaceMode = choice(SPACE_MODE, SpaceModeCodes, defaults.spaceMode),
+            splitSpaceOrder = choice(SPACE_SPLIT_ORDER, SplitOrderCodes, defaults.splitSpaceOrder),
             smartSpaceRemoval = flag(SMART_SPACE_REMOVAL, defaults.smartSpaceRemoval),
             autoCapitalize = flag(AUTO_CAPITALIZE, defaults.autoCapitalize),
             emojiKeywords = flag(EMOJI_KEYWORDS, defaults.emojiKeywords),
@@ -158,7 +173,7 @@ internal object SettingsPreferences {
     }
 
     /**
-     * 使用統計報告裏的設定：和儲存時同樣的鍵和代號，但不包括私隱開關和同意、首次設定精靈、新版簡介、未啟用的輸入方案和主題（連淺色、深色）。
+     * 使用統計報告裏的設定：和儲存時同樣的鍵和代號，但不包括私隱開關和同意、手寫、首次設定精靈、新版簡介、未啟用的輸入方案和主題（連淺色、深色）。
      * backend/usage-stats 只接受這些鍵；加減項目要兩邊一起改。
      */
     fun forUsageStats(settings: UserSettings): Map<String, Any> =
@@ -173,6 +188,7 @@ internal object SettingsPreferences {
         CONTINUOUS_TYPING,
         COLLOQUIAL_PRIORITY,
         SPACE_MODE,
+        SPACE_SPLIT_ORDER,
         SMART_SPACE_REMOVAL,
         AUTO_CAPITALIZE,
         EMOJI_KEYWORDS,
@@ -197,8 +213,11 @@ internal object SettingsPreferences {
         REMEMBER_CANDIDATES to settings.rememberCandidates,
         LOOSE_SPELLING to settings.looseSpelling,
         CONTINUOUS_TYPING to settings.continuousTyping,
+        HANDWRITING to settings.handwriting,
+        HANDWRITING_ACCEPTED to settings.handwritingAccepted,
         COLLOQUIAL_PRIORITY to settings.colloquialPriority,
         SPACE_MODE to SpaceModeCodes.getValue(settings.spaceMode),
+        SPACE_SPLIT_ORDER to SplitOrderCodes.getValue(settings.splitSpaceOrder),
         SMART_SPACE_REMOVAL to settings.smartSpaceRemoval,
         AUTO_CAPITALIZE to settings.autoCapitalize,
         EMOJI_KEYWORDS to settings.emojiKeywords,
