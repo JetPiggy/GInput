@@ -72,6 +72,8 @@
     <string name="cangjie_generation">Cangjie version</string>
     <string name="loose_spelling">Loose Jyutping spelling</string>
     <string name="loose_spelling_summary">Also accept lazy and Hong Kong spellings, e.g. lei for 你, o for 我, yau for 有, cheung for 張</string>
+    <string name="english_spelling">English-style spelling</string>
+    <string name="english_spelling_summary">Also accept spellings based on English sounds, e.g. arm for 啱, jor for 咗, lay for 你, gum for 咁. English words like for and car will also show Chinese</string>
     <string name="generation_both">3rd and 5th generation</string>
     <string name="generation_third">3rd generation only</string>
     <string name="generation_fifth">5th generation only</string>
@@ -348,9 +350,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput updated to %1$s</string>
     <string-array name="whats_new_items">
-        <item>New: handwriting. Tap Handwriting on the toolbar and write with your finger; each character goes in when you pause. The first time, you’ll see a notice, and the model downloads only after you agree.</item>
-        <item>New: split space bar. One half picks Chinese, the other writes English. Turn it on in Settings › Typing › Space bar.</item>
-        <item>Fixed: GInput could stop when you moved the cursor in some text boxes; on phones without Google voice typing, the mic now switches to a keyboard that has its own mic, such as iFlytek.</item>
+        <item>New: English-style Jyutping. Spellings based on English sounds work too, such as arm (啱), jor (咗) and lay (你). You can turn it off in Settings › Chinese input.</item>
+        <item>Better order for loose spellings: characters matching standard Jyutping now rank higher than those from Hong Kong or English-style spellings.</item>
     </string-array>
     <string name="whats_new_ok">Got it</string>
 

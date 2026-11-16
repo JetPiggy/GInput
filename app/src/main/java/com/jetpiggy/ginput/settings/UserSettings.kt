@@ -209,8 +209,10 @@ data class UserSettings(
     val cangjieGenerations: Set<CangjieGeneration> = CangjieGeneration.entries.toSet(),
     val sharedCodeOrder: SharedCodeOrder = SharedCodeOrder.Frequency,
     val rememberCandidates: Boolean = true,
-    /** 粵拼的寬鬆拼法：也接受懶音和港式拼法。 */
+    /** 粵拼的寬鬆拼法：也接受懶音、港式拼法和英式拼法。 */
     val looseSpelling: Boolean = true,
+    /** 英式拼法（arm → 啱、jor → 咗）：寬鬆拼法開啟時才生效；預設開啟。 */
+    val englishSpelling: Boolean = true,
     /** 連打：速成和倉頡可以連續打幾個字的碼，出整句候選；預設關閉。 */
     val continuousTyping: Boolean = false,
     /** 工具列有「手寫」（ADR 0013、0015）；預設開啟。 */
@@ -255,6 +257,7 @@ data class UserSettings(
             colloquialPriority = colloquialPriority,
             rememberCandidates = rememberCandidates,
             looseSpelling = looseSpelling,
+            englishSpelling = englishSpelling,
             continuousTyping = continuousTyping,
         ),
         spaceMode = spaceMode,

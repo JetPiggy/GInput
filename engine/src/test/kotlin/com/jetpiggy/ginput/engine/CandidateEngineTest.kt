@@ -204,6 +204,34 @@ class CandidateEngineTest {
     }
 
     @Test
+    fun englishSpellingsQuarterTheFrequency() {
+        val engine = CandidateEngine(
+            FakeDictionary(
+                emptyMap(),
+                jyutping = listOf(
+                    JyutpingEntry("啱", "ngaam", 50, colloquial = true),
+                    JyutpingEntry("岩", "ngaam", 20, colloquial = false),
+                    JyutpingEntry("咗", "zo", 60, colloquial = true),
+                    JyutpingEntry("做", "zou", 70, colloquial = false),
+                    JyutpingEntry("好", "hou", 80, colloquial = false),
+                    JyutpingEntry("好啱", "hou ngaam", 10, colloquial = true),
+                ),
+            ),
+        )
+        assertEquals(listOf("啱", "岩"), engine.texts("arm", jyutpingOnly))
+        assertEquals(emptyList<String>(), engine.texts("arm", jyutpingOnly.copy(looseSpelling = false)))
+        // 只關英式拼法：arm 不出中文，港式拼法的 jo 照出。
+        val noEnglish = jyutpingOnly.copy(englishSpelling = false)
+        assertEquals(emptyList<String>(), engine.texts("arm", noEnglish))
+        assertEquals(listOf("做", "咗"), engine.texts("jo", noEnglish))
+        assertEquals(listOf("咗"), engine.texts("jor", jyutpingOnly))
+        // jo 照港式拼法配到「做」（zou）和「咗」（zo），各自減半：35 比 30。
+        assertEquals(listOf("做", "咗"), engine.texts("jo", jyutpingOnly))
+        // 整個詞也可以用英式拼法，次序照常：用盡全部字母的詞先出。
+        assertEquals(listOf("好啱", "好"), engine.texts("houarm", jyutpingOnly))
+    }
+
+    @Test
     fun jyutpingIgnoresColloquialPriority() {
         val strict = jyutpingOnly.copy(looseSpelling = false)
         assertEquals(listOf("理", "嚟"), jyutping.texts("lei", strict))

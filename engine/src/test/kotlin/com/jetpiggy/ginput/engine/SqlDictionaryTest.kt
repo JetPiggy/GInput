@@ -187,6 +187,22 @@ class SqlDictionaryTest {
     }
 
     @Test
+    fun jyutpingAcceptsEnglishSpelling() {
+        val jyutping = EngineSettings(schemes = listOf(Scheme.Jyutping))
+        assertEquals(setOf("啱", "岩"), texts("arm", jyutping).take(2).toSet())
+        val firsts = mapOf(
+            "jor" to "咗", "lor" to "囉", "wor" to "喎", "lay" to "你", "gum" to "咁",
+            "sum" to "心", "mer" to "咩", "ger" to "嘅", "lar" to "啦", "bao" to "包",
+        )
+        for ((code, first) in firsts) assertEquals(code, first, texts(code, jyutping).first())
+        assertTrue("飲" in texts("yum", jyutping).take(3))
+        assertTrue(texts("arm", jyutping.copy(looseSpelling = false)).isEmpty())
+        val noEnglish = jyutping.copy(englishSpelling = false)
+        assertTrue(listOf("arm", "jor", "for", "car").all { texts(it, noEnglish).isEmpty() })
+        assertEquals("你", texts("lei", noEnglish).first())
+    }
+
+    @Test
     fun jyutpingSyllablesComeFromTheDictionary() {
         val syllables = SqlDictionary(JdbcSqlRunner(connection), JdbcSqlRunner(englishConnection)).jyutpingSyllables()
         assertTrue(listOf("nei", "hou", "m", "ng", "jyut").all { it in syllables })

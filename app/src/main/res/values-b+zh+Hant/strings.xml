@@ -71,6 +71,8 @@
     <string name="cangjie_generation">倉頡版本</string>
     <string name="loose_spelling">寬鬆拼法</string>
     <string name="loose_spelling_summary">粵拼也接受懶音和港式拼法，例如 lei（你）、o（我）、yau（有）、cheung（張）</string>
+    <string name="english_spelling">英式拼法</string>
+    <string name="english_spelling_summary">也接受照英文讀音的拼法，例如 arm（啱）、jor（咗）、lay（你）、gum（咁）。for、car 等英文字也會出中文</string>
     <string name="generation_both">三代和五代</string>
     <string name="generation_third">只用三代</string>
     <string name="generation_fifth">只用五代</string>
@@ -347,9 +349,8 @@
     <!-- 新版簡介：更新後第一次打開鍵盤時顯示一次。改了內容要一併更新 WhatsNew.VERSION；只寫簡單的改動。 -->
     <string name="whats_new_title">GInput 已更新到 %1$s</string>
     <string-array name="whats_new_items">
-        <item>新增手寫：在工具列按「手寫」，用手指寫字，停一停就自動出字。第一次用時會先說明，同意後才下載模型。</item>
-        <item>新增「分邊」空白鍵：空白鍵分成兩半，一半選中文，一半寫英文。在設定的「打字」→「空白鍵模式」開啟。</item>
-        <item>修正：在某些文字框移動游標時，GInput 可能停止運作；沒有 Google 語音輸入的手機，按咪高峰會改為切換到訊飛等鍵盤上有咪高峰的輸入法。</item>
+        <item>粵拼新增英式拼法：照英文讀音拼也得，例如 arm（啱）、jor（咗）、lay（你）。不想要可以在設定的「輸入方案」關掉。</item>
+        <item>寬鬆拼法的候選字排得更準：照原本粵拼打出的字排得較前，港式和英式拼法打出的字排得較後。</item>
     </string-array>
     <string name="whats_new_ok">知道了</string>
 

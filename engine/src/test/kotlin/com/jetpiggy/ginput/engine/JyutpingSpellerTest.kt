@@ -78,6 +78,56 @@ class JyutpingSpellerTest {
     }
 
     @Test
+    fun englishSpellings() {
+        assertTrue("arm" in JyutpingSpeller.looseSpellings("ngaam"))
+        assertTrue("char" in JyutpingSpeller.looseSpellings("caa"))
+        assertTrue("jor" in JyutpingSpeller.looseSpellings("zo"))
+        assertTrue("lor" in JyutpingSpeller.looseSpellings("lo"))
+        assertTrue("mer" in JyutpingSpeller.looseSpellings("me"))
+        assertTrue("her" in JyutpingSpeller.looseSpellings("hoe"))
+        assertTrue(JyutpingSpeller.looseSpellings("nei").containsAll(listOf("nay", "lay")))
+        assertTrue("gum" in JyutpingSpeller.looseSpellings("gam"))
+        assertTrue("yum" in JyutpingSpeller.looseSpellings("jam"))
+        assertTrue("sup" in JyutpingSpeller.looseSpellings("sap"))
+        assertTrue("bao" in JyutpingSpeller.looseSpellings("baau"))
+    }
+
+    @Test
+    fun englishSpellingsCostMoreThanHongKongSpellings() {
+        val costs = JyutpingSpeller.looseSpellingCosts("ngaam")
+        assertEquals(JyutpingSpeller.HONG_KONG, costs["am"])
+        // 聲母和韻母的寫法一起用時，取代價較高的一個。
+        assertEquals(JyutpingSpeller.ENGLISH, costs["arm"])
+        assertEquals(JyutpingSpeller.ENGLISH, costs["ngarm"])
+        assertEquals(JyutpingSpeller.HONG_KONG, JyutpingSpeller.looseSpellingCosts("zo")["jo"])
+        assertEquals(JyutpingSpeller.ENGLISH, JyutpingSpeller.looseSpellingCosts("zo")["jor"])
+    }
+
+    @Test
+    fun splitKeepsTheCheapestCostOfEachSyllable() {
+        val speller = JyutpingSpeller(setOf("ngaam", "zo", "zou"))
+        assertEquals(mapOf("ngaam" to JyutpingSpeller.ENGLISH), speller.split("arm", looseSpelling = true).single().syllables.single().costs)
+        assertTrue(speller.split("arm", looseSpelling = false).isEmpty())
+        assertEquals(
+            mapOf("zo" to JyutpingSpeller.HONG_KONG, "zou" to JyutpingSpeller.HONG_KONG),
+            speller.split("jo", looseSpelling = true).single().syllables.single().costs,
+        )
+    }
+
+    @Test
+    fun englishSpellingCanBeTurnedOffSeparately() {
+        val speller = JyutpingSpeller(setOf("ngaam", "zo", "zou"))
+        assertTrue(speller.split("arm", looseSpelling = true, englishSpelling = false).isEmpty())
+        assertTrue(speller.split("jor", looseSpelling = true, englishSpelling = false).isEmpty())
+        // 懶音和港式拼法照用，包括打到一半的音節。
+        assertEquals(setOf("zo", "zou"), speller.split("jo", looseSpelling = true, englishSpelling = false).single().syllables.single().syllables)
+        assertEquals(setOf("ngaam"), speller.split("am", looseSpelling = true, englishSpelling = false).single().syllables.single().syllables)
+        // 打到一半的 ar 只可能是英式拼法（arm）。
+        assertTrue(speller.split("zoar", looseSpelling = true, englishSpelling = false).isEmpty())
+        assertEquals(1, speller.split("zoar", looseSpelling = true).size)
+    }
+
+    @Test
     fun jBecomesYWithoutDoublingBeforeYu() {
         val spellings = JyutpingSpeller.looseSpellings("jyut")
         assertTrue(spellings.containsAll(listOf("yut", "yuet")))

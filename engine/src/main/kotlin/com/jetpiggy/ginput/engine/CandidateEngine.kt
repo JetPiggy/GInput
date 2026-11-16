@@ -174,7 +174,8 @@ class CandidateEngine(
      * 1. 用盡全部字母的字詞；
      * 2. 最後一個音節未打完的詞（例如 neih 的「你好」）；
      * 3. 只用前面幾個音節的字詞，音節多的先出；選了之後，其餘字母留在組字。
-     * 同一組按常用度排，靠寬鬆拼法才配得上的，常用度減半。字頻來自粵語語料，口語字本來就排得前，所以不另外套用口語優先。
+     * 同一組按常用度排，靠寬鬆拼法才配得上的扣分：懶音和港式拼法減半，英式拼法再減半。
+     * 字頻來自粵語語料，口語字本來就排得前，所以不另外套用口語優先。
      */
     private fun jyutpingCandidates(code: String, settings: EngineSettings): List<Candidate> {
         val lookups = HashMap<String, List<JyutpingEntry>>()
@@ -182,7 +183,7 @@ class CandidateEngine(
         fun startingWith(syllables: String) = lookups.getOrPut(syllables) { dictionary.jyutpingStartingWith(syllables) }
 
         val matches = mutableListOf<JyutpingMatch>()
-        for (split in speller.split(code, settings.looseSpelling)) {
+        for (split in speller.split(code, settings.looseSpelling, settings.englishSpelling)) {
             val typed = split.syllables
             val entries = typed.first().syllables.flatMap { first ->
                 when {
@@ -200,17 +201,22 @@ class CandidateEngine(
                     split.complete -> JyutpingMatch.WHOLE
                     else -> JyutpingMatch.UNFINISHED
                 }
-                // 照粵拼打的：完整的音節和打的一樣，未打完的音節以打的字母開頭。
-                val strict = syllables.indices.all { index ->
+                // 拼法的代價取各音節最高的；照粵拼打的（未打完的音節以打的字母開頭）不扣分。
+                val cost = syllables.indices.maxOf { index ->
                     val unfinished = !split.complete && index == typed.lastIndex
-                    if (unfinished) syllables[index].startsWith(typed[index].typed) else syllables[index] == typed[index].typed
+                    if (unfinished && syllables[index].startsWith(typed[index].typed)) {
+                        JyutpingSpeller.STRICT
+                    } else {
+                        typed[index].costs.getValue(syllables[index])
+                    }
                 }
                 matches += JyutpingMatch(
                     entry = entry,
                     group = group,
                     syllableCount = syllables.size,
                     codeLength = typed.take(syllables.size).sumOf { it.typed.length },
-                    score = if (strict) entry.frequency else entry.frequency / LOOSE_SPELLING_PENALTY,
+                    // 代價每高一級，常用度減半。
+                    score = entry.frequency / (1 shl cost),
                 )
             }
         }
@@ -304,9 +310,6 @@ class CandidateEngine(
     companion object {
         const val DEFAULT_ASSOCIATION_LIMIT = 20
         const val DEFAULT_ENGLISH_LIMIT = 3
-
-        /** 靠寬鬆拼法才配得上的粵拼字詞，常用度除以這個數。 */
-        private const val LOOSE_SPELLING_PENALTY = 2
 
         private val NO_PAIRS = PairMemory()
 

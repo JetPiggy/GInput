@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -45,30 +46,41 @@ internal fun SectionTitle(text: String) {
 }
 
 @Composable
-internal fun RowText(title: String, summary: String?, modifier: Modifier = Modifier) {
+internal fun RowText(title: String, summary: String?, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    // 不能用的設定照 Material 的做法灰掉：文字用 38% 不透明度。
+    val disabled = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
     Column(modifier) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
+        Text(title, style = MaterialTheme.typography.bodyLarge, color = if (enabled) Color.Unspecified else disabled)
         if (summary != null) {
             Text(
                 text = summary,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else disabled,
             )
         }
     }
 }
 
+private const val DISABLED_ALPHA = 0.38f
+
 @Composable
-internal fun SwitchRow(title: String, summary: String?, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+/** 開關；enabled 為 false 時灰掉，按了也不會變。 */
+internal fun SwitchRow(
+    title: String,
+    summary: String?,
+    checked: Boolean,
+    enabled: Boolean = true,
+    onCheckedChange: (Boolean) -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowText(title, summary, Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 16.dp))
+        RowText(title, summary, Modifier.weight(1f), enabled)
+        Switch(checked = checked, onCheckedChange = null, enabled = enabled, modifier = Modifier.padding(start = 16.dp))
     }
 }
 

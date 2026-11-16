@@ -14,7 +14,7 @@ GInput 是為香港人而設的 Android 輸入法：同一個鍵盤打中文和�
 - 速成和倉頡：三代和五代的碼都接受
 - 符號碼：速成和倉頡可以打標點，碼跟 Windows（倉頡 zxad、速成 zd →「。」）
 - 連打：速成和倉頡可以連續打幾個字的碼，候選列出整句（hivddpof →「我好想你」），會記住你打過的搭配；預設關閉
-- 粵拼：不用打聲調，可以打整個詞（neihou →「你好」）；也接受懶音和港式拼法（lei →「你」、cheung →「張」）
+- 粵拼：不用打聲調，可以打整個詞（neihou →「你好」）；也接受懶音、港式拼法和英式拼法（lei →「你」、cheung →「張」、arm →「啱」）
 - 幾種輸入方案可以同時啟用
 - 粵語口語字優先：嘅、咗、啲、冇排在前面，聯想加入口語詞
 - 英文建議、智能全形標點、智能刪空格
@@ -116,7 +116,7 @@ GInput is an Android keyboard made for Hong Kong. Type English as usual, or type
 - Quick and Cangjie, accepting both 3rd and 5th generation codes
 - Punctuation in Quick and Cangjie with the same codes as Windows (zxad in Cangjie or zd in Quick → 。)
 - Continuous typing: type the codes of several characters in a row in Quick or Cangjie and pick the whole sentence (hivddpof → 我好想你); it learns the character pairs you type. Off by default
-- Jyutping without tones, including whole words (neihou → 你好), lazy pronunciations and Hong Kong spellings (lei → 你, cheung → 張)
+- Jyutping without tones, including whole words (neihou → 你好), lazy pronunciations, Hong Kong spellings and English-style spellings (lei → 你, cheung → 張, arm → 啱)
 - Turn on more than one input scheme at the same time
 - Colloquial Cantonese first: 嘅, 咗, 啲 and 冇 come first, and suggestions include colloquial words
 - English suggestions, smart full-width punctuation and smart space removal

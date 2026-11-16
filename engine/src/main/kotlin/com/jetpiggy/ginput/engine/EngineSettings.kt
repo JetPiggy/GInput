@@ -29,8 +29,10 @@ data class EngineSettings(
     val colloquialPriority: Boolean = true,
     /** 記憶字排到最前；只在常用度次序下生效。 */
     val rememberCandidates: Boolean = true,
-    /** 寬鬆拼法：粵拼也接受懶音和港式拼法。 */
+    /** 寬鬆拼法：粵拼也接受懶音、港式拼法和英式拼法。 */
     val looseSpelling: Boolean = true,
+    /** 英式拼法（arm → 啱、jor → 咗）：寬鬆拼法開啟時才生效；關了仍然接受懶音和港式拼法。 */
+    val englishSpelling: Boolean = true,
     /** 連打：速成和倉頡可以連續打幾個字的碼，出整句候選；預設關閉。 */
     val continuousTyping: Boolean = false,
 )

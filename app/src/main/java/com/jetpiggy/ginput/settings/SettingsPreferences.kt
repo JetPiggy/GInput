@@ -17,6 +17,7 @@ internal object SettingsPreferences {
     private const val SHARED_CODE_ORDER = "shared_code_order"
     private const val REMEMBER_CANDIDATES = "remember_candidates"
     private const val LOOSE_SPELLING = "loose_spelling"
+    private const val ENGLISH_SPELLING = "english_spelling"
     private const val CONTINUOUS_TYPING = "continuous_typing"
     /** 1.0.1 之前未發佈的 "handwriting" 是「打開並同意」，意思不同，所以用新的鍵。 */
     private const val HANDWRITING = "handwriting_tool"
@@ -142,6 +143,7 @@ internal object SettingsPreferences {
             sharedCodeOrder = choice(SHARED_CODE_ORDER, OrderCodes, defaults.sharedCodeOrder),
             rememberCandidates = flag(REMEMBER_CANDIDATES, defaults.rememberCandidates),
             looseSpelling = flag(LOOSE_SPELLING, defaults.looseSpelling),
+            englishSpelling = flag(ENGLISH_SPELLING, defaults.englishSpelling),
             continuousTyping = flag(CONTINUOUS_TYPING, defaults.continuousTyping),
             handwriting = flag(HANDWRITING, defaults.handwriting),
             handwritingAccepted = flag(HANDWRITING_ACCEPTED, defaults.handwritingAccepted),
@@ -212,6 +214,7 @@ internal object SettingsPreferences {
         SHARED_CODE_ORDER to OrderCodes.getValue(settings.sharedCodeOrder),
         REMEMBER_CANDIDATES to settings.rememberCandidates,
         LOOSE_SPELLING to settings.looseSpelling,
+        ENGLISH_SPELLING to settings.englishSpelling,
         CONTINUOUS_TYPING to settings.continuousTyping,
         HANDWRITING to settings.handwriting,
         HANDWRITING_ACCEPTED to settings.handwritingAccepted,

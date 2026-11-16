@@ -3,26 +3,34 @@ package com.jetpiggy.ginput.engine
 /** 組字裏的一個音節：使用者打的字母，以及它可能代表的粵拼音節。 */
 internal data class TypedSyllable(
     val typed: String,
-    /** 可能代表的粵拼音節（不含聲調）；未打完的音節是以它開頭的全部音節。 */
-    val syllables: Set<String>,
-)
+    /**
+     * 可能代表的粵拼音節（不含聲調）和拼法的代價（JyutpingSpeller 的 STRICT、HONG_KONG、ENGLISH）；
+     * 未打完的音節是以它開頭的全部音節。
+     */
+    val costs: Map<String, Int>,
+) {
+    val syllables: Set<String> get() = costs.keys
+}
 
 /** 組字拆成音節的一種拆法。complete 為 false 時，最後一個音節未打完。 */
 internal data class SyllableSplit(val syllables: List<TypedSyllable>, val complete: Boolean)
 
 /**
  * 粵拼的拼法：把組字拆成音節，並找出每個音節代表哪些粵拼音節。
- * 寬鬆拼法開啟時，也接受懶音和港式拼法（looseSpellings）；規則見 docs/spec/v1.md 的「粵拼」。
+ * 寬鬆拼法開啟時，也接受懶音、港式拼法和英式拼法（looseSpellings）；規則見 docs/spec/v1.md 的「粵拼」。
  */
 internal class JyutpingSpeller(syllables: Set<String>) {
     private val strict = Spellings()
     private val loose = Spellings()
+    private val looseWithoutEnglish = Spellings()
 
     init {
         for (syllable in syllables) {
-            strict.add(syllable, syllable)
-            loose.add(syllable, syllable)
-            for (spelling in looseSpellings(syllable)) loose.add(spelling, syllable)
+            for (spellings in listOf(strict, loose, looseWithoutEnglish)) spellings.add(syllable, syllable, STRICT)
+            for ((spelling, cost) in looseSpellingCosts(syllable)) {
+                loose.add(spelling, syllable, cost)
+                if (cost < ENGLISH) looseWithoutEnglish.add(spelling, syllable, cost)
+            }
         }
     }
 
@@ -30,8 +38,12 @@ internal class JyutpingSpeller(syllables: Set<String>) {
      * 組字的拆法，只留音節最少的，最多 MAX_SPLITS 個；拆不到就是空的。
      * 最後一個音節可以未打完，但前面最少要有一個完整的音節，所以單獨一個未打完的音節（例如 n）拆不到。
      */
-    fun split(input: String, looseSpelling: Boolean): List<SyllableSplit> {
-        val spellings = if (looseSpelling) loose else strict
+    fun split(input: String, looseSpelling: Boolean, englishSpelling: Boolean = true): List<SyllableSplit> {
+        val spellings = when {
+            !looseSpelling -> strict
+            englishSpelling -> loose
+            else -> looseWithoutEnglish
+        }
         val length = input.length
         // fewest[i]：由第 i 個字母到結尾最少要幾個音節。
         val fewest = IntArray(length + 1) { UNREACHABLE }
@@ -69,27 +81,37 @@ internal class JyutpingSpeller(syllables: Set<String>) {
         return splits
     }
 
-    /** 拼法和它代表的粵拼音節；incomplete 是拼法打到一半（不包括整個拼法）。 */
+    /**
+     * 拼法和它代表的粵拼音節及代價；incomplete 是拼法打到一半（不包括整個拼法）。
+     * 同一個音節有幾種拼法配得上的話，用代價最低的。
+     */
     private class Spellings {
-        private val complete = HashMap<String, MutableSet<String>>()
-        private val incomplete = HashMap<String, MutableSet<String>>()
+        private val complete = HashMap<String, MutableMap<String, Int>>()
+        private val incomplete = HashMap<String, MutableMap<String, Int>>()
         var maxLength = 0
             private set
 
-        fun add(spelling: String, syllable: String) {
-            complete.getOrPut(spelling) { LinkedHashSet() } += syllable
-            for (end in 1 until spelling.length) incomplete.getOrPut(spelling.substring(0, end)) { LinkedHashSet() } += syllable
+        fun add(spelling: String, syllable: String, cost: Int) {
+            complete.getOrPut(spelling) { LinkedHashMap() }.merge(syllable, cost, ::minOf)
+            for (end in 1 until spelling.length) {
+                incomplete.getOrPut(spelling.substring(0, end)) { LinkedHashMap() }.merge(syllable, cost, ::minOf)
+            }
             maxLength = maxOf(maxLength, spelling.length)
         }
 
-        fun complete(typed: String): Set<String>? = complete[typed]
+        fun complete(typed: String): Map<String, Int>? = complete[typed]
 
-        fun incomplete(typed: String): Set<String>? = incomplete[typed]
+        fun incomplete(typed: String): Map<String, Int>? = incomplete[typed]
     }
 
     internal companion object {
         const val MAX_SPLITS = 8
         private const val UNREACHABLE = Int.MAX_VALUE / 2
+
+        /** 拼法的代價：照粵拼打的；懶音和港式拼法；英式拼法。代價越高，配得上的字詞常用度扣得越多。 */
+        const val STRICT = 0
+        const val HONG_KONG = 1
+        const val ENGLISH = 2
 
         /** 聲母；較長的排先，ngaa 才會拆成 ng + aa。 */
         private val INITIALS = listOf("ng", "gw", "kw", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "w", "z", "c", "s", "j")
@@ -101,17 +123,24 @@ internal class JyutpingSpeller(syllables: Set<String>) {
             "si" to listOf("sz", "sze"),
         )
 
-        /** 懶音和港式拼法：粵拼音節 syllable 還可以怎樣拼，不包括 syllable 本身。 */
-        fun looseSpellings(syllable: String): Set<String> {
+        /** 懶音、港式拼法和英式拼法：粵拼音節 syllable 還可以怎樣拼，不包括 syllable 本身。 */
+        fun looseSpellings(syllable: String): Set<String> = looseSpellingCosts(syllable).keys
+
+        /** 同 looseSpellings，附上每種拼法的代價：聲母和韻母的寫法一起用時，取代價較高的一個。 */
+        fun looseSpellingCosts(syllable: String): Map<String, Int> {
             val (initial, final) = splitSyllable(syllable)
-            val spellings = LinkedHashSet<String>()
-            for (i in listOf(initial) + looseInitials(initial, final)) {
-                for (f in listOf(final) + looseFinals(final)) spellings += i + f
+            val spellings = LinkedHashMap<String, Int>()
+            val initials = listOf(initial to STRICT) + looseInitials(initial, final).map { it to HONG_KONG }
+            val finals = listOf(final to STRICT) +
+                looseFinals(final).map { it to HONG_KONG } +
+                englishFinals(final).map { it to ENGLISH }
+            for ((i, initialCost) in initials) {
+                for ((f, finalCost) in finals) spellings.merge(i + f, maxOf(initialCost, finalCost), ::minOf)
             }
-            spellings += WHOLE_SYLLABLES[syllable].orEmpty()
+            WHOLE_SYLLABLES[syllable].orEmpty().forEach { spellings.merge(it, HONG_KONG, ::minOf) }
             spellings -= syllable
             // j 寫成 y 時，jyu 是 yu，不是 yyu。
-            spellings.removeAll { "yy" in it }
+            spellings.keys.removeAll { "yy" in it }
             return spellings
         }
 
@@ -159,6 +188,22 @@ internal class JyutpingSpeller(syllables: Set<String>) {
                 "m" -> listOf("mm")
                 else -> emptyList()
             }
+        }
+
+        /**
+         * 英式拼法：照英文讀音拼，例如英文不讀 r，ar、or、er 代表長元音（arm → 啱、jor → 咗），
+         * ay 代表 ei（lay → 你），um、up 代表 am、ap（gum → 咁）。
+         */
+        private fun englishFinals(final: String): List<String> = when (final) {
+            "aa" -> listOf("ar")
+            "aam" -> listOf("arm")
+            "aau" -> listOf("ao")
+            "o" -> listOf("or")
+            "e", "oe" -> listOf("er")
+            "ei" -> listOf("ay")
+            "am" -> listOf("um")
+            "ap" -> listOf("up")
+            else -> emptyList()
         }
     }
 }

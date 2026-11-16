@@ -120,7 +120,7 @@ private fun SubPage(
     }
 }
 
-/** 輸入方案：啟用和排序、倉頡版本、寬鬆拼法、連打、手寫、重碼次序、記憶字。 */
+/** 輸入方案：啟用和排序、倉頡版本、寬鬆拼法、英式拼法、連打、手寫、重碼次序、記憶字。 */
 @Composable
 internal fun SchemesPage(settings: UserSettings, onChange: ((UserSettings) -> UserSettings) -> Unit, onBack: () -> Unit) {
     val snackbar = remember { SnackbarHostState() }
@@ -155,14 +155,22 @@ internal fun SchemesPage(settings: UserSettings, onChange: ((UserSettings) -> Us
             selected = settings.cangjieGenerations,
             onSelect = { value -> onChange { it.copy(cangjieGenerations = value) } },
         )
-        if (Scheme.Jyutping in settings.enabledSchemes) {
-            SwitchRow(
-                title = stringResource(R.string.loose_spelling),
-                summary = stringResource(R.string.loose_spelling_summary),
-                checked = settings.looseSpelling,
-                onCheckedChange = { value -> onChange { it.copy(looseSpelling = value) } },
-            )
-        }
+        // 粵拼的設定一直顯示；沒有啟用粵拼時灰掉，不能開關。英式拼法屬於寬鬆拼法，寬鬆拼法關了也灰掉。
+        val jyutping = Scheme.Jyutping in settings.enabledSchemes
+        SwitchRow(
+            title = stringResource(R.string.loose_spelling),
+            summary = stringResource(R.string.loose_spelling_summary),
+            checked = settings.looseSpelling,
+            enabled = jyutping,
+            onCheckedChange = { value -> onChange { it.copy(looseSpelling = value) } },
+        )
+        SwitchRow(
+            title = stringResource(R.string.english_spelling),
+            summary = stringResource(R.string.english_spelling_summary),
+            checked = settings.englishSpelling,
+            enabled = jyutping && settings.looseSpelling,
+            onCheckedChange = { value -> onChange { it.copy(englishSpelling = value) } },
+        )
         if (settings.enabledSchemes.any { it != Scheme.Jyutping }) {
             SwitchRow(
                 title = stringResource(R.string.continuous_typing),

@@ -22,6 +22,7 @@ class UserSettingsTest {
         assertTrue(settings.typing.smartSpaceRemoval)
         assertTrue(settings.typing.autoCapitalize)
         assertFalse(settings.typing.engine.continuousTyping)
+        assertTrue(settings.typing.engine.englishSpelling)
         // 工具列預設有「手寫」，但未同意說明，不可以用 ML Kit（ADR 0015）。
         assertTrue(settings.handwriting)
         assertFalse(settings.handwritingAccepted)
@@ -53,6 +54,7 @@ class UserSettingsTest {
             sharedCodeOrder = SharedCodeOrder.Windows,
             rememberCandidates = false,
             looseSpelling = false,
+            englishSpelling = false,
             continuousTyping = true,
             handwriting = false,
             handwritingAccepted = true,
@@ -84,6 +86,7 @@ class UserSettingsTest {
         assertEquals(changed, SettingsPreferences.read(SettingsPreferences.write(changed)))
         assertEquals(listOf(Scheme.Jyutping, Scheme.Quick), changed.typing.engine.schemes)
         assertFalse(changed.typing.engine.looseSpelling)
+        assertFalse(changed.typing.engine.englishSpelling)
         assertTrue(changed.typing.engine.continuousTyping)
         assertTrue(changed.typing.emojiKeywords)
         assertFalse(changed.typing.englishChinese)
